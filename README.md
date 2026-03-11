@@ -28,16 +28,20 @@ Example:
 ```json
 {
   "./src/utils.4gl": [
-    "calculate(amount INTEGER, label STRING):result DECIMAL, status INTEGER",
-    "format_date(input_date DATE):formatted STRING"
+    "15-42: calculate(amount INTEGER, label STRING):result DECIMAL, status INTEGER",
+    "44-58: format_date(input_date DATE):formatted STRING"
   ],
   "./src/auth.4gl": [
-    "validate_user(username STRING, password STRING):is_valid SMALLINT, error_msg STRING"
+    "10-35: validate_user(username STRING, password STRING):is_valid SMALLINT, error_msg STRING"
   ]
 }
 ```
 
-Each signature includes parameter names/types and return names/types in a readable format.
+Each signature includes:
+- Start and end line numbers (e.g., `15-42:`)
+- Function name
+- Parameter names and types
+- Return value names and types (if any)
 
 ## Testing
 

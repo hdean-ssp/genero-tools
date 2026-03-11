@@ -28,6 +28,7 @@ find "$TARGET" -name "*.4gl" -print0 | while IFS= read -r -d $'\0' file; do
 
     /^FUNCTION / {
         in_function = 1
+        function_start_line = NR  # Track start line
         current_function = substr($0, index($0, "FUNCTION ") + 9)
         sub(/\(.*/, "", current_function)
         gsub(/^[ \t]+|[ \t]+$/, "", current_function)  # Trim whitespace
@@ -84,6 +85,8 @@ find "$TARGET" -name "*.4gl" -print0 | while IFS= read -r -d $'\0' file; do
     }
 
     /END FUNCTION/ {
+        function_end_line = NR  # Track end line
+        
         # Build parameters array
         params_json = ""
         params_str = ""
@@ -106,8 +109,8 @@ find "$TARGET" -name "*.4gl" -print0 | while IFS= read -r -d $'\0' file; do
             returns_str = returns_str (i > 1 ? ", " : "") var " " (type ? type : "unknown")
         }
 
-        # Create unique function signature: functionName(name type, ...):name type, ...
-        function_sig = current_function "(" params_str ")"
+        # Create unique function signature: start-end: functionName(name type, ...):name type, ...
+        function_sig = function_start_line "-" function_end_line ": " current_function "(" params_str ")"
         if (returns_str != "" && return_count > 0) {
             function_sig = function_sig ":" returns_str
         }

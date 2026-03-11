@@ -1,15 +1,15 @@
 {
   "./tests/complex_types.4gl": [
-    "process_record(rec RECORD, status_flag CHAR(1)):success SMALLINT",
-    "get_date_range(start_date DATE, end_date DATE):days_between INTEGER, is_valid SMALLINT"
+    "3-14: process_record(rec RECORD, status_flag CHAR(1)):success SMALLINT",
+    "16-26: get_date_range(start_date DATE, end_date DATE):days_between INTEGER, is_valid SMALLINT"
   ],
   "./tests/multiple_returns.4gl": [
-    "calculate_stats(values ARRAY OF DECIMAL):total DECIMAL, average DECIMAL, count INTEGER",
-    "validate_user(username STRING, password STRING):is_valid SMALLINT, error_msg STRING"
+    "3-15: calculate_stats(values ARRAY OF DECIMAL):total DECIMAL, average DECIMAL, count INTEGER",
+    "17-27: validate_user(username STRING, password STRING):is_valid SMALLINT, error_msg STRING"
   ],
   "./tests/simple_functions.4gl": [
-    "add_numbers(a INTEGER, b INTEGER):result INTEGER",
-    "get_user_name(user_id INTEGER):name STRING",
-    "no_params_no_return()"
+    "3-10: add_numbers(a INTEGER, b INTEGER):result INTEGER",
+    "12-19: get_user_name(user_id INTEGER):name STRING",
+    "21-23: no_params_no_return()"
   ]
 }
