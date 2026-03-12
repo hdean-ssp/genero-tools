@@ -5,11 +5,29 @@ shell script(s) to generate and index function signatures when run in a Genero c
 
 - Extracts function signatures from Genero/4GL files
 - Generates structured JSON output with metadata
+- Human-readable JSON formatting with proper indentation
 - Supports all Genero data types (basic, complex, and special types)
 - Handles multiple return values
 - Tracks line numbers for each function
 - Configurable output file and verbose mode
 - Robust error handling with automatic cleanup
+
+## Requirements
+
+- Bash shell
+- `jq` - Command-line JSON processor (for formatting output)
+- Standard Unix utilities: `find`, `sed`, `awk`, `date`
+
+Install `jq` if not already available:
+```bash
+# Ubuntu/Debian
+sudo apt-get install jq
+
+# macOS
+brew install jq
+
+# Or download from https://jqlang.github.io/jq/
+```
 
 ## Usage
 

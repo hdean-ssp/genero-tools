@@ -201,7 +201,7 @@ END {
     }
     print "}"
 }
-' "$TEMP_FILE" > "$OUTPUT_FILE"
+' "$TEMP_FILE" | jq '.' > "$OUTPUT_FILE"
 
 if [[ "$VERBOSE" == "1" ]]; then
     echo "Generated $OUTPUT_FILE successfully" >&2
