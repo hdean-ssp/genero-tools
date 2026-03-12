@@ -72,7 +72,7 @@ The script generates a `codebase_index.json` file with the following structure:
     }
   },
   "files": {
-    "file_001": {
+    "file_lib_core": {
       "path": "./src/lib_core.4gl",
       "type": "L4GLS",
       "functions": [
@@ -84,7 +84,7 @@ The script generates a `codebase_index.json` file with the following structure:
         }
       ]
     },
-    "file_002": {
+    "file_main": {
       "path": "./src/main.4gl",
       "type": "4GLS",
       "functions": [...]
@@ -94,9 +94,9 @@ The script generates a `codebase_index.json` file with the following structure:
     {
       "module": "core",
       "file": "./modules/core.m3",
-      "L4GLS": ["file_001", "file_003"],
-      "U4GLS": ["file_004"],
-      "4GLS": ["file_002"]
+      "L4GLS": ["file_lib_core", "file_lib_utils"],
+      "U4GLS": ["file_util_helpers"],
+      "4GLS": ["file_main"]
     }
   ]
 }
@@ -104,8 +104,8 @@ The script generates a `codebase_index.json` file with the following structure:
 
 ### Structure Details
 
-**files** - Deduplicated file index with unique IDs:
-- `file_NNN` - Unique file identifier (NNN = 001, 002, etc.)
+**files** - Deduplicated file index with descriptive IDs:
+- `file_<filename>` - Descriptive file identifier based on filename (e.g., `file_lib_core`, `file_main`)
 - `path` - Full path to the .4gl file
 - `type` - File category (L4GLS, U4GLS, or 4GLS)
 - `functions` - Array of function signatures from this file
@@ -120,13 +120,13 @@ The script generates a `codebase_index.json` file with the following structure:
 ## Benefits
 
 ### No Duplication
-Each file is defined once with all its functions. Modules reference files by ID, not by repeating file data.
+Each file is defined once with all its functions. Modules reference files by descriptive ID (e.g., `file_lib_core`), not by repeating file data.
 
 ### Efficient Queries
 With this structure, you can easily:
 - Find all functions in a module: `modules[].4GLS | map(files[.])` 
-- Find which modules use a file: `modules[] | select(.L4GLS[] == "file_001")`
-- Get function details: `files["file_001"].functions`
+- Find which modules use a file: `modules[] | select(.L4GLS[] == "file_lib_core")`
+- Get function details: `files["file_lib_core"].functions`
 
 ### Scalability
 Works efficiently with:
@@ -150,7 +150,7 @@ Using `jq` to query the index:
 jq '.modules[] | select(.module == "core") | .L4GLS[] as $fid | .files[$fid].functions' codebase_index.json
 
 # Find which modules use a specific file
-jq '.modules[] | select(.L4GLS[] == "file_001" or .U4GLS[] == "file_001" or ."4GLS"[] == "file_001") | .module' codebase_index.json
+jq '.modules[] | select(.L4GLS[] == "file_lib_core" or .U4GLS[] == "file_lib_core" or ."4GLS"[] == "file_lib_core") | .module' codebase_index.json
 
 # Count functions per module
 jq '.modules[] | {module: .module, functions: ((.L4GLS + .U4GLS + ."4GLS") | map(.files[.].functions | length) | add)}' codebase_index.json
@@ -175,8 +175,9 @@ VERBOSE=1 OUTPUT_FILE=my_index.json bash generate_codebase_index.sh
 
 ## Notes
 
-- File IDs are generated sequentially (file_001, file_002, etc.)
+- File IDs are generated from filenames (e.g., `file_lib_core`, `file_main`)
+- Special characters in filenames are converted to underscores
 - Files are deduplicated - each unique file path appears only once
-- Module file references use file IDs, not paths, for efficiency
+- Module file references use file IDs, not paths, for efficiency and readability
 - If a module references a file not in workspace.json, it won't have a file ID
 - The index preserves all metadata from source files for traceability

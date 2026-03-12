@@ -47,11 +47,17 @@ jq -n \
   # Extract workspace data (without metadata)
   ($workspace[0] | del(._metadata)) as $workspace_data |
   
-  # Build files array with sequential IDs
+  # Build files array with descriptive IDs based on filename
   (
     [$workspace_data | to_entries | to_entries[] | 
       {
-        id: "file_\((.key + 1 | tostring | "00\(.)" | .[-3:]))",
+        id: (
+          .value.key | 
+          split("/")[-1] |
+          gsub("\\.4gl$"; "") |
+          gsub("[^a-zA-Z0-9_]"; "_") |
+          "file_\(.)"
+        ),
         path: .value.key,
         type: (if .value.key | contains("L4GLS") then "L4GLS" elif .value.key | contains("U4GLS") then "U4GLS" else "4GLS" end),
         functions: .value.value
