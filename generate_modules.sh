@@ -179,6 +179,11 @@ TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 # Process modules using Python script
 python3 scripts/process_modules.py "$TEMP_FILE" "$OUTPUT_FILE" "$VERSION" "$TIMESTAMP" "$TOTAL_FILES"
 
+# Auto-generate SQLite database
+DB_FILE="${OUTPUT_FILE%.json}.db"
+python3 scripts/json_to_sqlite.py modules "$OUTPUT_FILE" "$DB_FILE"
+
 if [[ "$VERBOSE" == "1" ]]; then
     echo "Generated $OUTPUT_FILE successfully" >&2
+    echo "Generated $DB_FILE for fast querying" >&2
 fi
