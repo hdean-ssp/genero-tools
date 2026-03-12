@@ -3,6 +3,22 @@
 
 import json
 import sys
+import os
+
+def normalize_path(path):
+    """Normalize path to be relative with ./ prefix."""
+    # Convert absolute paths to relative if possible
+    if os.path.isabs(path):
+        try:
+            path = os.path.relpath(path)
+        except ValueError:
+            pass
+    
+    # Ensure relative paths start with ./
+    if not path.startswith('./') and not path.startswith('/'):
+        path = './' + path
+    
+    return path
 
 def main():
     if len(sys.argv) < 3:
@@ -26,6 +42,9 @@ def main():
                 
                 try:
                     obj = json.loads(line)
+                    # Normalize the file path
+                    if 'file' in obj:
+                        obj['file'] = normalize_path(obj['file'])
                     modules.append(obj)
                 except json.JSONDecodeError:
                     continue

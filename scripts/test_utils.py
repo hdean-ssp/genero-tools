@@ -11,9 +11,19 @@ def sort_signatures(input_file, output_file):
         data = json.load(f)
     
     data.pop('_metadata', None)
+    
+    # Normalize paths: convert "tests/..." to "./tests/..."
+    normalized_data = {}
+    for key in data.keys():
+        if not key.startswith('./') and not key.startswith('/'):
+            normalized_key = './' + key
+        else:
+            normalized_key = key
+        normalized_data[normalized_key] = data[key]
+    
     sorted_data = {}
-    for key in sorted(data.keys()):
-        sorted_data[key] = sorted(data[key], key=lambda x: x.get('name', ''))
+    for key in sorted(normalized_data.keys()):
+        sorted_data[key] = sorted(normalized_data[key], key=lambda x: x.get('name', ''))
     
     with open(output_file, 'w') as f:
         json.dump(sorted_data, f, sort_keys=True, indent=2)

@@ -59,10 +59,13 @@ log_info "Target directory: $TARGET"
 log_info "Found $GL4_COUNT .4gl files and $M3_COUNT .m3 files"
 echo ""
 
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Step 1: Generate function signatures
 if [[ $GL4_COUNT -gt 0 ]]; then
     log_step "Generating function signatures from .4gl files..."
-    if ! bash generate_signatures.sh "$TARGET" 2>&1 | tee /tmp/gen_sig_output.log; then
+    if ! bash "$SCRIPT_DIR/src/generate_signatures.sh" "$TARGET" 2>&1 | tee /tmp/gen_sig_output.log; then
         log_error "Failed to generate function signatures"
         log_error "Last output:"
         tail -20 /tmp/gen_sig_output.log >&2
@@ -78,7 +81,7 @@ echo ""
 # Step 2: Generate module dependencies
 if [[ $M3_COUNT -gt 0 ]]; then
     log_step "Generating module dependencies from .m3 files..."
-    if bash generate_modules.sh "$TARGET"; then
+    if bash "$SCRIPT_DIR/src/generate_modules.sh" "$TARGET"; then
         log_success "Module dependencies generated (modules.json)"
     else
         log_error "Failed to generate module dependencies"
@@ -93,7 +96,7 @@ echo ""
 # Step 3: Generate unified codebase index
 if [[ $GL4_COUNT -gt 0 && $M3_COUNT -gt 0 ]]; then
     log_step "Generating unified codebase index..."
-    if bash generate_codebase_index.sh; then
+    if bash "$SCRIPT_DIR/src/generate_codebase_index.sh"; then
         log_success "Codebase index generated (codebase_index.json)"
     else
         log_error "Failed to generate codebase index"

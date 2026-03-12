@@ -8,6 +8,11 @@
 
 set -euo pipefail
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the parent directory (project root)
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # Configuration
 VERSION="1.0.0"
 VERBOSE="${VERBOSE:-0}"
@@ -177,14 +182,14 @@ done
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Process modules using Python script
-python3 scripts/process_modules.py "$TEMP_FILE" "$OUTPUT_FILE" "$VERSION" "$TIMESTAMP" "$TOTAL_FILES"
+python3 "$PROJECT_ROOT/scripts/process_modules.py" "$TEMP_FILE" "$OUTPUT_FILE" "$VERSION" "$TIMESTAMP" "$TOTAL_FILES"
 
 # Optional: Generate SQLite database (only if CREATE_DB is set)
 if [[ "${CREATE_DB:-0}" == "1" ]]; then
     DB_FILE="${OUTPUT_FILE%.json}.db"
     # Remove existing database to avoid UNIQUE constraint errors
     rm -f "$DB_FILE"
-    python3 scripts/json_to_sqlite.py modules "$OUTPUT_FILE" "$DB_FILE"
+    python3 "$PROJECT_ROOT/scripts/json_to_sqlite.py" modules "$OUTPUT_FILE" "$DB_FILE"
     if [[ "$VERBOSE" == "1" ]]; then
         echo "Generated $DB_FILE for fast querying" >&2
     fi

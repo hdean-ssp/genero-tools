@@ -9,6 +9,11 @@
 
 set -euo pipefail
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the parent directory (project root)
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # Configuration
 VERSION="1.0.0"
 VERBOSE="${VERBOSE:-0}"
@@ -38,7 +43,7 @@ fi
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Generate the unified index using Python script
-python3 scripts/process_codebase_index.py "$WORKSPACE_FILE" "$MODULES_FILE" "$OUTPUT_FILE" "$VERSION" "$TIMESTAMP" 2>&1 || {
+python3 "$PROJECT_ROOT/scripts/process_codebase_index.py" "$WORKSPACE_FILE" "$MODULES_FILE" "$OUTPUT_FILE" "$VERSION" "$TIMESTAMP" 2>&1 || {
     echo "Error: Failed to generate codebase index" >&2
     echo "Check that workspace.json and modules.json are valid JSON" >&2
     exit 1

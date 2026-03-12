@@ -146,3 +146,15 @@ bash query.sh list-file-functions "path/to/file.4gl"
 - Fully indexed for fast pattern matching
 
 See [QUERYING.md](QUERYING.md) for complete documentation.
+
+## Planned Enhancements
+
+The project has an ambitious roadmap for future improvements:
+
+- **Enhanced Type Parser** - Support database LIKE types and RECORD types
+- **Database Schema Integration** - Parse schema files and validate types
+- **Advanced Queries** - Fuzzy matching, dependency analysis, unused code detection
+- **IDE Integration** - Plugins for popular editors
+- **Web Interface** - Browser-based code explorer
+
+See [FUTURE_ENHANCEMENTS.md](FUTURE_ENHANCEMENTS.md) for the complete roadmap.

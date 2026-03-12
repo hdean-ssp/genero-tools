@@ -356,6 +356,11 @@ module_files (id, module_id, file_name, category)
 6. **Web Interface** - Browser-based code explorer
 7. **Performance Metrics** - Track function complexity
 8. **Change Tracking** - Version control integration
+9. **Enhanced Type Parser** - Support LIKE types and records
+10. **Database Schema Integration** - Parse and validate against schema
+11. **Advanced Queries** - Fuzzy matching, dependency analysis, etc.
+
+See [FUTURE_ENHANCEMENTS.md](FUTURE_ENHANCEMENTS.md) for detailed roadmap.
 
 ## Maintenance
 
