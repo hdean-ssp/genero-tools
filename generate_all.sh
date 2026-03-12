@@ -47,20 +47,20 @@ if [[ ! -d "$TARGET" ]]; then
 fi
 
 # Check if there are any .4gl or .m3 files
-4GL_COUNT=$(find "$TARGET" -name "*.4gl" -type f | wc -l)
+GL4_COUNT=$(find "$TARGET" -name "*.4gl" -type f | wc -l)
 M3_COUNT=$(find "$TARGET" -name "*.m3" -type f | wc -l)
 
-if [[ $4GL_COUNT -eq 0 && $M3_COUNT -eq 0 ]]; then
+if [[ $GL4_COUNT -eq 0 && $M3_COUNT -eq 0 ]]; then
     log_error "No .4gl or .m3 files found in '$TARGET'"
     exit 1
 fi
 
 log_info "Target directory: $TARGET"
-log_info "Found $4GL_COUNT .4gl files and $M3_COUNT .m3 files"
+log_info "Found $GL4_COUNT .4gl files and $M3_COUNT .m3 files"
 echo ""
 
 # Step 1: Generate function signatures
-if [[ $4GL_COUNT -gt 0 ]]; then
+if [[ $GL4_COUNT -gt 0 ]]; then
     log_step "Generating function signatures from .4gl files..."
     if bash generate_signatures.sh "$TARGET"; then
         log_success "Function signatures generated (workspace.json)"
@@ -90,7 +90,7 @@ fi
 echo ""
 
 # Step 3: Generate unified codebase index
-if [[ $4GL_COUNT -gt 0 && $M3_COUNT -gt 0 ]]; then
+if [[ $GL4_COUNT -gt 0 && $M3_COUNT -gt 0 ]]; then
     log_step "Generating unified codebase index..."
     if bash generate_codebase_index.sh; then
         log_success "Codebase index generated (codebase_index.json)"
@@ -108,10 +108,10 @@ echo ""
 log_success "All generators completed successfully!"
 echo ""
 log_info "Generated files:"
-[[ $4GL_COUNT -gt 0 ]] && log_info "  - workspace.json (function signatures)"
+[[ $GL4_COUNT -gt 0 ]] && log_info "  - workspace.json (function signatures)"
 [[ $M3_COUNT -gt 0 ]] && log_info "  - modules.json (module dependencies)"
-[[ $4GL_COUNT -gt 0 && $M3_COUNT -gt 0 ]] && log_info "  - codebase_index.json (unified index)"
+[[ $GL4_COUNT -gt 0 && $M3_COUNT -gt 0 ]] && log_info "  - codebase_index.json (unified index)"
 echo ""
 log_info "Summary:"
-log_info "  - $4GL_COUNT .4gl files processed"
+log_info "  - $GL4_COUNT .4gl files processed"
 log_info "  - $M3_COUNT .m3 files processed"
