@@ -2,7 +2,36 @@
 
 This document outlines planned improvements and features for the Genero Function Signatures project.
 
-## 1. Enhanced Type Parser
+## 1. Enhanced Parser & Call Graph Extraction
+
+### Current State
+- Extracts function signatures (name, parameters, returns)
+- Extracts basic Genero data types (INTEGER, STRING, DECIMAL, etc.)
+- Does NOT parse function bodies or track function calls
+- Limited support for complex types
+
+### Planned Improvements
+
+#### 1.0 Function Body Parsing (Foundation for Dependency Queries)
+- **Goal:** Parse function bodies line-by-line to extract function calls
+- **Scope:**
+  - Identify all function calls within a function body
+  - Track call locations (line numbers)
+  - Handle nested calls and conditional calls
+  - Support different call patterns (direct calls, method calls, etc.)
+- **Implementation:**
+  - Extend AWK parser to capture function body content
+  - Build call graph database with caller-callee relationships
+  - Store call metadata (line number, context)
+  - Enable dependency queries (find-function-dependencies, find-function-dependents)
+- **Challenges:**
+  - Distinguishing function calls from other identifiers
+  - Handling dynamic/indirect calls
+  - Dealing with preprocessor directives
+  - Performance impact on large functions
+- **Output:** New `calls` table in database with function_id, called_function_name, line_number
+
+## 2. Enhanced Type Parser
 
 ### Current State
 - Extracts basic Genero data types (INTEGER, STRING, DECIMAL, etc.)
@@ -11,7 +40,7 @@ This document outlines planned improvements and features for the Genero Function
 
 ### Planned Improvements
 
-#### 1.1 Database-Like Types Detection
+#### 2.1 Database-Like Types Detection
 - **Goal:** Recognize and parse database-specific types
 - **Examples:** 
   - `LIKE table_name.column_name`
@@ -24,7 +53,7 @@ This document outlines planned improvements and features for the Genero Function
   - Store as structured type information
   - Enable cross-referencing with database schema
 
-#### 1.2 Record Type Parsing
+#### 2.2 Record Type Parsing
 - **Goal:** Parse and decompose RECORD types
 - **Examples:**
   - `RECORD { id INTEGER, name STRING }`
@@ -36,7 +65,7 @@ This document outlines planned improvements and features for the Genero Function
   - Handle nested structures
   - Store as structured record metadata
 
-#### 1.3 Complex Type Support
+#### 2.3 Complex Type Support
 - **Goal:** Better handling of complex types
 - **Examples:**
   - `DYNAMIC ARRAY OF RECORD`
@@ -47,7 +76,7 @@ This document outlines planned improvements and features for the Genero Function
   - Type composition tracking
   - Generic type parameters
 
-## 2. Database Schema Integration
+## 3. Database Schema Integration
 
 ### Current State
 - No integration with actual database schema
@@ -55,7 +84,7 @@ This document outlines planned improvements and features for the Genero Function
 
 ### Planned Improvements
 
-#### 2.1 Schema File Parsing
+#### 3.1 Schema File Parsing
 - **Goal:** Parse database schema files to understand actual types
 - **Supported Formats:**
   - SQL DDL files (CREATE TABLE statements)
@@ -67,7 +96,7 @@ This document outlines planned improvements and features for the Genero Function
   - Map column types to Genero types
   - Build schema index
 
-#### 2.2 Database Introspection Tool
+#### 3.2 Database Introspection Tool
 - **Goal:** Query live database for schema information
 - **Capabilities:**
   - Connect to database (PostgreSQL, MySQL, Oracle, etc.)
@@ -80,7 +109,7 @@ This document outlines planned improvements and features for the Genero Function
   - Cache schema information
   - Generate schema index JSON
 
-#### 2.3 Type Validation
+#### 3.3 Type Validation
 - **Goal:** Validate function types against actual database schema
 - **Features:**
   - Check if LIKE references exist in schema
@@ -93,7 +122,7 @@ This document outlines planned improvements and features for the Genero Function
   - Generate compatibility matrix
   - Report discrepancies
 
-## 3. Advanced Query Functionality
+## 4. Advanced Query Functionality
 
 ### Current Queries
 - `find-function` - Exact function lookup
@@ -123,7 +152,7 @@ The advanced queries are organized into logical categories:
 
 ### Planned Queries
 
-#### 3.1 Module Content Queries
+#### 4.1 Module Content Queries
 - **`find-modules-with-file <filename>`**
   - Find all modules containing a specific file
   - Show file category (L4GLS, U4GLS, 4GLS)
@@ -134,7 +163,7 @@ The advanced queries are organized into logical categories:
   - Show which file in module contains function
   - List all modules with that function
 
-#### 3.2 Fuzzy/Approximate Matching
+#### 4.2 Fuzzy/Approximate Matching
 - **`find-closest-function <name>`**
   - Find functions with similar names
   - Use Levenshtein distance or similar algorithm
@@ -145,7 +174,7 @@ The advanced queries are organized into logical categories:
   - Find modules with similar names
   - Return ranked results
 
-#### 3.3 Dependency Queries
+#### 4.3 Dependency Queries
 - **`find-function-dependencies <function_name>`**
   - Find all functions called by a function
   - Build call graph
@@ -161,7 +190,7 @@ The advanced queries are organized into logical categories:
   - Show dependency graph
   - Identify circular dependencies
 
-#### 3.4 Type-Based Queries
+#### 4.4 Type-Based Queries
 - **`find-functions-with-type <type_name>`**
   - Find all functions using a specific type
   - Filter by parameter or return type
@@ -176,7 +205,7 @@ The advanced queries are organized into logical categories:
   - Find functions using a specific record type
   - Show record field usage
 
-#### 3.5 Cross-Reference Queries
+#### 4.5 Cross-Reference Queries
 - **`find-file-usage <filename>`**
   - Show all modules using a file
   - Show all functions in the file
@@ -187,7 +216,7 @@ The advanced queries are organized into logical categories:
   - Show all modules affected
   - Generate usage report
 
-#### 3.6 Analysis Queries
+#### 4.6 Analysis Queries
 - **`analyze-module <module_name>`**
   - Generate comprehensive module report
   - Show all files, functions, dependencies
@@ -208,7 +237,7 @@ The advanced queries are organized into logical categories:
   - Find files not used by any module
   - Identify orphaned code
 
-#### 3.7 Signature Pattern Queries
+#### 4.7 Signature Pattern Queries
 - **`find-functions-by-parameter-count <count>`**
   - Find all functions with exactly N parameters
   - Useful for identifying simple vs. complex functions
@@ -229,7 +258,7 @@ The advanced queries are organized into logical categories:
   - Identify functions that modify state
   - Useful for pure function identification
 
-#### 3.8 Naming Convention Queries
+#### 4.8 Naming Convention Queries
 - **`find-functions-matching-pattern <regex>`**
   - Find functions matching naming patterns
   - Enforce naming conventions (get_*, set_*, etc.)
@@ -245,7 +274,7 @@ The advanced queries are organized into logical categories:
   - Identify function categories (e.g., _handler, _validator)
   - Useful for architectural analysis
 
-#### 3.9 Complexity & Metrics Queries
+#### 4.9 Complexity & Metrics Queries
 - **`find-complex-functions [threshold]`**
   - Find functions exceeding complexity threshold
   - Use line count, parameter count, return count
@@ -261,7 +290,7 @@ The advanced queries are organized into logical categories:
   - Identify very short or very long functions
   - Useful for code quality analysis
 
-#### 3.10 Relationship & Impact Queries
+#### 4.10 Relationship & Impact Queries
 - **`find-function-callers <function_name>`**
   - Find all functions that call a specific function
   - Show call chain depth
@@ -282,7 +311,7 @@ The advanced queries are organized into logical categories:
   - Identify standalone utilities
   - Useful for library extraction
 
-#### 3.11 Export & Reporting Queries
+#### 4.11 Export & Reporting Queries
 - **`export-module-graph <module_name> [format]`**
   - Export module dependency graph (JSON, DOT, SVG)
   - Visualize module relationships
@@ -303,7 +332,7 @@ The advanced queries are organized into logical categories:
   - Show coupling metrics
   - Identify circular dependencies
 
-#### 3.12 Search & Filter Queries
+#### 4.12 Search & Filter Queries
 - **`search-by-signature <pattern>`**
   - Search function signatures using regex
   - Find functions with specific parameter/return patterns
@@ -319,7 +348,7 @@ The advanced queries are organized into logical categories:
   - Example: `filter-functions "module=core AND type=INTEGER AND params>2"`
   - Powerful query composition
 
-#### 3.13 Comparison & Diff Queries
+#### 4.13 Comparison & Diff Queries
 - **`compare-modules <module1> <module2>`**
   - Compare two modules' structure and functions
   - Show differences in dependencies
@@ -335,7 +364,13 @@ The advanced queries are organized into logical categories:
   - Identify code duplication
   - Suggest consolidation candidates
 
-## 4. Implementation Priority
+## 5. Implementation Priority
+
+### Phase 0 (Foundation - Critical)
+- [ ] Function body parsing to extract function calls
+- [ ] Build call graph database (calls table)
+- [ ] Enable dependency queries (find-function-dependencies, find-function-dependents)
+- [ ] Store call metadata (line numbers, context)
 
 ### Phase 1 (High Priority)
 - [ ] Enhanced type parser for LIKE types
@@ -348,7 +383,6 @@ The advanced queries are organized into logical categories:
 ### Phase 2 (Medium Priority)
 - [ ] Database schema file parsing
 - [ ] Type validation engine
-- [ ] `find-function-dependencies` query
 - [ ] `find-functions-with-type` query
 - [ ] Module analysis query
 - [ ] `find-complex-functions` query
@@ -366,7 +400,14 @@ The advanced queries are organized into logical categories:
 - [ ] `find-duplicate-functions` query
 - [ ] `generate-dependency-matrix` query
 
-## 5. Technical Considerations
+## 6. Technical Considerations
+
+### Function Body Parser Enhancement
+- Extend AWK parser to capture function body lines between FUNCTION and END FUNCTION
+- Use regex patterns to identify function calls (e.g., `function_name(`, `CALL function_name`)
+- Handle edge cases: comments, string literals, nested parentheses
+- Store call information in new `calls` table with caller_id, callee_name, line_number
+- Performance: Consider line-by-line streaming for large functions
 
 ### Type Parser Enhancement
 - Use recursive descent parser for complex types
@@ -392,7 +433,7 @@ The advanced queries are organized into logical categories:
 - Version query API
 - Provide migration guide
 
-## 6. Testing Strategy
+## 7. Testing Strategy
 
 ### Unit Tests
 - Type parser tests with various type combinations
@@ -412,7 +453,7 @@ The advanced queries are organized into logical categories:
 - Create test databases
 - Generate performance test data
 
-## 7. Documentation Updates
+## 8. Documentation Updates
 
 ### New Documentation Files
 - `TYPE_PARSER.md` - Type parsing documentation
@@ -425,7 +466,7 @@ The advanced queries are organized into logical categories:
 - `ARCHITECTURE.md` - Update with new components
 - `QUERYING.md` - Add new query examples
 
-## 8. Related Issues & Considerations
+## 9. Related Issues & Considerations
 
 ### Database Support
 - Which databases to support initially?
@@ -442,7 +483,7 @@ The advanced queries are organized into logical categories:
 - Integration with IDEs?
 - Export formats for reports?
 
-## 9. Success Criteria
+## 10. Success Criteria
 
 - [ ] Type parser handles 95%+ of Genero types
 - [ ] Schema integration works with major databases
