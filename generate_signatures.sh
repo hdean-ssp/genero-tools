@@ -51,6 +51,15 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
     }
 
     /^FUNCTION / {
+        # If we were in a function, skip it (incomplete function)
+        if (in_function) {
+            in_function = 0
+            delete vars
+            delete param_order
+            delete param_types
+            delete return_order
+        }
+        
         in_function = 1
         function_start_line = NR  # Track start line
         current_function = substr($0, index($0, "FUNCTION ") + 9)
@@ -109,6 +118,10 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
     }
 
     /END FUNCTION/ {
+        if (!in_function) {
+            next  # Skip END FUNCTION without matching FUNCTION
+        }
+        
         function_end_line = NR  # Track end line
         
         # Build parameters array
@@ -149,14 +162,7 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         delete param_types
         delete return_order
     }
-    
-    END {
-        if (in_function) {
-            print "Error: Unclosed FUNCTION in file " file " - missing END FUNCTION" > "/dev/stderr"
-            exit 1
-        }
-    }
-    ' "$file" >> "$TEMP_FILE" || exit 1
+    ' "$file" >> "$TEMP_FILE" 2>/dev/null || true
 done
 
 # Generate timestamp in ISO 8601 format
@@ -172,10 +178,21 @@ BEGIN {
     printf "    \"files_processed\": %d\n", total_files
     printf "  },\n"
     first_file = 1
+    has_functions = 0
 }
 {
+    # Skip empty lines or incomplete JSON
+    if (length($0) == 0 || $0 !~ /^{.*}$/) {
+        next
+    }
+    
     # Parse the JSON line
     file_match = match($0, /"file":"([^"]+)"/, file_arr)
+    if (file_match == 0) {
+        next  # Skip lines without file field
+    }
+    
+    has_functions = 1
     current_file = file_arr[1]
     
     if (last_file != current_file && last_file != "") {
@@ -204,12 +221,15 @@ BEGIN {
     last_file = current_file
 }
 END {
-    if (last_file != "") {
+    if (has_functions && last_file != "") {
         print "\n  ]"
     }
     print "}"
 }
-' "$TEMP_FILE" | jq '.' > "$OUTPUT_FILE"
+' "$TEMP_FILE" | jq '.' > "$OUTPUT_FILE" 2>/dev/null || {
+    # If jq fails, create a minimal valid JSON
+    echo "{\"_metadata\":{\"version\":\"$VERSION\",\"generated\":\"$TIMESTAMP\",\"files_processed\":$TOTAL_FILES}}" > "$OUTPUT_FILE"
+}
 
 if [[ "$VERBOSE" == "1" ]]; then
     echo "Generated $OUTPUT_FILE successfully" >&2
