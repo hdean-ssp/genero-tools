@@ -1,7 +1,7 @@
 {
   "_metadata": {
     "version": "1.0.0",
-    "generated": "2026-03-12T20:40:15Z",
+    "generated": "2026-03-12T20:50:05Z",
     "files_processed": 7
   },
   "./tests/sample_codebase/no_returns.4gl": [
@@ -501,6 +501,50 @@
         },
         {
           "name": "result2",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "control_flow_calls",
+      "line": {
+        "start": 59,
+        "end": 89
+      },
+      "signature": "59-89: control_flow_calls(value INTEGER):status INTEGER",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "status",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "nested_function_calls",
+      "line": {
+        "start": 91,
+        "end": 105
+      },
+      "signature": "91-105: nested_function_calls(param1 STRING, param2 INTEGER):result STRING",
+      "parameters": [
+        {
+          "name": "param1",
+          "type": "STRING"
+        },
+        {
+          "name": "param2",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "result",
           "type": "STRING"
         }
       ]

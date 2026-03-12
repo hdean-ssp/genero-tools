@@ -139,6 +139,210 @@ The implementation should handle:
    CALL myFunction(param)
    ```
 
+5. **Calls within IF statements:**
+   ```
+   IF condition THEN
+       CALL function_name(param)
+   END IF
+   
+   IF function_name(param) THEN
+       ...
+   END IF
+   ```
+
+6. **Calls within CASE statements:**
+   ```
+   CASE variable
+       WHEN value1
+           CALL function_name(param)
+       WHEN value2
+           LET result = function_name(param)
+   END CASE
+   ```
+
+7. **Calls within WHILE/FOR loops:**
+   ```
+   WHILE condition
+       CALL function_name(param)
+   END WHILE
+   
+   FOR i = 1 TO 10
+       CALL function_name(i)
+   END FOR
+   ```
+
+8. **Calls within TRY/CATCH blocks:**
+   ```
+   TRY
+       CALL function_name(param)
+   CATCH
+       CALL error_handler()
+   END TRY
+   ```
+
+9. **Calls in conditional expressions:**
+   ```
+   IF function_name(param) = value THEN
+       ...
+   END IF
+   ```
+
+10. **Calls as function parameters (nested):**
+    ```
+    CALL outer_function(inner_function(param))
+    LET result = outer_function(inner_function(param1), param2)
+    ```
+
+### Control Flow Handling Strategy
+
+Since the AWK parser already tracks `in_function` state, we can extend this approach:
+
+**Key Insight:** The AWK parser processes line-by-line within a function body. Control flow structures (IF, CASE, WHILE, FOR, TRY) don't change the fundamental line-by-line processing - they're just context.
+
+**Implementation Approach:**
+
+1. **No special state tracking needed** for control flow structures
+   - The parser already processes every line within a function
+   - Control flow keywords (IF, CASE, WHILE, etc.) don't affect call detection
+   - Calls are detected regardless of nesting level
+
+2. **Pattern matching works across all contexts:**
+   ```awk
+   in_function && /^[ \t]*CALL[ \t]+[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/ {
+       # This pattern matches CALL statements at ANY indentation level
+       # Works inside IF, CASE, WHILE, FOR, TRY blocks
+   }
+   ```
+
+3. **Indentation is handled by regex:**
+   - `^[ \t]*` matches any leading whitespace
+   - Works for nested structures with multiple indentation levels
+
+4. **Conditional expressions are handled by broader patterns:**
+   ```awk
+   # Detect function calls in conditions
+   in_function && /[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/ {
+       # More permissive pattern for calls in expressions
+       # Matches: IF func(x) THEN, WHILE func(x), etc.
+   }
+   ```
+
+### Recommended Pattern Enhancements
+
+**Pattern 1: Direct CALL (unchanged)**
+```awk
+in_function && /^[ \t]*CALL[ \t]+[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/ {
+    # Matches: CALL function_name(
+    # Works at any indentation level
+}
+```
+
+**Pattern 2: LET assignment (unchanged)**
+```awk
+in_function && /^[ \t]*LET[ \t]+[a-zA-Z_][a-zA-Z0-9_]*[ \t]*=[ \t]*[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/ {
+    # Matches: LET var = function_name(
+    # Works at any indentation level
+}
+```
+
+**Pattern 3: Function calls in expressions (NEW)**
+```awk
+in_function && /^[ \t]*(IF|WHILE|CASE|WHEN|ELSEIF).*[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/ {
+    # Matches function calls in control flow conditions
+    # Examples:
+    #   IF function_name(param) THEN
+    #   WHILE function_name(param) > 0
+    #   CASE function_name(param)
+    #   WHEN function_name(param)
+}
+```
+
+**Pattern 4: Nested function calls (NEW)**
+```awk
+in_function && /[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(.*[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/ {
+    # Matches nested function calls
+    # Examples:
+    #   CALL outer(inner(param))
+    #   LET x = outer(inner(param1), param2)
+    # Note: This is more complex and may require recursive parsing
+}
+```
+
+### Processing Strategy for Control Flow
+
+The key advantage of line-by-line processing is that **control flow structures are transparent**:
+
+```
+Function Body Processing:
+├─ Line 1: FUNCTION declaration
+├─ Line 2: DEFINE variable
+├─ Line 3: IF condition
+├─ Line 4:     CALL function_name(param)  ◄─ Detected (indented)
+├─ Line 5: END IF
+├─ Line 6: CASE variable
+├─ Line 7:     WHEN value
+├─ Line 8:         CALL another_func(param)  ◄─ Detected (double indented)
+├─ Line 9: END CASE
+├─ Line 10: WHILE condition
+├─ Line 11:     CALL loop_func(param)  ◄─ Detected (indented)
+├─ Line 12: END WHILE
+└─ Line 13: END FUNCTION
+```
+
+All calls are detected regardless of control flow nesting because:
+1. Each line is processed independently
+2. Indentation is handled by regex `^[ \t]*`
+3. Control flow keywords don't interfere with pattern matching
+
+### Handling Conditional Expressions
+
+For calls within conditions (e.g., `IF function_name(param) THEN`), we need a more permissive pattern:
+
+```awk
+in_function && /^[ \t]*(IF|ELSEIF|WHILE|CASE|WHEN).*[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/ {
+    # Extract function name from condition
+    line_content = $0
+    # Remove control flow keyword
+    sub(/^[ \t]*(IF|ELSEIF|WHILE|CASE|WHEN)[ \t]+/, "", line_content)
+    # Find first function call pattern
+    if (match(line_content, /[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/)) {
+        called_func = substr(line_content, RSTART, RLENGTH)
+        sub(/[ \t]*\(.*/, "", called_func)
+        
+        call_count++
+        function_calls[call_count] = called_func "|" NR
+    }
+}
+```
+
+### Nested Function Calls
+
+For nested calls like `CALL outer(inner(param))`, we need to extract ALL function names:
+
+```awk
+in_function && /[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/ {
+    # More general pattern to catch all function calls
+    line_content = $0
+    
+    # Extract all function names followed by (
+    while (match(line_content, /[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/)) {
+        called_func = substr(line_content, RSTART, RLENGTH)
+        sub(/[ \t]*\(.*/, "", called_func)
+        
+        # Avoid duplicates and false positives
+        if (called_func != current_function) {
+            call_count++
+            function_calls[call_count] = called_func "|" NR
+        }
+        
+        # Continue searching for more calls on this line
+        line_content = substr(line_content, RSTART + RLENGTH)
+    }
+}
+```
+
+## Implementation Details
+
 ### Edge Cases to Handle
 
 1. **Comments:** Strip comments before pattern matching
@@ -157,6 +361,41 @@ The implementation should handle:
    ```
 
 4. **Multi-line statements:** Currently handled by sed cleanup
+
+5. **Control flow structures:** Handle calls within IF/CASE/WHILE/FOR/TRY blocks
+   ```
+   IF condition THEN
+       CALL function_name(param)
+   END IF
+   ```
+
+6. **Conditional expressions:** Detect calls in IF conditions
+   ```
+   IF function_name(param) = value THEN
+   ```
+
+7. **Nested function calls:** Extract all function calls, including nested ones
+   ```
+   CALL outer(inner(param))
+   ```
+
+8. **Multiple calls on same line:** Handle multiple function calls
+   ```
+   CALL func1(param); CALL func2(param)
+   ```
+
+9. **Indentation variations:** Handle various indentation levels
+   ```
+   CALL function_name(param)
+       CALL nested_function(param)
+           CALL deeply_nested(param)
+   ```
+
+10. **Case sensitivity:** Preserve function name case as written
+    ```
+    CALL MyFunction(param)  # Store as "MyFunction"
+    CALL myfunction(param)  # Store as "myfunction"
+    ```
 
 ## Data Flow
 
