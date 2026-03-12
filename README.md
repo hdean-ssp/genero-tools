@@ -1,6 +1,16 @@
 # genero-func-sigs
 shell script(s) to generate and index function signatures when run in a Genero codebase
 
+## Features
+
+- Extracts function signatures from Genero/4GL files
+- Generates structured JSON output with metadata
+- Supports all Genero data types (basic, complex, and special types)
+- Handles multiple return values
+- Tracks line numbers for each function
+- Configurable output file and verbose mode
+- Robust error handling with automatic cleanup
+
 ## Usage
 
 ### Generate Signatures
@@ -16,9 +26,15 @@ bash generate_signatures.sh /path/to/genero/code
 
 # Run against a single file
 bash generate_signatures.sh path/to/file.4gl
+
+# Enable verbose output
+VERBOSE=1 bash generate_signatures.sh /path/to/code
+
+# Specify custom output file
+OUTPUT_FILE=my_signatures.json bash generate_signatures.sh /path/to/code
 ```
 
-The script will generate a `workspace.json` file containing function signatures for all `.4gl` files found.
+The script will generate a `workspace.json` file (or custom filename) containing function signatures for all `.4gl` files found.
 
 ### Output Format
 
@@ -27,6 +43,11 @@ The script generates a `workspace.json` file with structured function data group
 Example:
 ```json
 {
+  "_metadata": {
+    "version": "1.0.0",
+    "generated": "2026-03-11T23:51:33Z",
+    "files_processed": 3
+  },
   "./src/utils.4gl": [
     {
       "name": "calculate",
@@ -45,12 +66,14 @@ Example:
 }
 ```
 
-Each function entry includes:
-- `name`: Function name for direct lookup
-- `line`: Start and end line numbers
-- `signature`: Human-readable signature string with line numbers
-- `parameters`: Array of parameter objects with name and type
-- `returns`: Array of return value objects with name and type
+The output includes:
+- `_metadata`: Generation information (version, timestamp, file count)
+- Each function entry includes:
+  - `name`: Function name for direct lookup
+  - `line`: Start and end line numbers
+  - `signature`: Human-readable signature string with line numbers
+  - `parameters`: Array of parameter objects with name and type
+  - `returns`: Array of return value objects with name and type
 
 ## Testing
 
@@ -60,12 +83,32 @@ Run the test suite to verify the script works correctly:
 bash run_tests.sh
 ```
 
-The test suite includes:
+The test suite includes 5 comprehensive tests:
 - Test 1: Validates output against expected results from test files
 - Test 2: Verifies single file processing
 - Test 3: Checks signature format validity
+- Test 4: Verifies function count accuracy
+- Test 5: Validates metadata structure
 
-Test files are located in the `tests/` directory and include various function patterns:
-- Simple functions with basic types
-- Functions with multiple return values
-- Functions with complex types (RECORD, DATE, ARRAY, etc.)
+### Test Coverage
+
+The test suite includes 7 test files with 23 functions covering:
+- `simple_functions.4gl` (3 functions) - Basic parameter and return types
+- `complex_types.4gl` (2 functions) - RECORD, DATE, ARRAY types
+- `multiple_returns.4gl` (2 functions) - Functions returning multiple values
+- `edge_cases.4gl` (4 functions) - Long parameters, inline returns, mixed case
+- `whitespace_variations.4gl` (3 functions) - Various spacing patterns
+- `special_types.4gl` (5 functions) - INTERVAL, TEXT, MONEY, SERIAL, BOOLEAN, DYNAMIC ARRAY
+- `no_returns.4gl` (4 functions) - Procedure-style functions without returns
+
+## Configuration
+
+The script supports environment variables for customization:
+
+- `VERBOSE`: Set to `1` to enable progress output (default: `0`)
+- `OUTPUT_FILE`: Specify output filename (default: `workspace.json`)
+
+Example:
+```bash
+VERBOSE=1 OUTPUT_FILE=signatures.json bash generate_signatures.sh ./src
+```

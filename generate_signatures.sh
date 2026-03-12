@@ -7,15 +7,38 @@
 #       11/03/2026              hdean           Initial
 #       -       -       -       -       -       -       -       -       -       -       -       -       -       -       -
 
-TEMP_FILE=$(mktemp)
+set -euo pipefail
+
+# Configuration
+VERSION="1.0.0"
+VERBOSE="${VERBOSE:-0}"
+OUTPUT_FILE="${OUTPUT_FILE:-workspace.json}"
 
 # Accept directory/file as parameter, default to current directory
 TARGET="${1:-.}"
 
-# process all .4gl files in the target
-find "$TARGET" -name "*.4gl" -print0 | while IFS= read -r -d $'\0' file; do
-    # tr -d '\r' < "$file" | awk -v file="$file" '
-        sed 's/[^[:print:]\t]//g' "$file" | awk -v file="$file" '
+# Validate target exists
+if [[ ! -e "$TARGET" ]]; then
+    echo "Error: Target '$TARGET' does not exist" >&2
+    exit 1
+fi
+
+# Create temp file and ensure cleanup
+TEMP_FILE=$(mktemp)
+trap 'rm -f "$TEMP_FILE"' EXIT
+
+# Count total files for metadata
+TOTAL_FILES=$(find "$TARGET" -name "*.4gl" -type f | wc -l)
+if [[ "$VERBOSE" == "1" ]]; then
+    echo "Found $TOTAL_FILES .4gl files to process" >&2
+fi
+
+# Process all .4gl files in the target
+find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
+    if [[ "$VERBOSE" == "1" ]]; then
+        echo "Processing: $file" >&2
+    fi
+    sed 's/[^[:print:]\t]//g' "$file" | awk -v file="$file" '
 
 
     BEGIN {
@@ -128,10 +151,18 @@ find "$TARGET" -name "*.4gl" -print0 | while IFS= read -r -d $'\0' file; do
     ' "$file" >> "$TEMP_FILE"
 done
 
-# Group by file and create structured JSON
-awk '
+# Generate timestamp in ISO 8601 format
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Group by file and create structured JSON with metadata
+awk -v version="$VERSION" -v timestamp="$TIMESTAMP" -v total_files="$TOTAL_FILES" '
 BEGIN {
     print "{"
+    printf "  \"_metadata\": {\n"
+    printf "    \"version\": \"%s\",\n", version
+    printf "    \"generated\": \"%s\",\n", timestamp
+    printf "    \"files_processed\": %d\n", total_files
+    printf "  },\n"
     first_file = 1
 }
 {
@@ -170,6 +201,8 @@ END {
     }
     print "}"
 }
-' "$TEMP_FILE" > workspace.json
+' "$TEMP_FILE" > "$OUTPUT_FILE"
 
-rm "$TEMP_FILE"
+if [[ "$VERBOSE" == "1" ]]; then
+    echo "Generated $OUTPUT_FILE successfully" >&2
+fi
