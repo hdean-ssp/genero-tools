@@ -1,16 +1,16 @@
 {
   "_metadata": {
     "version": "1.0.0",
-    "generated": "2026-03-12T10:40:56Z",
+    "generated": "2026-03-12T11:01:51Z",
     "source_files": {
       "workspace": {
         "version": "1.0.0",
-        "generated": "2026-03-12T10:40:37Z",
+        "generated": "2026-03-12T11:01:32Z",
         "files_processed": 7
       },
       "modules": {
         "version": "1.0.0",
-        "generated": "2026-03-12T10:40:50Z",
+        "generated": "2026-03-12T11:01:43Z",
         "files_processed": 9
       }
     }
@@ -556,21 +556,21 @@
   "modules": [
     {
       "module": "minimal",
-      "file": "./tests/sample_codebase/modules/minimal.m3",
+      "file": "./tests/sample_codebase/minimal.m3",
       "L4GLS": [],
       "U4GLS": [],
       "4GLS": []
     },
     {
       "module": "mixed_files",
-      "file": "./tests/sample_codebase/modules/mixed_files.m3",
+      "file": "./tests/sample_codebase/mixed_files.m3",
       "L4GLS": [],
       "U4GLS": [],
       "4GLS": []
     },
     {
       "module": "test_mapping",
-      "file": "./tests/sample_codebase/modules/test_mapping.m3",
+      "file": "./tests/sample_codebase/test_mapping.m3",
       "L4GLS": [
         "file_complex_types",
         "file_edge_cases"
@@ -585,21 +585,7 @@
     },
     {
       "module": "whitespace",
-      "file": "./tests/sample_codebase/modules/whitespace.m3",
-      "L4GLS": [],
-      "U4GLS": [],
-      "4GLS": []
-    },
-    {
-      "module": "comments",
-      "file": "./tests/sample_codebase/modules/comments.m3",
-      "L4GLS": [],
-      "U4GLS": [],
-      "4GLS": []
-    },
-    {
-      "module": "empty",
-      "file": "./tests/sample_codebase/modules/empty.m3",
+      "file": "./tests/sample_codebase/whitespace.m3",
       "L4GLS": [],
       "U4GLS": [],
       "4GLS": []
@@ -619,8 +605,22 @@
       "4GLS": []
     },
     {
+      "module": "comments",
+      "file": "./tests/sample_codebase/comments.m3",
+      "L4GLS": [],
+      "U4GLS": [],
+      "4GLS": []
+    },
+    {
+      "module": "empty",
+      "file": "./tests/sample_codebase/empty.m3",
+      "L4GLS": [],
+      "U4GLS": [],
+      "4GLS": []
+    },
+    {
       "module": "single_line",
-      "file": "./tests/sample_codebase/modules/single_line.m3",
+      "file": "./tests/sample_codebase/single_line.m3",
       "L4GLS": [],
       "U4GLS": [],
       "4GLS": []

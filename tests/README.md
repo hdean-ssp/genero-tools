@@ -6,12 +6,13 @@ This directory contains test codebases for validating the Genero function signat
 
 ```
 tests/
-├── sample_codebase/              # Sample Genero codebase with nested structure
+├── sample_codebase/              # Sample Genero codebase with mixed structure
 │   ├── *.4gl                     # Main 4GL source files (6 files)
+│   ├── *.m3                      # Main module makefiles (7 files)
 │   ├── lib/                      # Library subdirectory
 │   │   └── complex_types.4gl     # Library file
-│   ├── modules/                  # Module makefiles directory
-│   │   └── *.m3                  # Module definition files (9 files)
+│   ├── modules/                  # Modules subdirectory
+│   │   └── *.m3                  # Some module files (2 files)
 │   ├── expected_output.json      # Expected output for generate_signatures.sh
 │   ├── expected_modules.json     # Expected output for generate_modules.sh
 │   └── expected_index.json       # Expected output for generate_codebase_index.sh
@@ -32,19 +33,18 @@ A comprehensive test codebase with realistic directory structure:
 - `edge_cases.4gl` - Long parameters, inline returns, mixed case
 - `special_types.4gl` - INTERVAL, TEXT, MONEY, SERIAL, BOOLEAN, DYNAMIC ARRAY
 
-**lib/ Subdirectory (1 .4gl file):**
-- `complex_types.4gl` - RECORD, DATE, ARRAY types
+**Main Directory (7 .m3 files):**
+- `comments.m3` - Inline comments (2, 1, 2)
+- `empty.m3` - Empty lists (0, 0, 0)
+- `minimal.m3` - Minimal module (0, 0, 2)
+- `mixed_files.m3` - Mixed file types (2, 1, 2)
+- `single_line.m3` - Single-line assignments (3, 1, 1)
+- `test_mapping.m3` - Tests file-to-module mapping (2, 1, 2)
+- `whitespace.m3` - Whitespace variations (4, 2, 2)
 
-**modules/ Subdirectory (9 .m3 files):**
+**modules/ Subdirectory (2 .m3 files):**
 - `test.m3` - Real-world example (85 L4GLS, 6 U4GLS, 2 4GLS)
 - `multiline.m3` - Multi-line continuations (8, 3, 3)
-- `single_line.m3` - Single-line assignments (3, 1, 1)
-- `whitespace.m3` - Whitespace variations (4, 2, 2)
-- `comments.m3` - Inline comments (2, 1, 2)
-- `mixed_files.m3` - Mixed file types (2, 1, 2)
-- `minimal.m3` - Minimal module (0, 0, 2)
-- `empty.m3` - Empty lists (0, 0, 0)
-- `test_mapping.m3` - Tests file-to-module mapping (2, 1, 2)
 
 ## Running Tests
 

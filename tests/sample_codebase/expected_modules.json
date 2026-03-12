@@ -1,7 +1,7 @@
 {
   "modules": [
     {
-      "file": "./tests/sample_codebase/modules/minimal.m3",
+      "file": "./tests/sample_codebase/minimal.m3",
       "module": "minimal",
       "L4GLS": [],
       "U4GLS": [],
@@ -11,7 +11,7 @@
       ]
     },
     {
-      "file": "./tests/sample_codebase/modules/mixed_files.m3",
+      "file": "./tests/sample_codebase/mixed_files.m3",
       "module": "mixed_files",
       "L4GLS": [
         "lib_core.4gl",
@@ -26,7 +26,7 @@
       ]
     },
     {
-      "file": "./tests/sample_codebase/modules/test_mapping.m3",
+      "file": "./tests/sample_codebase/test_mapping.m3",
       "module": "test_mapping",
       "L4GLS": [
         "complex_types.4gl",
@@ -41,7 +41,7 @@
       ]
     },
     {
-      "file": "./tests/sample_codebase/modules/whitespace.m3",
+      "file": "./tests/sample_codebase/whitespace.m3",
       "module": "whitespace",
       "L4GLS": [
         "lib_a.4gl",
@@ -57,28 +57,6 @@
         "whitespace.4gl",
         "helper.4gl"
       ]
-    },
-    {
-      "file": "./tests/sample_codebase/modules/comments.m3",
-      "module": "comments",
-      "L4GLS": [
-        "lib_report.4gl",
-        "lib_export.4gl"
-      ],
-      "U4GLS": [
-        "util_file.4gl"
-      ],
-      "4GLS": [
-        "comments.4gl",
-        "output.4gl"
-      ]
-    },
-    {
-      "file": "./tests/sample_codebase/modules/empty.m3",
-      "module": "empty",
-      "L4GLS": [],
-      "U4GLS": [],
-      "4GLS": []
     },
     {
       "file": "./tests/sample_codebase/modules/multiline.m3",
@@ -208,7 +186,29 @@
       ]
     },
     {
-      "file": "./tests/sample_codebase/modules/single_line.m3",
+      "file": "./tests/sample_codebase/comments.m3",
+      "module": "comments",
+      "L4GLS": [
+        "lib_report.4gl",
+        "lib_export.4gl"
+      ],
+      "U4GLS": [
+        "util_file.4gl"
+      ],
+      "4GLS": [
+        "comments.4gl",
+        "output.4gl"
+      ]
+    },
+    {
+      "file": "./tests/sample_codebase/empty.m3",
+      "module": "empty",
+      "L4GLS": [],
+      "U4GLS": [],
+      "4GLS": []
+    },
+    {
+      "file": "./tests/sample_codebase/single_line.m3",
       "module": "single_line",
       "L4GLS": [
         "lib_util.4gl",
