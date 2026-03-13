@@ -3,8 +3,6 @@
 # Integration test for header parsing and querying
 # Tests the full pipeline: parse headers -> merge -> database -> query
 
-set -e
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
@@ -39,19 +37,15 @@ echo ""
 
 # Test 1: Parse headers from sample file
 echo "Test 1: Parse headers from sample file"
-HEADERS=$(python3 "$PROJECT_ROOT/scripts/parse_headers.py" "$PROJECT_ROOT/tests/sample_codebase/simple_functions.4gl")
-REF_COUNT=$(echo "$HEADERS" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data.get('file_references', [])))")
+HEADERS=$(python3 "$PROJECT_ROOT/scripts/parse_headers.py" "$PROJECT_ROOT/tests/sample_codebase/simple_functions.4gl" 2>/dev/null || echo "{}")
+REF_COUNT=$(echo "$HEADERS" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data.get('file_references', [])))" 2>/dev/null || echo "0")
 assert_equals "Extract 10 references" "10" "$REF_COUNT"
 
-# Test 2: Merge headers into workspace
-echo ""
-echo "Test 2: Merge headers into workspace.json"
-# Create a minimal workspace.json for testing
+# Setup test files
 TEST_WORKSPACE=$(mktemp)
 TEST_HEADERS=$(mktemp)
 TEST_OUTPUT=$(mktemp)
-
-trap "rm -f $TEST_WORKSPACE $TEST_HEADERS $TEST_OUTPUT" EXIT
+TEST_DB=$(mktemp --suffix=.db)
 
 # Create test workspace
 cat > "$TEST_WORKSPACE" << 'EOF'
@@ -64,53 +58,76 @@ cat > "$TEST_WORKSPACE" << 'EOF'
 EOF
 
 # Create test headers
-python3 "$PROJECT_ROOT/scripts/parse_headers.py" "$PROJECT_ROOT/tests/sample_codebase/simple_functions.4gl" > "$TEST_HEADERS"
+python3 "$PROJECT_ROOT/scripts/parse_headers.py" "$PROJECT_ROOT/tests/sample_codebase/simple_functions.4gl" > "$TEST_HEADERS" 2>/dev/null || true
 
-# Merge
-python3 "$PROJECT_ROOT/scripts/merge_headers.py" "$TEST_WORKSPACE" "$TEST_HEADERS" "$TEST_OUTPUT"
+# Test 2: Merge headers into workspace
+echo ""
+echo "Test 2: Merge headers into workspace.json"
+MERGE_RESULT=$(python3 "$PROJECT_ROOT/scripts/merge_headers.py" "$TEST_WORKSPACE" "$TEST_HEADERS" "$TEST_OUTPUT" 2>&1)
+MERGE_EXIT=$?
 
-# Check that headers were merged
-MERGED=$(cat "$TEST_OUTPUT")
-HAS_REFS=$(echo "$MERGED" | python3 -c "import sys, json; data=json.load(sys.stdin); funcs=list(data.values())[1:]; print('true' if funcs and 'file_references' in funcs[0][0] else 'false')" 2>/dev/null || echo "false")
-assert_equals "Headers merged into workspace" "true" "$HAS_REFS"
+if [ $MERGE_EXIT -eq 0 ]; then
+    # Check that headers were merged
+    MERGED=$(cat "$TEST_OUTPUT" 2>/dev/null || echo "{}")
+    HAS_REFS=$(echo "$MERGED" | python3 -c "import sys, json; data=json.load(sys.stdin); funcs=list(data.values())[1:]; print('true' if funcs and 'file_references' in funcs[0][0] else 'false')" 2>/dev/null || echo "false")
+    assert_equals "Headers merged into workspace" "true" "$HAS_REFS"
+else
+    echo -e "${RED}✗${NC} Headers merge failed: $MERGE_RESULT"
+    ((TESTS_FAILED++))
+fi
 
 # Test 3: Create database with headers
 echo ""
 echo "Test 3: Create database with header tables"
-TEST_DB=$(mktemp --suffix=.db)
-trap "rm -f $TEST_DB" EXIT
 
 # First create signatures database
-python3 "$PROJECT_ROOT/scripts/json_to_sqlite.py" signatures "$TEST_OUTPUT" "$TEST_DB"
+DB_RESULT=$(python3 "$PROJECT_ROOT/scripts/json_to_sqlite.py" signatures "$TEST_OUTPUT" "$TEST_DB" 2>&1)
+DB_EXIT=$?
 
-# Then add header tables
-python3 "$PROJECT_ROOT/scripts/json_to_sqlite_headers.py" "$TEST_HEADERS" "$TEST_DB"
-
-# Check that tables exist
-TABLES=$(sqlite3 "$TEST_DB" ".tables")
-assert_equals "file_references table exists" "true" "$(echo "$TABLES" | grep -q 'file_references' && echo 'true' || echo 'false')"
-assert_equals "file_authors table exists" "true" "$(echo "$TABLES" | grep -q 'file_authors' && echo 'true' || echo 'false')"
+if [ $DB_EXIT -eq 0 ]; then
+    # Then add header tables
+    HEADER_RESULT=$(python3 "$PROJECT_ROOT/scripts/json_to_sqlite_headers.py" "$TEST_HEADERS" "$TEST_DB" 2>&1)
+    HEADER_EXIT=$?
+    
+    if [ $HEADER_EXIT -eq 0 ]; then
+        # Check that tables exist using Python
+        TABLES=$(python3 -c "import sqlite3; conn = sqlite3.connect('$TEST_DB'); c = conn.cursor(); c.execute(\"SELECT name FROM sqlite_master WHERE type='table';\"); tables = [t[0] for t in c.fetchall()]; conn.close(); print(','.join(tables))" 2>/dev/null || echo "")
+        HAS_REFS=$(echo "$TABLES" | grep -q 'file_references' && echo 'true' || echo 'false')
+        HAS_AUTHORS=$(echo "$TABLES" | grep -q 'file_authors' && echo 'true' || echo 'false')
+        assert_equals "file_references table exists" "true" "$HAS_REFS"
+        assert_equals "file_authors table exists" "true" "$HAS_AUTHORS"
+    else
+        echo -e "${RED}✗${NC} Failed to add header tables to database: $HEADER_RESULT"
+        ((TESTS_FAILED++))
+    fi
+else
+    echo -e "${RED}✗${NC} Failed to create signatures database: $DB_RESULT"
+    ((TESTS_FAILED++))
+fi
 
 # Test 4: Query references from database
 echo ""
 echo "Test 4: Query references from database"
 QUERY_RESULT=$(python3 "$PROJECT_ROOT/scripts/query_headers.py" search-references "$TEST_DB" "PRB-%" 2>/dev/null || echo "[]")
-REF_COUNT=$(echo "$QUERY_RESULT" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))")
+REF_COUNT=$(echo "$QUERY_RESULT" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))" 2>/dev/null || echo "0")
 assert_equals "Find PRB references" "2" "$REF_COUNT"
 
 # Test 5: Query authors from database
 echo ""
 echo "Test 5: Query authors from database"
 QUERY_RESULT=$(python3 "$PROJECT_ROOT/scripts/query_headers.py" find-author "$TEST_DB" "Rich" 2>/dev/null || echo "[]")
-AUTHOR_COUNT=$(echo "$QUERY_RESULT" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))")
+AUTHOR_COUNT=$(echo "$QUERY_RESULT" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))" 2>/dev/null || echo "0")
 assert_equals "Find Rich's changes" "2" "$AUTHOR_COUNT"
 
 # Test 6: Query author expertise
 echo ""
 echo "Test 6: Query author expertise"
 QUERY_RESULT=$(python3 "$PROJECT_ROOT/scripts/query_headers.py" author-expertise "$TEST_DB" "Chilly" 2>/dev/null || echo "[]")
-EXPERTISE_COUNT=$(echo "$QUERY_RESULT" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))")
+EXPERTISE_COUNT=$(echo "$QUERY_RESULT" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))" 2>/dev/null || echo "0")
 assert_equals "Chilly has expertise in 1 file" "1" "$EXPERTISE_COUNT"
+
+# Cleanup
+rm -f "$TEST_WORKSPACE" "$TEST_HEADERS" "$TEST_OUTPUT" "$TEST_DB"
 
 # Summary
 echo ""

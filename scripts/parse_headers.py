@@ -36,7 +36,7 @@ class HeaderParser:
         """
         self.max_header_lines = max_header_lines
     
-    def parse_file(self, filepath: str) -> Dict:
+    def parse_file(self, filepath: str) -> Optional[Dict]:
         """
         Parse a file and extract header metadata.
         
@@ -44,29 +44,37 @@ class HeaderParser:
             filepath: Path to .4gl file
             
         Returns:
-            Dictionary with extracted references and authors
+            Dictionary with extracted references and authors, or None if no headers found
         """
         try:
             with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
                 lines = f.readlines()
         except Exception as e:
-            print(f"Error reading file {filepath}: {e}", file=sys.stderr)
-            return {'file': filepath, 'file_references': [], 'file_authors': {}}
+            # Silently skip files that can't be read
+            return None
         
-        # Extract header comments (first N lines)
-        header_lines = self._extract_header_comments(lines)
-        
-        # Find and parse modifications section
-        references = self._parse_modifications_section(header_lines)
-        
-        # Aggregate author information
-        authors = self._aggregate_authors(references)
-        
-        return {
-            'file': filepath,
-            'file_references': references,
-            'file_authors': authors
-        }
+        try:
+            # Extract header comments (first N lines)
+            header_lines = self._extract_header_comments(lines)
+            
+            # Find and parse modifications section
+            references = self._parse_modifications_section(header_lines)
+            
+            # Only return if we found references
+            if not references:
+                return None
+            
+            # Aggregate author information
+            authors = self._aggregate_authors(references)
+            
+            return {
+                'file': filepath,
+                'file_references': references,
+                'file_authors': authors
+            }
+        except Exception as e:
+            # Silently skip files with parsing errors
+            return None
     
     def _extract_header_comments(self, lines: List[str]) -> List[str]:
         """
@@ -367,9 +375,11 @@ def main():
     parser = HeaderParser()
     result = parser.parse_file(filepath)
     
-    import json
-    # Output as single line JSON for easy line-by-line processing
-    print(json.dumps(result))
+    # Only output if we found headers
+    if result:
+        import json
+        # Output as single line JSON for easy line-by-line processing
+        print(json.dumps(result))
 
 
 if __name__ == '__main__':

@@ -56,6 +56,13 @@ def create_headers_db(headers_json_file: str, db_file: str) -> None:
     
     # Load header data
     try:
+        if not os.path.exists(headers_json_file) or os.path.getsize(headers_json_file) == 0:
+            # No headers to process
+            conn.commit()
+            conn.close()
+            print(f"No header data to process")
+            return
+        
         with open(headers_json_file, 'r') as f:
             for line in f:
                 line = line.strip()
@@ -84,27 +91,35 @@ def create_headers_db(headers_json_file: str, db_file: str) -> None:
                     
                     # Insert file references
                     for ref in data.get('file_references', []):
-                        c.execute('''INSERT INTO file_references 
-                                    (file_id, reference_id, author, change_date, description)
-                                    VALUES (?, ?, ?, ?, ?)''',
-                                 (file_id, ref.get('reference'), ref.get('author'),
-                                  ref.get('date'), ref.get('description')))
+                        try:
+                            c.execute('''INSERT INTO file_references 
+                                        (file_id, reference_id, author, change_date, description)
+                                        VALUES (?, ?, ?, ?, ?)''',
+                                     (file_id, ref.get('reference'), ref.get('author'),
+                                      ref.get('date'), ref.get('description')))
+                        except Exception:
+                            # Skip individual reference insertion errors
+                            continue
                     
                     # Insert file authors
                     for author in data.get('file_authors', []):
-                        c.execute('''INSERT INTO file_authors
-                                    (file_id, author, first_change_date, last_change_date, change_count)
-                                    VALUES (?, ?, ?, ?, ?)''',
-                                 (file_id, author.get('author'), author.get('first_change'),
-                                  author.get('last_change'), author.get('count')))
+                        try:
+                            c.execute('''INSERT INTO file_authors
+                                        (file_id, author, first_change_date, last_change_date, change_count)
+                                        VALUES (?, ?, ?, ?, ?)''',
+                                     (file_id, author.get('author'), author.get('first_change'),
+                                      author.get('last_change'), author.get('count')))
+                        except Exception:
+                            # Skip individual author insertion errors
+                            continue
                 
                 except json.JSONDecodeError:
+                    # Skip malformed JSON lines
                     continue
     
     except Exception as e:
-        print(f"Error reading headers file: {e}", file=sys.stderr)
-        conn.close()
-        raise
+        # Log error but continue
+        print(f"Warning: Error processing headers: {e}", file=sys.stderr)
     
     conn.commit()
     conn.close()

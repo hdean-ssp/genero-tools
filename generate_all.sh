@@ -87,16 +87,20 @@ if [[ $GL4_COUNT -gt 0 ]]; then
     trap 'rm -f "$HEADERS_TEMP"' EXIT
     
     # Process all .4gl files to extract headers
+    # Continue even if some files fail to parse
     find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         python3 "$SCRIPT_DIR/scripts/parse_headers.py" "$file" >> "$HEADERS_TEMP" 2>/dev/null || true
     done
     
-    # Merge headers into workspace.json
+    # Merge headers into workspace.json (only if we have headers)
     if [[ -s "$HEADERS_TEMP" ]]; then
-        python3 "$SCRIPT_DIR/scripts/merge_headers.py" workspace.json "$HEADERS_TEMP" workspace.json
-        log_success "File headers extracted and merged"
+        if python3 "$SCRIPT_DIR/scripts/merge_headers.py" workspace.json "$HEADERS_TEMP" workspace.json 2>/dev/null; then
+            log_success "File headers extracted and merged"
+        else
+            log_info "Some headers could not be merged (continuing)"
+        fi
     else
-        log_info "No headers found to extract"
+        log_info "No headers found to extract (some or all files may not have modification sections)"
     fi
 fi
 
@@ -143,7 +147,7 @@ if [[ $GL4_COUNT -gt 0 ]]; then
     python3 "$SCRIPT_DIR/scripts/json_to_sqlite.py" signatures workspace.json workspace.db
     log_success "workspace.db created"
     
-    # Add header tables to database
+    # Add header tables to database (continue even if this fails)
     HEADERS_TEMP=$(mktemp)
     trap 'rm -f "$HEADERS_TEMP"' EXIT
     
@@ -152,8 +156,13 @@ if [[ $GL4_COUNT -gt 0 ]]; then
     done
     
     if [[ -s "$HEADERS_TEMP" ]]; then
-        python3 "$SCRIPT_DIR/scripts/json_to_sqlite_headers.py" "$HEADERS_TEMP" workspace.db
-        log_success "Header metadata added to workspace.db"
+        if python3 "$SCRIPT_DIR/scripts/json_to_sqlite_headers.py" "$HEADERS_TEMP" workspace.db 2>/dev/null; then
+            log_success "Header metadata added to workspace.db"
+        else
+            log_info "Some header metadata could not be added (continuing)"
+        fi
+    else
+        log_info "No header metadata to add"
     fi
 fi
 

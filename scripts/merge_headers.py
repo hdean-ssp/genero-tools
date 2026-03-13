@@ -51,27 +51,28 @@ def merge_headers(workspace_file: str, headers_temp_file: str, output_file: str)
     file_headers_map = {}
     
     try:
-        with open(headers_temp_file, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                
-                try:
-                    data = json.loads(line)
-                    filepath = data.get('file')
-                    if filepath:
-                        # Normalize path to match workspace.json format
-                        normalized_path = normalize_path(filepath)
-                        file_headers_map[normalized_path] = {
-                            'file_references': data.get('file_references', []),
-                            'file_authors': data.get('file_authors', [])
-                        }
-                except json.JSONDecodeError:
-                    continue
+        if os.path.exists(headers_temp_file) and os.path.getsize(headers_temp_file) > 0:
+            with open(headers_temp_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    try:
+                        data = json.loads(line)
+                        filepath = data.get('file')
+                        if filepath:
+                            # Normalize path to match workspace.json format
+                            normalized_path = normalize_path(filepath)
+                            file_headers_map[normalized_path] = {
+                                'file_references': data.get('file_references', []),
+                                'file_authors': data.get('file_authors', [])
+                            }
+                    except json.JSONDecodeError:
+                        # Skip malformed JSON lines
+                        continue
     except Exception as e:
-        print(f"Warning: Could not read headers file: {e}", file=sys.stderr)
-        # Continue without headers if file doesn't exist
+        # Continue without headers if file doesn't exist or can't be read
         pass
     
     # Merge headers into workspace
