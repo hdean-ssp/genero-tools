@@ -52,13 +52,19 @@ From the repository root:
 
 ```bash
 # Test function signature generator
-bash run_tests.sh
+bash tests/run_tests.sh
 
 # Test module dependency generator
-bash run_module_tests.sh
+bash tests/run_module_tests.sh
 
 # Test call graph functionality
 bash tests/test_call_graph.sh
+
+# Test header parsing functionality
+bash tests/test_header_integration.sh
+
+# Run all tests
+bash tests/run_all_tests.sh
 ```
 
 ## Adding New Test Codebases
@@ -117,3 +123,13 @@ The current test suite validates:
 - ✓ find_function_dependencies query
 - ✓ find_function_dependents query
 - ✓ Query wrapper commands
+
+**Header Parsing:**
+- ✓ Parse headers from sample file (10 references extracted)
+- ✓ Merge headers into workspace.json
+- ✓ Create database with header tables
+- ✓ Query references from database
+- ✓ Query authors from database
+- ✓ Query author expertise
+- ✓ Flexible column detection
+- ✓ Graceful error handling for files without headers

@@ -5,6 +5,7 @@ shell script(s) to generate and index function signatures when run in a Genero c
 
 - Extracts function signatures from Genero/4GL files
 - **Extracts function calls and builds call graphs** (NEW)
+- **Parses file headers to extract code references and author information** (NEW)
 - Generates structured JSON output with metadata
 - Human-readable JSON formatting with proper indentation
 - Supports all Genero data types (basic, complex, and special types)
@@ -173,6 +174,38 @@ bash query.sh find-function-dependents log_message
 
 See [QUICK_START_CALL_GRAPH.md](docs/QUICK_START_CALL_GRAPH.md) and [CALL_GRAPH_QUERIES.md](docs/CALL_GRAPH_QUERIES.md) for complete documentation.
 
+## File Header Queries
+
+Extract code references and author information from file modification sections:
+
+```bash
+# Find files containing a code reference
+bash query.sh find-reference "PRB-299"
+
+# Find files modified by an author
+bash query.sh find-author "Rich"
+
+# Get all references for a file
+bash query.sh get-file-references "./src/utils.4gl"
+
+# Show author expertise areas
+bash query.sh author-expertise "Chilly"
+
+# Find recently modified files
+bash query.sh find-recent-changes
+
+# Search references by pattern
+bash query.sh search-references "EH100%"
+```
+
+**Use Cases:**
+- Track which code changes affect which files
+- Find author expertise areas
+- Impact analysis for code references
+- Audit trail of modifications
+
+See [QUICK_START_HEADERS.md](docs/QUICK_START_HEADERS.md) and [HEADER_PARSING_IMPLEMENTATION.md](docs/HEADER_PARSING_IMPLEMENTATION.md) for complete documentation.
+
 ## Completed Enhancements
 
 - ✅ **Function Call Graph** - Extract and query function calls and dependencies
@@ -180,6 +213,14 @@ See [QUICK_START_CALL_GRAPH.md](docs/QUICK_START_CALL_GRAPH.md) and [CALL_GRAPH_
   - Stores calls in JSON and SQLite database
   - Query functions: `find-function-dependencies`, `find-function-dependents`
   - See [CALL_GRAPH_QUERIES.md](docs/CALL_GRAPH_QUERIES.md) for details
+
+- ✅ **File Header Parsing** - Extract code references and author information
+  - Flexible column detection (no hard-coded patterns)
+  - Handles variable spacing and optional columns
+  - Supports any reference format (PRB-299, EH100512, SR-40356-3, etc.)
+  - Graceful error handling for files without headers
+  - Query functions: `find-reference`, `find-author`, `author-expertise`, etc.
+  - See [HEADER_PARSING_IMPLEMENTATION.md](docs/HEADER_PARSING_IMPLEMENTATION.md) for details
 
 ## Planned Enhancements
 
