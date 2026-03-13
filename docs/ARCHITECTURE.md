@@ -322,44 +322,89 @@ module_files (id, module_id, file_name, category)
 
 ## Integration Points
 
-### IDE Integration
+### IDE/Editor Integration
 
-- Line numbers enable editor navigation
-- Function signatures for code completion
-- Module context for scoped searches
+**Vim Plugin:**
+- Query API for function lookup and navigation
+- Metrics for complexity highlighting
+- Call graph for dependency visualization
+- Example: `:VimFunctionLookup my_function` shows full context
+
+**VS Code Extension:**
+- Code lens showing function complexity and call count
+- Hover information with full signature and dependencies
+- Quick navigation to function definitions
+- Autocompletion context with parameter types
+
+**Other Editors:**
+- Query the SQLite database directly
+- Use Python API for programmatic access
+- JSON output for easy integration
+
+### AI-Powered Code Review
+
+**New Function Review:**
+- Get full function context (signature, metrics, dependencies)
+- Find similar functions for pattern matching
+- Check for unresolved calls and type mismatches
+- Prioritize review based on complexity metrics
+
+**Impact Analysis:**
+- Understand what breaks when you modify a function
+- See all direct and transitive dependents
+- Identify affected modules
+- Track code ownership and expertise
+
+**Code Quality Checks:**
+- Detect dead code (unused functions)
+- Find unresolved calls (calls to non-existent functions)
+- Identify type mismatches
+- Flag overly complex functions
 
 ### Build Systems
 
 - Can be integrated into build pipelines
 - Generates artifacts for documentation
 - Enables dependency analysis
+- Fails build on critical issues (unresolved calls)
 
 ### Documentation Tools
 
 - Module-specific API docs
 - Dependency graphs
 - Call graphs
+- Architecture diagrams
 
 ### Analysis Tools
 
-- Impact analysis
-- Refactoring support
+- Impact analysis before refactoring
+- Dead code detection
 - Code quality metrics
+- Codebase understanding
 
 ## Future Enhancements
 
-1. **Call Resolution** - Map called function names to actual functions
-2. **Recursive Call Detection** - Identify and mark recursive calls
-3. **Enhanced Type Parser** - Support LIKE types and records
-4. **Database Schema Integration** - Parse and validate against schema
-5. **Advanced Queries** - Circular dependency detection, dead code analysis
-6. **IDE Plugins** - Direct integration with editors
-7. **Web Interface** - Browser-based code explorer
-8. **Performance Metrics** - Track function complexity
-9. **Change Tracking** - Version control integration
-10. **Advanced Queries** - Fuzzy matching, dependency analysis, etc.
+### Phase 1 (Next - Database Schema Parsing & Type Resolution)
+- Database schema file parsing - Parse SQL DDL and Genero .sch files
+- Enhanced type parser - Resolve LIKE references (e.g., `LIKE contract.*`)
+- Type validation engine - Detect type mismatches
+- Record type parsing - Decompose RECORD types
+- Type resolution queries - Query resolved types
 
-See [FUTURE_ENHANCEMENTS.md](FUTURE_ENHANCEMENTS.md) for detailed roadmap.
+### Phase 2 (Function Analysis & Metrics)
+- Type resolution for function calls
+- Function metrics - Extract complexity, parameters, returns, call depth
+- Dead code detection - Find functions never called
+- Unresolved call detection - Find calls to non-existent functions
+- Similar function detection - Find functions with similar signatures
+
+### Phase 3 (Advanced Analysis)
+- Circular dependency detection - Find problematic call cycles
+- Code duplication analysis - Identify similar/duplicate functions
+- Performance metrics - Track function complexity over time
+- Visualization exports - Generate architecture diagrams
+
+See [PROJECT_SPECIFICATION.md](.kiro/specs/PROJECT_SPECIFICATION.md) for the complete roadmap.
 
 ## Maintenance
 

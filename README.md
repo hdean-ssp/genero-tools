@@ -1,18 +1,16 @@
 # genero-func-sigs
-shell script(s) to generate and index function signatures when run in a Genero codebase
+Comprehensive codebase analysis tool that extracts and indexes rich metadata from Genero/4GL codebases to enable IDE/editor integration, AI-powered code review, and developer tooling.
 
 ## Features
 
-- Extracts function signatures from Genero/4GL files
-- **Extracts function calls and builds call graphs** (NEW)
-- **Parses file headers to extract code references and author information** (NEW)
-- Generates structured JSON output with metadata
-- Human-readable JSON formatting with proper indentation
-- Supports all Genero data types (basic, complex, and special types)
-- Handles multiple return values
-- Tracks line numbers for each function
-- Configurable output file and verbose mode
-- Robust error handling with automatic cleanup
+- **Extracts function signatures** - Names, parameters, return types, line numbers
+- **Builds call graphs** - Tracks which functions call which other functions
+- **Parses file headers** - Extracts code references and author information for impact analysis
+- **Generates structured metadata** - JSON and SQLite databases for fast querying
+- **Supports all Genero data types** - Basic, complex, and special types
+- **Handles multiple return values** - Full signature capture
+- **Tracks line numbers** - For IDE integration and navigation
+- **Configurable and robust** - Environment variables, error handling, automatic cleanup
 
 ## Requirements
 
@@ -222,16 +220,96 @@ See [QUICK_START_HEADERS.md](docs/QUICK_START_HEADERS.md) and [HEADER_PARSING_IM
   - Query functions: `find-reference`, `find-author`, `author-expertise`, etc.
   - See [HEADER_PARSING_IMPLEMENTATION.md](docs/HEADER_PARSING_IMPLEMENTATION.md) for details
 
+## Use Cases
+
+### IDE/Editor Integration
+This tool provides rich metadata for editor plugins and extensions:
+
+**Vim Plugin Example:**
+```bash
+# Get full function context for hover information
+bash query.sh get-function-full-context my_function
+# Returns: signature, file location, who calls it, what it calls, metrics
+```
+
+**VS Code Extension Example:**
+- Code lens showing function complexity and call count
+- Hover information with full signature and dependencies
+- Quick navigation to function definitions
+- Autocompletion context with parameter types
+
+**Any Editor:**
+- Query the SQLite database directly
+- Use Python API for programmatic access
+- JSON output for easy integration
+
+### AI-Powered Code Review
+Automated analysis agents can use this data to:
+
+**New Function Review:**
+```bash
+# Get everything needed to review a new function
+bash query.sh get-function-full-context new_function
+# Find similar functions for pattern matching
+bash query.sh find-similar-functions new_function
+# Check for unresolved calls
+bash query.sh find-unresolved-calls ./src/new_file.4gl
+```
+
+**Analysis Capabilities:**
+- Review new functions against codebase patterns
+- Detect type mismatches and unresolved calls
+- Identify similar functions for pattern matching
+- Prioritize review based on complexity metrics
+- Understand impact of changes
+
+### Developer Tooling
+Command-line tools for common development tasks:
+
+**Impact Analysis:**
+```bash
+# Understand what breaks when you modify a function
+bash query.sh get-impact-analysis function_name
+# Shows: direct dependents, transitive dependents, affected modules
+```
+
+**Dead Code Detection:**
+```bash
+# Find unused functions
+bash query.sh find-dead-code
+# Shows: function name, file, last modified, author
+```
+
+**Refactoring Support:**
+- Understand function dependencies before changes
+- See all callers and callees
+- Identify functions with similar signatures
+- Track code ownership and expertise
+
+See [INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) for implementation examples and [USE_CASES.md](docs/USE_CASES.md) for detailed scenarios.
+
 ## Planned Enhancements
 
-The project has an ambitious roadmap for future improvements:
+The project roadmap focuses on building a strong type system foundation:
 
-- **Call Resolution** - Map called function names to actual functions
-- **Recursive Call Detection** - Identify and mark recursive calls
-- **Enhanced Type Parser** - Support database LIKE types and RECORD types
-- **Database Schema Integration** - Parse schema files and validate types
-- **Advanced Queries** - Circular dependency detection, unused code analysis
-- **IDE Integration** - Plugins for popular editors
-- **Web Interface** - Browser-based code explorer
+**Phase 1 (Next - Database Schema Parsing & Type Resolution):**
+- Database schema file parsing (SQL DDL, Genero .sch files)
+- Enhanced type parser for LIKE references (e.g., `LIKE contract.*`)
+- Type validation engine
+- Record type parsing
+- Type resolution queries
 
-See [FUTURE_ENHANCEMENTS.md](FUTURE_ENHANCEMENTS.md) for the complete roadmap.
+**Phase 2 (Function Analysis & Metrics):**
+- Type resolution for function calls
+- Function metrics (complexity, parameters, returns, call depth)
+- Dead code detection
+- Unresolved call detection
+- Similar function detection
+
+**Phase 3 (Advanced Analysis):**
+- Circular dependency detection
+- Code duplication analysis
+- Performance metrics
+- Visualization exports
+
+See [PROJECT_SPECIFICATION.md](.kiro/specs/PROJECT_SPECIFICATION.md) for the complete roadmap and [FUTURE_ENHANCEMENTS.md](docs/FUTURE_ENHANCEMENTS.md) for detailed technical plans.

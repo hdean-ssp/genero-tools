@@ -255,6 +255,15 @@ if [[ "${CREATE_DB:-0}" == "1" ]]; then
     fi
 fi
 
+# Optional: Resolve LIKE types (only if RESOLVE_TYPES is set and workspace.db exists)
+if [[ "${RESOLVE_TYPES:-0}" == "1" ]] && [[ -f "workspace.db" ]]; then
+    RESOLVED_OUTPUT="${OUTPUT_FILE%.json}_resolved.json"
+    python3 "$PROJECT_ROOT/scripts/resolve_types.py" workspace.db "$OUTPUT_FILE" "$RESOLVED_OUTPUT"
+    if [[ "$VERBOSE" == "1" ]]; then
+        echo "Generated $RESOLVED_OUTPUT with type resolution" >&2
+    fi
+fi
+
 if [[ "$VERBOSE" == "1" ]]; then
     echo "Generated $OUTPUT_FILE successfully" >&2
 fi

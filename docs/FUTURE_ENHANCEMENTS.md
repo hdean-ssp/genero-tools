@@ -534,41 +534,129 @@ The advanced queries are organized into logical categories:
 - ✅ Build call graph database (calls table)
 - ✅ Enable dependency queries (find-function-dependencies, find-function-dependents)
 - ✅ Store call metadata (line numbers, context)
+- ✅ File header comment parsing for metadata extraction
+- ✅ Code references and author tracking from file headers
+- ✅ File metadata database schema and queries
 
-### Phase 1 (High Priority)
-- [ ] File header comment parsing for metadata extraction
-- [ ] Code tags and categorization from headers
-- [ ] Author and change tracking from file headers
-- [ ] File metadata database schema and queries
-- [ ] `find-files-by-tag`, `find-files-by-author`, `find-files-by-category` queries
-- [ ] Call resolution - Map called function names to actual functions
-- [ ] Recursive call detection - Identify and mark recursive calls
-- [ ] Enhanced type parser for LIKE types
-- [ ] Record type parsing
-- [ ] `find-modules-with-file` query
-- [ ] `find-closest-function` query
-- [ ] `find-functions-by-parameter-count` query
-- [ ] `find-functions-matching-pattern` query
+### Phase 1 (High Priority - Database Schema Parsing & Type Resolution Foundation)
 
-### Phase 2 (Medium Priority)
-- [ ] Database schema file parsing
-- [ ] Type validation engine
-- [ ] `find-functions-with-type` query
-- [ ] Module analysis query
-- [ ] `find-complex-functions` query
-- [ ] `find-function-callers` query
-- [ ] `export-module-graph` query
+**Why Phase 1 is critical:**
+- Enables type resolution for LIKE references (e.g., `LIKE contract.*`)
+- Provides foundation for enhanced type parsing
+- Enables type validation and mismatch detection
+- Supports impact analysis with type information
+- Creates basis for all downstream type-aware features
 
-### Phase 3 (Lower Priority)
-- [ ] Live database introspection
-- [ ] Dependency graph visualization
+**Features:**
+- [ ] **Database Schema File Parsing**
+  - Parse SQL DDL files (CREATE TABLE statements)
+  - Parse Genero schema files (.sch)
+  - Extract table definitions, column names, and types
+  - Build schema index in database
+  - Store in new `schema_tables` and `schema_columns` tables
+  - Use case: Foundation for type resolution
+  
+- [ ] **Enhanced Type Parser for LIKE Types**
+  - Recognize and parse LIKE references (e.g., `LIKE contract.id`, `LIKE contract.*`)
+  - Extract table and column references
+  - Resolve against parsed schema
+  - Store resolved type information
+  - Use case: IDE plugins showing actual database types, AI agents understanding data flow
+  
+- [ ] **Type Validation Engine**
+  - Check if LIKE references exist in schema
+  - Validate column types match function parameters
+  - Detect type mismatches
+  - Generate validation reports
+  - Use case: Code quality checks, error detection
+  
+- [ ] **Record Type Parsing**
+  - Parse and decompose RECORD types
+  - Extract field names and types
+  - Handle nested structures
+  - Store as structured record metadata
+  - Use case: Better type understanding for IDE/AI
+  
+- [ ] **Type Resolution Queries**
+  - `get-function-types <name>` - Get resolved types for function
+  - `find-functions-with-type <type>` - Find functions using a type
+  - `find-functions-with-database-type <table>` - Find functions using LIKE references
+  - `validate-types <file>` - Check for type mismatches in file
+  - `find-type-mismatches` - Find all type validation issues
+
+**Not in Phase 1 (moved to Phase 2):**
+- ~~Recursive call detection~~ (developers shouldn't write recursive code)
+- Function metrics (Phase 2)
+- Dead code detection (Phase 2)
+- Unresolved call detection (Phase 2)
+- Similar function detection (Phase 2)
+
+### Phase 2 (Medium Priority - Function Analysis & Metrics)
+
+**Why Phase 2 is important:**
+- Builds on Phase 1 type foundation
+- Enables AI agents to prioritize review
+- Detects code quality issues
+- Supports impact analysis
+
+**Features:**
+- [ ] **Type Resolution** - Map called function names to actual function signatures
+  - Join calls table with functions table
+  - Enable queries like: "Show me all calls to this function with their parameter types"
+  - Use case: IDE plugins showing full context, AI agents understanding dependencies
+  
+- [ ] **Function Metrics** - Extract complexity, parameter count, line count, call depth
+  - Calculate from existing data
+  - Store metrics in database for fast queries
+  - Use case: AI agents prioritizing review, IDE highlighting complex functions
+  
+- [ ] **Dead Code Detection** - Find functions never called
+  - Query: `find-dead-code`
+  - Shows: function name, file, last modified, author
+  - Use case: Developer cleanup, codebase maintenance
+  
+- [ ] **Unresolved Call Detection** - Find calls to non-existent functions
+  - Query: `find-unresolved-calls <file>`
+  - Shows: function name, line number, called function name
+  - Use case: Code quality checks, error detection
+  
+- [ ] **Similar Function Detection** - Find functions with similar signatures
+  - Query: `find-similar-functions <name>`
+  - Shows: functions with same parameter/return count
+  - Use case: AI pattern matching, code review, refactoring
+  
+- [ ] **New Query Layer for AI Agents**
+  - `get-function-full-context <name>` - Everything about a function
+  - `get-impact-analysis <name>` - What breaks when you change this
+  - `find-dead-code` - Unused functions
+  - `find-unresolved-calls <file>` - Calls to non-existent functions
+  - `find-similar-functions <name>` - Functions with similar signatures
+  - `find-functions-by-parameter-count <count>` - Functions with N parameters
+  - `find-functions-by-return-count <count>` - Functions returning N values
+
+### Phase 3 (Lower Priority - Advanced Analysis & Visualization)
 - [ ] Circular dependency detection
-- [ ] Dead code analysis
+  - Find problematic call cycles
+  - Identify circular module dependencies
+  
+- [ ] Code duplication analysis
+  - Find functions with identical or similar signatures
+  - Identify code duplication
+  - Suggest consolidation candidates
+  
 - [ ] Performance metrics
-- [ ] `search-by-signature` query
+  - Track function complexity over time
+  - Generate performance reports
+  
+- [ ] Visualization exports
+  - Export dependency graphs (DOT format)
+  - Generate architecture diagrams
+  - Create module relationship visualizations
+  
 - [ ] `compare-modules` query
 - [ ] `find-duplicate-functions` query
 - [ ] `generate-dependency-matrix` query
+- [ ] `export-module-graph` query
 
 ## 6. Technical Considerations
 
