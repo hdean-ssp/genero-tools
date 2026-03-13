@@ -31,7 +31,168 @@ This document outlines planned improvements and features for the Genero Function
 - [QUICK_START_CALL_GRAPH.md](QUICK_START_CALL_GRAPH.md) - Quick start guide
 - [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - Implementation details
 
-## 1. Enhanced Parser & Call Graph Extraction
+## 1. File Header Comment Parsing
+
+### Current State
+- No extraction of file-level metadata
+- File header comments are ignored
+- No tracking of code references (e.g., SR-12345, PRB-137, EH100512) or authorship
+
+### Planned Improvements
+
+#### 1.1 Header Comment Extraction
+- **Goal:** Parse file header comments to extract metadata and change history
+- **Supported Formats:**
+  - Standard comment blocks at file start
+  - Multi-line comments with structured change logs
+  - Single-line comment sequences
+- **Implementation:**
+  - Extract first N lines of comments from each file
+  - Parse change history tables with variable column layouts
+  - Extract code references (tickets, issue IDs, etc.)
+  - Extract author information from change records
+  - Store metadata in JSON and database
+  - Handle various comment styles and inconsistent spacing
+
+#### 1.2 Code References Extraction
+- **Goal:** Extract code references from file headers for traceability
+- **Examples:** SR-12345, PRB-137, EH100512, EH100512-4, etc.
+- **Use Cases:**
+  - Link code changes to tickets/issues
+  - Track which changes are related to specific problems
+  - Enable ticket-based code queries
+  - Generate change reports by reference
+
+#### 1.3 Author & Change Tracking
+- **Goal:** Extract author and change history from file headers
+- **Characteristics:**
+  - Change history typically in tabular format within comments
+  - Columns may include: Reference, For, Date, Who, Description
+  - Column order and presence varies between files
+  - Spacing/alignment is inconsistent (tabs, spaces, variable widths)
+  - Multiple authors may modify same file over time
+- **Use Cases:**
+  - Identify subject matter experts for code review
+  - Track code ownership and responsibility
+  - Understand change history without git
+  - Generate audit trails
+  - Find who last modified a file
+
+#### 1.4 Flexible Parser Design
+- **Challenge:** Headers have inconsistent structure and spacing
+  - Column positions vary between files
+  - Some files omit certain columns (e.g., no "For" column)
+  - Spacing uses mix of tabs and spaces
+  - Table alignment is not guaranteed
+- **Solution Approach:**
+  - Use pattern matching to identify change history sections
+  - Extract rows based on reference ID patterns (e.g., `[A-Z]+-\d+`)
+  - Parse columns flexibly by position or delimiter
+  - Handle missing/optional columns gracefully
+  - Normalize whitespace for consistent parsing
+  - Support multiple table formats
+
+#### 1.5 Database Schema Update
+- **Goal:** Store file metadata in SQLite for efficient querying
+- **New Tables:**
+  ```sql
+  file_metadata (
+    id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
+    FOREIGN KEY (file_id) REFERENCES files(id)
+  )
+  
+  file_references (
+    id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
+    reference_id TEXT NOT NULL,
+    author TEXT,
+    change_date TEXT,
+    description TEXT,
+    FOREIGN KEY (file_id) REFERENCES files(id)
+  )
+  
+  file_authors (
+    id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
+    author TEXT NOT NULL,
+    first_change_date TEXT,
+    last_change_date TEXT,
+    change_count INTEGER,
+    FOREIGN KEY (file_id) REFERENCES files(id)
+  )
+  ```
+
+#### 1.6 Query Functions
+- **`find-files-by-reference <ref_id>`** - Find files modified for a specific reference
+- **`find-files-by-author <author>`** - Find files authored/modified by person
+- **`get-file-references <filename>`** - Get all references for a file
+- **`get-file-authors <filename>`** - Get all authors who modified a file
+- **`find-recent-changes <days>`** - Find recently modified files
+- **`find-author-expertise <author>`** - Show what areas an author works on
+- **`find-reference-changes <ref_id>`** - Get all files modified for a reference
+
+#### 1.7 JSON Output Enhancement
+- **workspace.json** now includes file-level metadata:
+  - List of code references extracted from headers
+  - List of authors and their change dates
+  - Change history entries with reference, author, date, description
+
+#### 1.8 Handling Shared Files
+- **Challenge:** The same .4gl file can appear in multiple .m3 modules
+- **Considerations:**
+  - File header metadata is parsed once per file (not per module reference)
+  - Metadata is associated with the file, not the module
+  - Queries can find all modules using a file with specific metadata
+  - File-level references/authors apply across all modules using that file
+  - Module-specific context is tracked separately in module definitions
+
+#### 1.9 Use Cases
+- **Code Review Assignment** - Find experts for specific files/modules
+- **Change Tracking** - Link code changes to tickets/issues
+- **Audit Compliance** - Track who modified what and when
+- **Onboarding** - Identify critical/complex files needing review
+- **Impact Analysis** - Understand who to notify about changes
+- **Knowledge Management** - Map expertise across team
+- **Risk Assessment** - Identify files with frequent changes
+- **Maintenance Planning** - Find files needing updates
+- **Ticket-Based Queries** - Find all code changes for a specific ticket
+
+### Implementation Details
+
+#### Parser Enhancement
+- Extend AWK parser to capture file header comments
+- Extract first 50-100 lines of comments
+- Identify change history sections using pattern matching
+- Extract code references using regex patterns (e.g., `[A-Z]+-\d+`, `[A-Z]+\d+`)
+- Parse change history rows flexibly to handle:
+  - Variable column positions
+  - Missing/optional columns
+  - Inconsistent spacing (tabs vs spaces)
+  - Different table formats
+- Extract author names from change records
+- Normalize whitespace and align data
+- Store in JSON and database
+
+#### Parsing Strategy
+- **Reference Detection:** Use regex to find code reference patterns (SR-12345, PRB-137, EH100512, etc.)
+- **Column Flexibility:** Parse by position ranges or delimiters, not fixed columns
+- **Whitespace Handling:** Normalize tabs/spaces, handle variable-width columns
+- **Optional Columns:** Gracefully handle missing columns (e.g., no "For" column)
+- **Author Extraction:** Extract from "Who" or similar columns, normalize names
+- **Date Parsing:** Handle various date formats, normalize to ISO 8601
+
+#### Performance Considerations
+- Header parsing adds minimal overhead (<1% per file)
+- Index frequently searched fields (author, tags, status)
+- Cache metadata for repeated queries
+- Lazy load change history if needed
+
+#### Backward Compatibility
+- Existing workspace.json format preserved
+- New `header_metadata` field is optional
+- Files without headers have empty metadata
+- All existing queries unaffected
 
 ## 2. Enhanced Type Parser
 
@@ -375,6 +536,11 @@ The advanced queries are organized into logical categories:
 - ✅ Store call metadata (line numbers, context)
 
 ### Phase 1 (High Priority)
+- [ ] File header comment parsing for metadata extraction
+- [ ] Code tags and categorization from headers
+- [ ] Author and change tracking from file headers
+- [ ] File metadata database schema and queries
+- [ ] `find-files-by-tag`, `find-files-by-author`, `find-files-by-category` queries
 - [ ] Call resolution - Map called function names to actual functions
 - [ ] Recursive call detection - Identify and mark recursive calls
 - [ ] Enhanced type parser for LIKE types
@@ -405,6 +571,14 @@ The advanced queries are organized into logical categories:
 - [ ] `generate-dependency-matrix` query
 
 ## 6. Technical Considerations
+
+### File Header Parser
+- Extract first N lines of file comments (configurable, default 100)
+- Parse structured tag information from file headers
+- Handle multi-line values and arrays
+- Store metadata in new `file_metadata`, `file_tags`, `file_changes` tables
+- Index frequently searched fields (author, tags, status, category)
+- Performance: <1% overhead per file
 
 ### Function Body Parser Enhancement
 - Extend AWK parser to capture function body lines between FUNCTION and END FUNCTION
