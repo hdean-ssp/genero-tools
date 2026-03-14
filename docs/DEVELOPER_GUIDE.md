@@ -9,14 +9,14 @@ This guide is for developers and AI agents working on the Genero Function Signat
 **Key Components:**
 - Shell scripts for parsing (AWK/sed)
 - Python scripts for JSON processing and database operations
-- SQLite for efficient querying
-- Comprehensive test suite
+- SQLite for efficient querying (optional, generated from JSON)
+- Comprehensive test suite (Python-based, no external dependencies)
 
 **Tech Stack:**
 - Bash shell scripts
 - AWK/sed for text processing
-- Python 3.6+ for JSON and database operations
-- SQLite 3 for indexing and queries
+- Python 3.6+ for JSON processing, database operations, and testing
+- SQLite 3 for optional indexed queries (built-in, no external dependencies)
 
 ## Directory Structure
 
@@ -30,10 +30,14 @@ genero-func-sigs/
 ├── scripts/                       # Python utility scripts
 │   ├── parse_headers.py           # Extract headers and author info
 │   ├── merge_headers.py           # Merge headers into workspace.json
-│   ├── json_to_sqlite.py          # Convert JSON to SQLite
-│   ├── json_to_sqlite_headers.py  # Create header tables in DB
+│   ├── json_to_sqlite.py          # Convert JSON to SQLite (optional)
+│   ├── json_to_sqlite_headers.py  # Create header tables in DB (optional)
 │   ├── query_db.py                # Query database functions
 │   ├── query_headers.py           # Query header metadata
+│   ├── metrics_extractor.py       # Extract code quality metrics
+│   ├── quality_analyzer.py        # Analyze metrics and code quality
+│   ├── incremental_generator.py   # Incremental metric updates
+│   ├── metrics_db.py              # Metrics database operations
 │   ├── process_*.py               # Data processing utilities
 │   └── test_utils.py              # Test helper functions
 ├── tests/                         # Test suite
@@ -43,14 +47,21 @@ genero-func-sigs/
 │   ├── test_call_graph.sh         # Test call graph extraction
 │   ├── test_header_integration.sh # Test header parsing
 │   ├── test_header_parser.sh      # Test header parser
+│   ├── test_quality_analyzer.py   # Test quality analyzer
+│   ├── test_metrics_extraction.py # Test metrics extraction
+│   ├── test_incremental_generator.py # Test incremental updates
+│   ├── test_phase2_integration.py # Test Phase 2 integration
 │   └── sample_codebase/           # Test data
 ├── docs/                          # Documentation
 │   ├── ARCHITECTURE.md            # System architecture
-│   ├── IMPLEMENTATION_SUMMARY.md  # Feature implementations
-│   ├── HEADER_PARSING_*.md        # Header parsing docs
+│   ├── QUERY_LAYER_GUIDE.md       # Phase 2 query layer and metrics
 │   ├── CALL_GRAPH_QUERIES.md      # Call graph documentation
 │   ├── QUICK_START_*.md           # Quick start guides
-│   └── FUTURE_ENHANCEMENTS.md     # Roadmap
+│   ├── TYPE_RESOLUTION_GUIDE.md   # Type resolution system
+│   ├── SCHEMA_PARSING_GUIDE.md    # Schema parsing
+│   ├── SECURITY.md                # Security practices
+│   ├── INDEX.md                   # Documentation index
+│   └── archive/                   # Archived documentation
 ├── generate_all.sh                # Main orchestration script
 ├── query.sh                       # Query interface
 └── README.md                      # Project overview
@@ -60,7 +71,7 @@ genero-func-sigs/
 
 ### 1. Understanding the Pipeline
 
-The project follows a linear pipeline:
+The project follows a multi-stage pipeline:
 
 ```
 .4gl files → generate_signatures.sh → workspace.json
@@ -69,10 +80,19 @@ The project follows a linear pipeline:
                                     ↓
                           merge_headers.py (merge into JSON)
                                     ↓
-                          json_to_sqlite.py (create DB)
+                          metrics_extractor.py (extract metrics)
+                                    ↓
+                          json_to_sqlite.py (optional: create DB)
                                     ↓
                           query_db.py (query interface)
 ```
+
+**Key Stages:**
+1. **Signature Extraction** - Parse .4gl files for function signatures
+2. **Header Parsing** - Extract code references and author information
+3. **Metrics Extraction** - Calculate code quality metrics (Phase 2)
+4. **Database Creation** - Optional SQLite database for fast queries
+5. **Query Interface** - Python and shell wrappers for querying
 
 ### 2. Making Changes
 
@@ -109,6 +129,9 @@ bash tests/run_tests.sh              # Signature generation
 bash tests/run_module_tests.sh       # Module generation
 bash tests/test_call_graph.sh        # Call graph
 bash tests/test_header_integration.sh # Header parsing
+python3 tests/test_quality_analyzer.py # Quality analyzer (Phase 2)
+python3 tests/test_metrics_extraction.py # Metrics extraction (Phase 2)
+python3 tests/test_phase2_integration.py # Phase 2 integration
 ```
 
 **Test a single file:**
@@ -150,20 +173,24 @@ To add a new test file:
 ### Python Scripts (`scripts/`)
 
 **Pattern:**
-- Accept file paths as arguments
-- Output JSON to stdout
+- Accept file paths or database files as arguments
+- Output JSON to stdout or write to database
 - Handle errors gracefully
 - Use type hints for clarity
 - Include docstrings
+- No external dependencies (use standard library only)
 
 **Key Classes:**
 - `HeaderParser` - Parse file headers
-- Database functions - Query operations
+- `MetricsExtractor` - Extract code quality metrics
+- `QualityAnalyzer` - Analyze metrics and code quality
+- `MetricsDatabase` - SQLite database operations
 
 **Key Functions:**
 - `parse_file()` - Parse single file
 - `merge_headers()` - Merge header data
-- `create_db()` - Create SQLite database
+- `extract_metrics()` - Extract code metrics
+- `create_db()` - Create SQLite database (optional)
 
 ## Common Tasks
 
@@ -172,7 +199,16 @@ To add a new test file:
 1. Add function to `scripts/query_db.py`:
 ```python
 def find_something(db_file: str, param: str) -> List[Dict]:
-    """Find something in database."""
+    """Find something in database.
+    
+    Args:
+        db_file: Path to SQLite database
+        param: Search parameter
+        
+    Returns:
+        List of matching records as dictionaries
+    """
+    import sqlite3
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
     c.execute("SELECT * FROM table WHERE column = ?", (param,))
@@ -188,8 +224,8 @@ find-something)
     ;;
 ```
 
-3. Add test case to `tests/test_call_graph.sh`
-4. Update documentation
+3. Add test case to `tests/test_query_layer.py`
+4. Update documentation in `docs/QUERY_LAYER_GUIDE.md`
 
 ### Fixing a Bug
 
@@ -257,14 +293,14 @@ python3 -c "import json; data=json.load(open('workspace.json')); print(data.get(
 ### Query Database Directly
 
 ```bash
-# List all tables
-sqlite3 workspace.db ".tables"
+# Using Python to query JSON files
+python3 -c "import json; data=json.load(open('workspace.json')); print(json.dumps(data.get('path/to/file.4gl', []), indent=2))"
 
-# Check function count
-sqlite3 workspace.db "SELECT COUNT(*) FROM functions"
+# Using Python to query SQLite database (if created)
+python3 -c "import sqlite3; conn=sqlite3.connect('workspace.db'); c=conn.cursor(); c.execute('SELECT * FROM functions LIMIT 5'); print([dict(row) for row in c.fetchall()])"
 
-# Find specific function
-sqlite3 workspace.db "SELECT * FROM functions WHERE name = 'my_func'"
+# Or use the query wrapper
+bash query.sh find-function "my_function"
 ```
 
 ### Enable Verbose Output
@@ -316,17 +352,19 @@ feat: add header parsing for code references
 
 ### Large Codebases
 
-- Use SQLite for queries (much faster than JSON)
-- Consider incremental updates
-- Monitor memory usage
+- JSON files work well for codebases up to 15-20MB
+- Use SQLite for queries on large codebases (much faster than JSON)
+- Consider incremental updates for CI/CD pipelines
+- Monitor memory usage with `top` or `ps`
 - Profile with `time` command
 
 ### Optimization Opportunities
 
-- AWK parsing is fast but could be parallelized
-- Python JSON processing could use streaming
-- Database queries could use connection pooling
-- Consider caching for repeated queries
+- AWK parsing is fast but could be parallelized for very large codebases
+- Python JSON processing could use streaming for memory efficiency
+- Database queries could use connection pooling for repeated queries
+- Consider caching for frequently accessed data
+- Metrics extraction is optimized with incremental updates
 
 ## Documentation Standards
 
@@ -346,10 +384,14 @@ feat: add header parsing for code references
 
 ## Resources
 
+- **README.md** - Project overview and quick start
 - **ARCHITECTURE.md** - System design and components
-- **IMPLEMENTATION_SUMMARY.md** - Feature details
-- **QUICK_START_*.md** - Usage examples
-- **FUTURE_ENHANCEMENTS.md** - Roadmap
+- **QUERY_LAYER_GUIDE.md** - Phase 2 query layer and metrics
+- **QUICK_START_*.md** - Feature-specific quick start guides
+- **CALL_GRAPH_QUERIES.md** - Call graph query documentation
+- **TYPE_RESOLUTION_GUIDE.md** - Type resolution system
+- **SECURITY.md** - Security practices
+- **INDEX.md** - Documentation index and navigation
 - **tests/README.md** - Test data documentation
 
 ## Getting Help
