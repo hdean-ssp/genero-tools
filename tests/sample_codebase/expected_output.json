@@ -1,10 +1,10 @@
 {
   "_metadata": {
     "version": "1.0.0",
-    "generated": "2026-03-13T11:20:27Z",
-    "files_processed": 7
+    "generated": "2026-03-14T14:14:20Z",
+    "files_processed": 8
   },
-  "./tests/sample_codebase/no_returns.4gl": [
+  "./no_returns.4gl": [
     {
       "name": "display_message",
       "line": {
@@ -138,7 +138,7 @@
       ]
     }
   ],
-  "./tests/sample_codebase/special_types.4gl": [
+  "./special_types.4gl": [
     {
       "name": "process_interval",
       "line": {
@@ -319,7 +319,7 @@
       ]
     }
   ],
-  "./tests/sample_codebase/simple_functions.4gl": [
+  "./simple_functions.4gl": [
     {
       "name": "add_numbers",
       "line": {
@@ -414,7 +414,7 @@
       ]
     }
   ],
-  "./tests/sample_codebase/whitespace_variations.4gl": [
+  "./whitespace_variations.4gl": [
     {
       "name": "spaced_function",
       "line": {
@@ -535,7 +535,7 @@
       ]
     }
   ],
-  "./tests/sample_codebase/edge_cases.4gl": [
+  "./edge_cases.4gl": [
     {
       "name": "function_with_long_params",
       "line": {
@@ -806,7 +806,7 @@
       ]
     }
   ],
-  "./tests/sample_codebase/lib/complex_types.4gl": [
+  "./lib/complex_types.4gl": [
     {
       "name": "process_record",
       "line": {
@@ -906,7 +906,7 @@
       ]
     }
   ],
-  "./tests/sample_codebase/multiple_returns.4gl": [
+  "./multiple_returns.4gl": [
     {
       "name": "calculate_stats",
       "line": {
@@ -1016,6 +1016,92 @@
           "line": 46
         }
       ]
+    }
+  ],
+  "./test_like_types.4gl": [
+    {
+      "name": "process_abi_message",
+      "line": {
+        "start": 1,
+        "end": 8
+      },
+      "signature": "1-8: process_abi_message(msg LIKE abi_message.*):msg_id INTEGER",
+      "parameters": [
+        {
+          "name": "msg",
+          "type": "LIKE abi_message.*"
+        }
+      ],
+      "returns": [
+        {
+          "name": "msg_id",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "get_message_id",
+      "line": {
+        "start": 10,
+        "end": 14
+      },
+      "signature": "10-14: get_message_id(id LIKE abi_message.msg_id):id LIKE abi_message.msg_id",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "LIKE abi_message.msg_id"
+        }
+      ],
+      "returns": [
+        {
+          "name": "id",
+          "type": "LIKE abi_message.msg_id"
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "process_segment",
+      "line": {
+        "start": 16,
+        "end": 20
+      },
+      "signature": "16-20: process_segment(seg LIKE abi_segments.*):seg.seg_id unknown",
+      "parameters": [
+        {
+          "name": "seg",
+          "type": "LIKE abi_segments.*"
+        }
+      ],
+      "returns": [
+        {
+          "name": "seg.seg_id",
+          "type": "unknown"
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "get_field_name",
+      "line": {
+        "start": 22,
+        "end": 26
+      },
+      "signature": "22-26: get_field_name(field LIKE abi_fields.field_name):field LIKE abi_fields.field_name",
+      "parameters": [
+        {
+          "name": "field",
+          "type": "LIKE abi_fields.field_name"
+        }
+      ],
+      "returns": [
+        {
+          "name": "field",
+          "type": "LIKE abi_fields.field_name"
+        }
+      ],
+      "calls": []
     }
   ]
 }

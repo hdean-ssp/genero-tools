@@ -46,8 +46,24 @@ find "$TARGET" -name "*.m3" -type f -print0 | while IFS= read -r -d '' file; do
     # Extract module name from filename (without path and extension)
     module_name=$(basename "$file" .m3)
     
+    # Strip the TARGET path from the file path to get relative path
+    if [[ -d "$TARGET" ]]; then
+        # TARGET is a directory
+        relative_file="${file#$TARGET/}"
+        if [[ "$relative_file" == "$file" ]]; then
+            # If stripping didn't work, try without trailing slash
+            relative_file="${file#$TARGET}"
+            if [[ "$relative_file" == /* ]]; then
+                relative_file="${relative_file#/}"
+            fi
+        fi
+    else
+        # TARGET is a file, just use the basename
+        relative_file=$(basename "$file")
+    fi
+    
     # Use awk to parse the m3 file and extract L4GLS, U4GLS, and 4GLS
-    awk -v file="$file" -v module="$module_name" '
+    awk -v file="$relative_file" -v module="$module_name" '
     BEGIN {
         in_l4gls = 0
         in_u4gls = 0

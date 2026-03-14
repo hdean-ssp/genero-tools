@@ -88,7 +88,7 @@ else
 fi
 
 echo "Testing list-file-functions..."
-RESULT=$(bash "$PROJECT_ROOT/query.sh" list-file-functions "./tests/sample_codebase/no_returns.4gl" | python3 -c "import json, sys; data=json.load(sys.stdin); print(len(data))")
+RESULT=$(bash "$PROJECT_ROOT/query.sh" list-file-functions "./no_returns.4gl" | python3 -c "import json, sys; data=json.load(sys.stdin); print(len(data))")
 if [ "$RESULT" -ge 1 ]; then
     echo "[PASS] list-file-functions works correctly"
 else

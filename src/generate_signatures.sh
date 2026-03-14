@@ -52,7 +52,23 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         echo "Processing: $file" >&2
     fi
     
-    sed 's/[^[:print:]\t]//g' "$file" | awk -v file="$file" '
+    # Strip the TARGET path from the file path to get relative path
+    if [[ -d "$TARGET" ]]; then
+        # TARGET is a directory
+        relative_file="${file#$TARGET/}"
+        if [[ "$relative_file" == "$file" ]]; then
+            # If stripping didn't work, try without trailing slash
+            relative_file="${file#$TARGET}"
+            if [[ "$relative_file" == /* ]]; then
+                relative_file="${relative_file#/}"
+            fi
+        fi
+    else
+        # TARGET is a file, just use the basename
+        relative_file=$(basename "$file")
+    fi
+    
+    sed 's/[^[:print:]\t]//g' "$file" | awk -v file="$relative_file" '
 
 
     BEGIN {

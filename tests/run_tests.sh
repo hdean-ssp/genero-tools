@@ -62,7 +62,7 @@ with open(sys.argv[1], 'r') as f:
 
 data.pop('_metadata', None)
 file_count = len(data)
-simple_count = len(data.get('./tests/sample_codebase/simple_functions.4gl', []))
+simple_count = len(data.get('./simple_functions.4gl', []))
 
 if file_count == 1 and simple_count == 4:
     print(f"[PASS] Test 2 PASSED: Single file processing works correctly (found {simple_count} functions)")
