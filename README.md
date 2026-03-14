@@ -202,7 +202,7 @@ bash query.sh search-references "EH100%"
 - Impact analysis for code references
 - Audit trail of modifications
 
-See [QUICK_START_HEADERS.md](docs/QUICK_START_HEADERS.md) and [HEADER_PARSING_IMPLEMENTATION.md](docs/HEADER_PARSING_IMPLEMENTATION.md) for complete documentation.
+See [QUICK_START_HEADERS.md](docs/QUICK_START_HEADERS.md) for complete documentation.
 
 ## Completed Enhancements
 
@@ -218,7 +218,15 @@ See [QUICK_START_HEADERS.md](docs/QUICK_START_HEADERS.md) and [HEADER_PARSING_IM
   - Supports any reference format (PRB-299, EH100512, SR-40356-3, etc.)
   - Graceful error handling for files without headers
   - Query functions: `find-reference`, `find-author`, `author-expertise`, etc.
-  - See [HEADER_PARSING_IMPLEMENTATION.md](docs/HEADER_PARSING_IMPLEMENTATION.md) for details
+  - See [QUICK_START_HEADERS.md](docs/QUICK_START_HEADERS.md) for details
+
+- ✅ **Code Quality Analysis & Metrics** (Phase 2) - Extract and analyze code metrics
+  - 6 core metrics: Lines of Code, Cyclomatic Complexity, Variable Count, Parameter Count, Return Count, Call Depth
+  - Incremental generation for efficient updates (file-level and function-level)
+  - SQLite database with optimized indexes for fast queries
+  - Quality analyzer with 5 query methods for code review
+  - Property-based testing framework for correctness validation
+  - See [QUERY_LAYER_GUIDE.md](docs/QUERY_LAYER_GUIDE.md) for details
 
 ## Use Cases
 
@@ -290,26 +298,12 @@ See [INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) for implementation example
 
 ## Planned Enhancements
 
-The project roadmap focuses on building a strong type system foundation:
+The project roadmap focuses on advanced analysis capabilities:
 
-**Phase 1 (Next - Database Schema Parsing & Type Resolution):**
-- Database schema file parsing (SQL DDL, Genero .sch files)
-- Enhanced type parser for LIKE references (e.g., `LIKE contract.*`)
-- Type validation engine
-- Record type parsing
-- Type resolution queries
+**Phase 3 (Next - Advanced Analysis):**
+- Circular dependency detection - Find problematic call cycles
+- Code duplication analysis - Identify similar/duplicate functions
+- Performance metrics - Track function complexity over time
+- Visualization exports - Generate architecture diagrams
 
-**Phase 2 (Function Analysis & Metrics):**
-- Type resolution for function calls
-- Function metrics (complexity, parameters, returns, call depth)
-- Dead code detection
-- Unresolved call detection
-- Similar function detection
-
-**Phase 3 (Advanced Analysis):**
-- Circular dependency detection
-- Code duplication analysis
-- Performance metrics
-- Visualization exports
-
-See [PROJECT_SPECIFICATION.md](.kiro/specs/PROJECT_SPECIFICATION.md) for the complete roadmap and [FUTURE_ENHANCEMENTS.md](docs/FUTURE_ENHANCEMENTS.md) for detailed technical plans.
+See [QUERY_LAYER_GUIDE.md](docs/QUERY_LAYER_GUIDE.md) for Phase 2 implementation details.

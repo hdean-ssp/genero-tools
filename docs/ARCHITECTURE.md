@@ -85,7 +85,86 @@ This document describes the architecture and design of the Genero Function Signa
 - Enables module-scoped queries
 - Supports dependency analysis
 
-### 4. Database Tools
+### 4. Metrics Extraction (`scripts/metrics_extractor.py`)
+
+**Purpose:** Extract code quality metrics from function signatures
+
+**Metrics Extracted:**
+1. Lines of Code (LOC) - Function body line count
+2. Cyclomatic Complexity - Decision point count
+3. Variable Count - Local variable declarations
+4. Parameter Count - Function parameters
+5. Return Count - Return value count
+6. Call Depth - Maximum nesting depth of function calls
+
+**Process:**
+1. Parse function signatures and bodies
+2. Analyze control flow structures
+3. Count variables and parameters
+4. Calculate complexity metrics
+5. Output metrics JSON
+
+**Output:** Metrics data for each function
+- Integrated with workspace.json
+- Stored in metrics database
+
+**Key Features:**
+- Accurate complexity calculation
+- Handles nested structures
+- Efficient processing
+- Extensible metric framework
+
+### 5. Incremental Generator (`scripts/incremental_generator.py`)
+
+**Purpose:** Efficiently update metrics for changed files
+
+**Process:**
+1. Track file modification times
+2. Identify changed files since last run
+3. Re-extract metrics only for changed files
+4. Merge with existing metrics database
+5. Update indexes
+
+**Output:** Updated metrics database
+- Only changed files processed
+- Existing data preserved
+- Efficient incremental updates
+
+**Key Features:**
+- File-level and function-level updates
+- Preserves unchanged data
+- Fast incremental processing
+- Suitable for CI/CD pipelines
+
+### 6. Quality Analyzer (`scripts/quality_analyzer.py`)
+
+**Purpose:** Query and analyze code quality metrics
+
+**Query Methods:**
+1. `get_function_metrics()` - Retrieve metrics for a function
+2. `find_complex_functions()` - Find functions above complexity threshold
+3. `find_long_functions()` - Find functions exceeding LOC threshold
+4. `find_high_parameter_functions()` - Find functions with many parameters
+5. `get_file_metrics()` - Aggregate metrics for a file
+
+**Process:**
+1. Query metrics database
+2. Apply filters and thresholds
+3. Return results with analysis
+4. Support sorting and ranking
+
+**Output:** Query results in JSON format
+- Function-level metrics
+- File-level aggregates
+- Ranked by complexity/size
+
+**Key Features:**
+- Fast indexed queries
+- Flexible filtering
+- Extensible query framework
+- Integration with code review tools
+
+### 7. Database Tools
 
 #### `scripts/json_to_sqlite.py`
 
@@ -126,7 +205,7 @@ bash query.sh search-functions "get_*"
 bash query.sh find-module "core"
 ```
 
-### 5. Test Utilities (`scripts/test_utils.py`)
+### 8. Test Utilities (`scripts/test_utils.py`)
 
 **Purpose:** Provide utilities for testing and validation
 
@@ -384,27 +463,13 @@ module_files (id, module_id, file_name, category)
 
 ## Future Enhancements
 
-### Phase 1 (Next - Database Schema Parsing & Type Resolution)
-- Database schema file parsing - Parse SQL DDL and Genero .sch files
-- Enhanced type parser - Resolve LIKE references (e.g., `LIKE contract.*`)
-- Type validation engine - Detect type mismatches
-- Record type parsing - Decompose RECORD types
-- Type resolution queries - Query resolved types
-
-### Phase 2 (Function Analysis & Metrics)
-- Type resolution for function calls
-- Function metrics - Extract complexity, parameters, returns, call depth
-- Dead code detection - Find functions never called
-- Unresolved call detection - Find calls to non-existent functions
-- Similar function detection - Find functions with similar signatures
-
-### Phase 3 (Advanced Analysis)
+### Phase 3 (Next - Advanced Analysis)
 - Circular dependency detection - Find problematic call cycles
 - Code duplication analysis - Identify similar/duplicate functions
 - Performance metrics - Track function complexity over time
 - Visualization exports - Generate architecture diagrams
 
-See [PROJECT_SPECIFICATION.md](.kiro/specs/PROJECT_SPECIFICATION.md) for the complete roadmap.
+See [QUERY_LAYER_GUIDE.md](QUERY_LAYER_GUIDE.md) for Phase 2 implementation details.
 
 ## Maintenance
 
