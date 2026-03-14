@@ -1,0 +1,104 @@
+{
+  "databases": {
+    "workspace_db": {
+      "description": "SQLite database for function signatures and call graphs",
+      "tables": {
+        "functions": {
+          "description": "Function definitions",
+          "columns": {
+            "id": "INTEGER PRIMARY KEY",
+            "name": "TEXT UNIQUE",
+            "file": "TEXT",
+            "line_start": "INTEGER",
+            "line_end": "INTEGER",
+            "signature": "TEXT",
+            "loc": "INTEGER",
+            "complexity": "INTEGER",
+            "variables": "INTEGER",
+            "parameters": "INTEGER",
+            "returns": "INTEGER",
+            "call_depth": "INTEGER"
+          },
+          "indexes": ["name", "file"]
+        },
+        "parameters": {
+          "description": "Function parameters",
+          "columns": {
+            "id": "INTEGER PRIMARY KEY",
+            "function_id": "INTEGER FOREIGN KEY",
+            "name": "TEXT",
+            "type": "TEXT",
+            "position": "INTEGER"
+          },
+          "indexes": ["function_id"]
+        },
+        "return_values": {
+          "description": "Function return values",
+          "columns": {
+            "id": "INTEGER PRIMARY KEY",
+            "function_id": "INTEGER FOREIGN KEY",
+            "name": "TEXT",
+            "type": "TEXT",
+            "position": "INTEGER"
+          },
+          "indexes": ["function_id"]
+        },
+        "calls": {
+          "description": "Function call relationships",
+          "columns": {
+            "id": "INTEGER PRIMARY KEY",
+            "caller_id": "INTEGER FOREIGN KEY",
+            "callee_name": "TEXT",
+            "line": "INTEGER"
+          },
+          "indexes": ["caller_id", "callee_name"]
+        },
+        "headers": {
+          "description": "File header information",
+          "columns": {
+            "id": "INTEGER PRIMARY KEY",
+            "file": "TEXT UNIQUE",
+            "author": "TEXT",
+            "reference": "TEXT",
+            "date": "TEXT",
+            "description": "TEXT"
+          },
+          "indexes": ["file", "author", "reference"]
+        }
+      }
+    },
+    "modules_db": {
+      "description": "SQLite database for module dependencies",
+      "tables": {
+        "modules": {
+          "description": "Module definitions",
+          "columns": {
+            "id": "INTEGER PRIMARY KEY",
+            "name": "TEXT UNIQUE",
+            "file": "TEXT",
+            "type": "TEXT"
+          },
+          "indexes": ["name"]
+        },
+        "module_files": {
+          "description": "Files in modules",
+          "columns": {
+            "id": "INTEGER PRIMARY KEY",
+            "module_id": "INTEGER FOREIGN KEY",
+            "file_path": "TEXT",
+            "file_type": "TEXT"
+          },
+          "indexes": ["module_id", "file_path"]
+        }
+      }
+    }
+  },
+  "query_examples": {
+    "find_function": "SELECT * FROM functions WHERE name = ?",
+    "search_functions": "SELECT * FROM functions WHERE name LIKE ?",
+    "list_file_functions": "SELECT * FROM functions WHERE file = ?",
+    "find_dependencies": "SELECT callee_name FROM calls WHERE caller_id = (SELECT id FROM functions WHERE name = ?)",
+    "find_dependents": "SELECT DISTINCT f.name FROM functions f JOIN calls c ON f.id = c.caller_id WHERE c.callee_name = ?",
+    "find_dead_code": "SELECT f.name FROM functions f WHERE f.id NOT IN (SELECT DISTINCT caller_id FROM calls)"
+  }
+}

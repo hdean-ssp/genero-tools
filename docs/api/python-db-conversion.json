@@ -1,0 +1,24 @@
+{
+  "module": "scripts.json_to_sqlite",
+  "description": "Convert JSON files to SQLite databases",
+  "functions": {
+    "create_signatures_db": {
+      "signature": "create_signatures_db(json_file: str, db_file: str) -> None",
+      "description": "Create workspace.db from workspace.json",
+      "parameters": [
+        {"name": "json_file", "type": "str", "description": "Path to workspace.json"},
+        {"name": "db_file", "type": "str", "description": "Path to output workspace.db"}
+      ],
+      "example": "from scripts.json_to_sqlite import create_signatures_db\ncreate_signatures_db('workspace.json', 'workspace.db')"
+    },
+    "create_modules_db": {
+      "signature": "create_modules_db(json_file: str, db_file: str) -> None",
+      "description": "Create modules.db from modules.json",
+      "parameters": [
+        {"name": "json_file", "type": "str", "description": "Path to modules.json"},
+        {"name": "db_file", "type": "str", "description": "Path to output modules.db"}
+      ],
+      "example": "from scripts.json_to_sqlite import create_modules_db\ncreate_modules_db('modules.json', 'modules.db')"
+    }
+  }
+}

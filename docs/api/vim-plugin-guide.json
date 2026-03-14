@@ -1,0 +1,82 @@
+{
+  "vim_plugin_integration": {
+    "overview": "Guide for integrating genero-tools into Vim plugins",
+    "recommended_features": {
+      "hover_information": {
+        "query": "find-function",
+        "use_case": "Show function signature and metadata on hover",
+        "data_needed": "name, signature, parameters, returns, file, line"
+      },
+      "code_completion": {
+        "query": "search-functions",
+        "use_case": "Autocomplete function names",
+        "data_needed": "name, parameters, returns"
+      },
+      "go_to_definition": {
+        "query": "find-function",
+        "use_case": "Navigate to function definition",
+        "data_needed": "file, line_start"
+      },
+      "find_references": {
+        "query": "find-function-dependents",
+        "use_case": "Find all places where function is called",
+        "data_needed": "name, file, line"
+      },
+      "code_metrics": {
+        "query": "Python API - QualityAnalyzer",
+        "use_case": "Show complexity and quality metrics",
+        "data_needed": "complexity, loc, parameters, variables"
+      },
+      "dependency_graph": {
+        "query": "find-function-dependencies + find-function-dependents",
+        "use_case": "Visualize function call relationships",
+        "data_needed": "calls, dependents"
+      }
+    },
+    "integration_approaches": {
+      "shell_based": {
+        "method": "Call query.sh commands via system()",
+        "pros": ["Simple", "No Python dependency", "Easy to debug"],
+        "cons": ["Slower", "Process overhead"],
+        "example": "system('query.sh find-function ' . function_name)"
+      },
+      "python_based": {
+        "method": "Import Python modules directly",
+        "pros": ["Fast", "Direct access", "No subprocess overhead"],
+        "cons": ["Requires Python", "More complex"],
+        "example": "python3 -c 'from scripts.query_db import find_function'"
+      },
+      "database_based": {
+        "method": "Direct SQLite queries",
+        "pros": ["Fastest", "Most control", "Batch queries"],
+        "cons": ["Requires SQL knowledge", "Schema knowledge needed"],
+        "example": "sqlite3 workspace.db 'SELECT * FROM functions WHERE name = ?'"
+      }
+    },
+    "setup_steps": [
+      "1. Generate workspace.json: bash generate_signatures.sh /path/to/codebase",
+      "2. Generate modules.json: bash generate_modules.sh /path/to/codebase",
+      "3. Create databases: bash query.sh create-dbs",
+      "4. Verify databases exist: ls -la workspace.db modules.db",
+      "5. Test query: query.sh find-function test_function"
+    ],
+    "caching_strategy": {
+      "cache_level_1": "In-memory cache of recent queries (1000 entries)",
+      "cache_level_2": "File-based cache of function metadata (updated hourly)",
+      "invalidation": "Regenerate databases when source files change"
+    },
+    "performance_tips": [
+      "Cache function lookups in memory",
+      "Use pattern search for autocomplete (faster than full scan)",
+      "Batch multiple queries when possible",
+      "Use database interface for complex queries",
+      "Implement incremental updates for large codebases"
+    ],
+    "error_handling": {
+      "database_not_found": "Prompt user to run 'query.sh create-dbs'",
+      "query_timeout": "Set 5s timeout, show cached results if available",
+      "invalid_function": "Return empty result, don't error",
+      "database_corruption": "Suggest regenerating databases"
+    }
+  }
+}

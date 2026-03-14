@@ -1,0 +1,76 @@
+{
+  "module": "scripts.query_headers",
+  "description": "Query file headers for code references and author information",
+  "functions": {
+    "find_reference": {
+      "signature": "find_reference(db_file: str, reference: str) -> List[Dict]",
+      "description": "Find files modified for a code reference",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "reference", "type": "str", "description": "Code reference (e.g., PRB-299)"}
+      ],
+      "returns": "List of files with reference",
+      "example": "from scripts.query_headers import find_reference\nresults = find_reference('workspace.db', 'PRB-299')"
+    },
+    "find_author": {
+      "signature": "find_author(db_file: str, author: str) -> List[Dict]",
+      "description": "Find files modified by an author",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "author", "type": "str", "description": "Author name"}
+      ],
+      "returns": "List of files modified by author",
+      "example": "results = find_author('workspace.db', 'John Smith')"
+    },
+    "file_references": {
+      "signature": "file_references(db_file: str, file_path: str) -> List[Dict]",
+      "description": "Get all references for a file",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "file_path", "type": "str", "description": "File path"}
+      ],
+      "returns": "List of references for file",
+      "example": "results = file_references('workspace.db', './src/utils.4gl')"
+    },
+    "file_authors": {
+      "signature": "file_authors(db_file: str, file_path: str) -> List[Dict]",
+      "description": "Get all authors who modified a file",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "file_path", "type": "str", "description": "File path"}
+      ],
+      "returns": "List of authors",
+      "example": "results = file_authors('workspace.db', './src/utils.4gl')"
+    },
+    "author_expertise": {
+      "signature": "author_expertise(db_file: str, author: str) -> Dict",
+      "description": "Show what areas an author has expertise in",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "author", "type": "str", "description": "Author name"}
+      ],
+      "returns": "Dict with expertise areas and file counts",
+      "example": "result = author_expertise('workspace.db', 'John Smith')"
+    },
+    "recent_changes": {
+      "signature": "recent_changes(db_file: str, days: int = 30) -> List[Dict]",
+      "description": "Find files modified in last N days",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "days", "type": "int", "default": 30, "description": "Number of days"}
+      ],
+      "returns": "List of recently modified files",
+      "example": "results = recent_changes('workspace.db', 7)"
+    },
+    "search_references": {
+      "signature": "search_references(db_file: str, pattern: str) -> List[Dict]",
+      "description": "Search references by pattern",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "pattern", "type": "str", "description": "Wildcard pattern"}
+      ],
+      "returns": "List of matching references",
+      "example": "results = search_references('workspace.db', 'EH100%')"
+    }
+  }
+}

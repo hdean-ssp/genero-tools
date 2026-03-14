@@ -1,0 +1,60 @@
+{
+  "integration_examples": {
+    "shell_integration": {
+      "description": "Call genero-tools from shell scripts or external programs",
+      "example_1": {
+        "task": "Find function and display signature",
+        "code": "#!/bin/bash\nFUNC_NAME=$1\nquery.sh find-function \"$FUNC_NAME\" | python3 -m json.tool"
+      },
+      "example_2": {
+        "task": "Search functions and count results",
+        "code": "#!/bin/bash\nPATTERN=$1\nquery.sh search-functions \"$PATTERN\" | python3 -c \"import sys, json; print(len(json.load(sys.stdin)))\""
+      },
+      "example_3": {
+        "task": "Find all dead code",
+        "code": "#!/bin/bash\nquery.sh find-dead-code | python3 -c \"import sys, json; data = json.load(sys.stdin); print(f'Found {len(data)} unused functions')\""
+      }
+    },
+    "python_integration": {
+      "description": "Import and use genero-tools Python modules",
+      "example_1": {
+        "task": "Find function and get metrics",
+        "code": "from scripts.query_db import find_function\nfrom scripts.quality_analyzer import QualityAnalyzer\n\nfuncs = find_function('workspace.db', 'my_function')\nqa = QualityAnalyzer('workspace.db')\nfor func in funcs:\n    metrics = qa.get_function_metrics(func['name'])\n    print(f\"{func['name']}: complexity={metrics['complexity']}\")"
+      },
+      "example_2": {
+        "task": "Find complex functions in a module",
+        "code": "from scripts.query_db import find_functions_in_module\nfrom scripts.quality_analyzer import QualityAnalyzer\n\nqa = QualityAnalyzer('workspace.db')\ncomplex_funcs = qa.find_complex_functions(threshold=10)\ncore_funcs = find_functions_in_module('modules.db', 'workspace.db', 'core')\ncore_complex = [f for f in complex_funcs if f['name'] in [cf['name'] for cf in core_funcs]]\nprint(f\"Complex functions in core: {len(core_complex)}\")"
+      },
+      "example_3": {
+        "task": "Analyze author expertise",
+        "code": "from scripts.query_headers import author_expertise\n\nexpertise = author_expertise('workspace.db', 'John Smith')\nfor area, count in expertise.items():\n    print(f\"{area}: {count} files\")"
+      }
+    },
+    "database_integration": {
+      "description": "Direct SQLite queries for advanced use cases",
+      "example_1": {
+        "task": "Find functions with many parameters",
+        "code": "import sqlite3\n\nconn = sqlite3.connect('workspace.db')\nc = conn.cursor()\nc.execute('SELECT name, parameters FROM functions WHERE parameters > 5 ORDER BY parameters DESC')\nfor name, param_count in c.fetchall():\n    print(f\"{name}: {param_count} parameters\")\nconn.close()"
+      },
+      "example_2": {
+        "task": "Find call chains",
+        "code": "import sqlite3\n\nconn = sqlite3.connect('workspace.db')\nc = conn.cursor()\nc.execute('''\n  SELECT f1.name, f2.name FROM functions f1\n  JOIN calls c ON f1.id = c.caller_id\n  JOIN functions f2 ON c.callee_name = f2.name\n  WHERE f1.name = 'main'\n''')\nfor caller, callee in c.fetchall():\n    print(f\"{caller} -> {callee}\")\nconn.close()"
+      },
+      "example_3": {
+        "task": "Find files by author and reference",
+        "code": "import sqlite3\n\nconn = sqlite3.connect('workspace.db')\nc = conn.cursor()\nc.execute('''\n  SELECT DISTINCT file FROM headers\n  WHERE author = ? AND reference LIKE ?\n''', ('John Smith', 'PRB%'))\nfor file in c.fetchall():\n    print(file[0])\nconn.close()"
+      }
+    },
+    "vim_plugin_example": {
+      "description": "Vim plugin integration pattern",
+      "setup": "let g:genero_tools_db = '/path/to/workspace.db'",
+      "hover_function": "function! GeneroHover()\n  let word = expand('<cword>')\n  let cmd = 'query.sh find-function ' . word\n  let result = system(cmd)\n  echo result\nendfunction",
+      "completion_function": "function! GeneroComplete(findstart, base)\n  if a:findstart\n    return col('.') - 1\n  endif\n  let cmd = 'query.sh search-functions ' . a:base . '*'\n  let results = system(cmd)\n  return json_decode(results)\nendfunction",
+      "goto_definition": "function! GeneroGotoDefinition()\n  let word = expand('<cword>')\n  let cmd = 'query.sh find-function ' . word\n  let result = system(cmd)\n  let data = json_decode(result)\n  if len(data) > 0\n    execute 'edit ' . data[0]['file']\n    execute 'goto ' . data[0]['line_start']\n  endif\nendfunction"
+    },
+    "incremental_update_example": {
+      "description": "Efficiently update metrics for changed files",
+      "code": "from scripts.incremental_generator import IncrementalGenerator\nimport json\n\ngen = IncrementalGenerator('workspace.db')\n\n# Load existing workspace\nwith open('workspace.json') as f:\n    existing = json.load(f)\n\n# Update only changed file\nnew_metrics = gen.generate_file_metrics('./src/utils.4gl', existing)\n\n# Merge with existing\nmerged = gen.merge_with_existing(new_metrics, existing)\n\n# Save updated workspace\nwith open('workspace.json', 'w') as f:\n    json.dump(merged, f)"
+    }
+  }
+}

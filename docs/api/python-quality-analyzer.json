@@ -1,0 +1,84 @@
+{
+  "module": "scripts.quality_analyzer",
+  "description": "Code quality metrics and analysis",
+  "class": "QualityAnalyzer",
+  "constructor": {
+    "signature": "QualityAnalyzer(db_file: str)",
+    "description": "Initialize quality analyzer with database",
+    "parameters": [
+      {"name": "db_file", "type": "str", "description": "Path to workspace.db"}
+    ],
+    "example": "from scripts.quality_analyzer import QualityAnalyzer\nqa = QualityAnalyzer('workspace.db')"
+  },
+  "methods": {
+    "get_function_metrics": {
+      "signature": "get_function_metrics(func_name: str) -> Dict",
+      "description": "Get metrics for a specific function",
+      "parameters": [
+        {"name": "func_name", "type": "str", "description": "Function name"}
+      ],
+      "returns": "Dict with metrics: loc, complexity, variables, parameters, returns, call_depth",
+      "example": "metrics = qa.get_function_metrics('calculate')"
+    },
+    "get_file_metrics": {
+      "signature": "get_file_metrics(file_path: str) -> Dict",
+      "description": "Get aggregated metrics for a file",
+      "parameters": [
+        {"name": "file_path", "type": "str", "description": "File path"}
+      ],
+      "returns": "Dict with file-level metrics",
+      "example": "metrics = qa.get_file_metrics('./src/utils.4gl')"
+    },
+    "find_complex_functions": {
+      "signature": "find_complex_functions(threshold: int = 10) -> List[Dict]",
+      "description": "Find functions exceeding complexity threshold",
+      "parameters": [
+        {"name": "threshold", "type": "int", "default": 10, "description": "Complexity threshold"}
+      ],
+      "returns": "List of complex functions with metrics",
+      "example": "complex = qa.find_complex_functions(threshold=10)"
+    },
+    "find_long_functions": {
+      "signature": "find_long_functions(threshold: int = 100) -> List[Dict]",
+      "description": "Find functions exceeding line count threshold",
+      "parameters": [
+        {"name": "threshold", "type": "int", "default": 100, "description": "Line count threshold"}
+      ],
+      "returns": "List of long functions with metrics",
+      "example": "long = qa.find_long_functions(threshold=100)"
+    },
+    "find_high_parameter_functions": {
+      "signature": "find_high_parameter_functions(threshold: int = 5) -> List[Dict]",
+      "description": "Find functions with many parameters",
+      "parameters": [
+        {"name": "threshold", "type": "int", "default": 5, "description": "Parameter count threshold"}
+      ],
+      "returns": "List of functions with many parameters",
+      "example": "high_param = qa.find_high_parameter_functions(threshold=5)"
+    },
+    "find_similar_functions": {
+      "signature": "find_similar_functions(func_name: str) -> List[Dict]",
+      "description": "Find functions with similar signatures",
+      "parameters": [
+        {"name": "func_name", "type": "str", "description": "Function name"}
+      ],
+      "returns": "List of similar functions",
+      "example": "similar = qa.find_similar_functions('calculate')"
+    },
+    "find_isolated_functions": {
+      "signature": "find_isolated_functions() -> List[Dict]",
+      "description": "Find functions with no dependencies",
+      "parameters": [],
+      "returns": "List of isolated functions",
+      "example": "isolated = qa.find_isolated_functions()"
+    }
+  },
+  "metrics": {
+    "loc": "Lines of Code - total lines in function",
+    "complexity": "Cyclomatic Complexity - number of decision points",
+    "variables": "Variable Count - number of local variables",
+    "parameters": "Parameter Count - number of function parameters",
+    "returns": "Return Count - number of return values",
+    "call_depth": "Call Depth - maximum nesting depth of function calls"
+  }
+}

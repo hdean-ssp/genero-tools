@@ -1,0 +1,51 @@
+{
+  "module": "scripts.incremental_generator",
+  "description": "Efficiently update metrics for changed files only",
+  "class": "IncrementalGenerator",
+  "constructor": {
+    "signature": "IncrementalGenerator(db_file: str = 'workspace.db')",
+    "description": "Initialize incremental generator",
+    "parameters": [
+      {"name": "db_file", "type": "str", "default": "workspace.db", "description": "Path to workspace.db"}
+    ],
+    "example": "from scripts.incremental_generator import IncrementalGenerator\ngen = IncrementalGenerator('workspace.db')"
+  },
+  "methods": {
+    "generate_file_metrics": {
+      "signature": "generate_file_metrics(file_path: str, existing_workspace: Optional[Dict] = None) -> Dict",
+      "description": "Generate metrics for a single file",
+      "parameters": [
+        {"name": "file_path", "type": "str", "description": "Path to .4gl file"},
+        {"name": "existing_workspace", "type": "Optional[Dict]", "default": "None", "description": "Existing workspace.json data"}
+      ],
+      "returns": "Dict with file metrics",
+      "example": "metrics = gen.generate_file_metrics('./src/utils.4gl')"
+    },
+    "generate_function_metrics": {
+      "signature": "generate_function_metrics(file_path: str, func_name: str, existing_workspace: Optional[Dict] = None) -> Dict",
+      "description": "Generate metrics for a specific function",
+      "parameters": [
+        {"name": "file_path", "type": "str", "description": "Path to .4gl file"},
+        {"name": "func_name", "type": "str", "description": "Function name"},
+        {"name": "existing_workspace", "type": "Optional[Dict]", "default": "None", "description": "Existing workspace.json data"}
+      ],
+      "returns": "Dict with function metrics",
+      "example": "metrics = gen.generate_function_metrics('./src/utils.4gl', 'calculate')"
+    },
+    "merge_with_existing": {
+      "signature": "merge_with_existing(new_metrics: Dict, existing_workspace: Dict) -> Dict",
+      "description": "Merge new metrics with existing workspace data",
+      "parameters": [
+        {"name": "new_metrics", "type": "Dict", "description": "New metrics to merge"},
+        {"name": "existing_workspace", "type": "Dict", "description": "Existing workspace.json data"}
+      ],
+      "returns": "Merged workspace data",
+      "example": "merged = gen.merge_with_existing(new_metrics, existing_workspace)"
+    }
+  },
+  "use_cases": {
+    "incremental_update": "Update only changed files without regenerating entire database",
+    "ci_cd_pipeline": "Efficiently refresh metrics in CI/CD without full regeneration",
+    "file_watcher": "Update metrics as files are modified during development"
+  }
+}

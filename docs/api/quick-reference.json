@@ -1,0 +1,34 @@
+{
+  "quick_reference": {
+    "setup": {
+      "generate_signatures": "bash generate_signatures.sh /path/to/codebase",
+      "generate_modules": "bash generate_modules.sh /path/to/codebase",
+      "create_databases": "bash query.sh create-dbs"
+    },
+    "common_queries": {
+      "find_function": "query.sh find-function my_function",
+      "search_functions": "query.sh search-functions 'get_*'",
+      "find_dependencies": "query.sh find-function-dependencies my_function",
+      "find_dependents": "query.sh find-function-dependents my_function",
+      "find_in_module": "query.sh find-functions-in-module core",
+      "find_module_for_func": "query.sh find-module-for-function my_function",
+      "find_reference": "query.sh find-reference 'PRB-299'",
+      "find_author": "query.sh find-author 'John Smith'",
+      "find_dead_code": "query.sh find-dead-code"
+    },
+    "python_imports": {
+      "query_db": "from scripts.query_db import find_function, search_functions",
+      "quality_analyzer": "from scripts.quality_analyzer import QualityAnalyzer",
+      "query_headers": "from scripts.query_headers import find_reference, find_author",
+      "metrics_extractor": "from scripts.metrics_extractor import MetricsExtractor",
+      "incremental_generator": "from scripts.incremental_generator import IncrementalGenerator"
+    },
+    "output_format": "JSON (all queries return JSON arrays or objects)",
+    "performance": {
+      "exact_lookup": "<1ms",
+      "pattern_search": "<10ms",
+      "database_creation": "<5s",
+      "metrics_extraction": "<1ms per function"
+    }
+  }
+}

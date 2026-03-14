@@ -1,0 +1,239 @@
+{
+  "interface": "shell",
+  "description": "Shell command interface via query.sh",
+  "commands": {
+    "signature_queries": {
+      "find-function": {
+        "description": "Find function by exact name",
+        "syntax": "query.sh find-function <name>",
+        "parameters": [
+          {"name": "name", "type": "string", "required": true, "description": "Function name"}
+        ],
+        "returns": "JSON array of matching functions with signatures, parameters, returns, calls",
+        "example": "query.sh find-function calculate",
+        "performance": "<1ms"
+      },
+      "search-functions": {
+        "description": "Search functions by name pattern",
+        "syntax": "query.sh search-functions <pattern>",
+        "parameters": [
+          {"name": "pattern", "type": "string", "required": true, "description": "Wildcard pattern (e.g., get_*)"}
+        ],
+        "returns": "JSON array of matching functions",
+        "example": "query.sh search-functions 'get_*'",
+        "performance": "<10ms"
+      },
+      "list-file-functions": {
+        "description": "List all functions in a file",
+        "syntax": "query.sh list-file-functions <path>",
+        "parameters": [
+          {"name": "path", "type": "string", "required": true, "description": "File path"}
+        ],
+        "returns": "JSON array of functions in file",
+        "example": "query.sh list-file-functions './src/utils.4gl'",
+        "performance": "<1ms"
+      },
+      "find-function-dependencies": {
+        "description": "Find all functions called by a function",
+        "syntax": "query.sh find-function-dependencies <name>",
+        "parameters": [
+          {"name": "name", "type": "string", "required": true, "description": "Function name"}
+        ],
+        "returns": "JSON array of called functions with line numbers",
+        "example": "query.sh find-function-dependencies process_request",
+        "performance": "<1ms"
+      },
+      "find-function-dependents": {
+        "description": "Find all functions that call a function",
+        "syntax": "query.sh find-function-dependents <name>",
+        "parameters": [
+          {"name": "name", "type": "string", "required": true, "description": "Function name"}
+        ],
+        "returns": "JSON array of calling functions",
+        "example": "query.sh find-function-dependents log_message",
+        "performance": "<1ms"
+      },
+      "find-dead-code": {
+        "description": "Find functions that are never called",
+        "syntax": "query.sh find-dead-code",
+        "parameters": [],
+        "returns": "JSON array of unused functions",
+        "example": "query.sh find-dead-code",
+        "performance": "<10ms"
+      }
+    },
+    "module_queries": {
+      "find-module": {
+        "description": "Find module by exact name",
+        "syntax": "query.sh find-module <name>",
+        "parameters": [
+          {"name": "name", "type": "string", "required": true, "description": "Module name"}
+        ],
+        "returns": "JSON object with module details",
+        "example": "query.sh find-module core",
+        "performance": "<1ms"
+      },
+      "search-modules": {
+        "description": "Search modules by name pattern",
+        "syntax": "query.sh search-modules <pattern>",
+        "parameters": [
+          {"name": "pattern", "type": "string", "required": true, "description": "Wildcard pattern"}
+        ],
+        "returns": "JSON array of matching modules",
+        "example": "query.sh search-modules 'lib_*'",
+        "performance": "<10ms"
+      },
+      "list-file-modules": {
+        "description": "Find modules using a file",
+        "syntax": "query.sh list-file-modules <filename>",
+        "parameters": [
+          {"name": "filename", "type": "string", "required": true, "description": "File name or path"}
+        ],
+        "returns": "JSON array of modules using file",
+        "example": "query.sh list-file-modules 'util.4gl'",
+        "performance": "<1ms"
+      }
+    },
+    "module_scoped_queries": {
+      "find-functions-in-module": {
+        "description": "Find all functions in a module",
+        "syntax": "query.sh find-functions-in-module <name>",
+        "parameters": [
+          {"name": "name", "type": "string", "required": true, "description": "Module name"}
+        ],
+        "returns": "JSON array of functions in module",
+        "example": "query.sh find-functions-in-module core",
+        "performance": "<1ms"
+      },
+      "find-module-for-function": {
+        "description": "Find which module(s) contain a function",
+        "syntax": "query.sh find-module-for-function <name>",
+        "parameters": [
+          {"name": "name", "type": "string", "required": true, "description": "Function name"}
+        ],
+        "returns": "JSON array of modules containing function",
+        "example": "query.sh find-module-for-function my_function",
+        "performance": "<1ms"
+      },
+      "find-functions-calling-in-module": {
+        "description": "Find functions in module that call a function",
+        "syntax": "query.sh find-functions-calling-in-module <module> <func>",
+        "parameters": [
+          {"name": "module", "type": "string", "required": true, "description": "Module name"},
+          {"name": "func", "type": "string", "required": true, "description": "Function name"}
+        ],
+        "returns": "JSON array of functions in module calling func",
+        "example": "query.sh find-functions-calling-in-module core validate_input",
+        "performance": "<1ms"
+      },
+      "find-module-dependencies": {
+        "description": "Find modules that a module depends on",
+        "syntax": "query.sh find-module-dependencies <name>",
+        "parameters": [
+          {"name": "name", "type": "string", "required": true, "description": "Module name"}
+        ],
+        "returns": "JSON array of dependent modules",
+        "example": "query.sh find-module-dependencies core",
+        "performance": "<1ms"
+      }
+    },
+    "header_queries": {
+      "find-reference": {
+        "description": "Find files modified for a code reference",
+        "syntax": "query.sh find-reference <ref>",
+        "parameters": [
+          {"name": "ref", "type": "string", "required": true, "description": "Code reference (e.g., PRB-299)"}
+        ],
+        "returns": "JSON array of files with reference",
+        "example": "query.sh find-reference 'PRB-299'",
+        "performance": "<1ms"
+      },
+      "find-author": {
+        "description": "Find files modified by an author",
+        "syntax": "query.sh find-author <author>",
+        "parameters": [
+          {"name": "author", "type": "string", "required": true, "description": "Author name"}
+        ],
+        "returns": "JSON array of files modified by author",
+        "example": "query.sh find-author 'John Smith'",
+        "performance": "<1ms"
+      },
+      "file-references": {
+        "description": "Get all references for a file",
+        "syntax": "query.sh file-references <path>",
+        "parameters": [
+          {"name": "path", "type": "string", "required": true, "description": "File path"}
+        ],
+        "returns": "JSON array of references for file",
+        "example": "query.sh file-references './src/utils.4gl'",
+        "performance": "<1ms"
+      },
+      "file-authors": {
+        "description": "Get all authors who modified a file",
+        "syntax": "query.sh file-authors <path>",
+        "parameters": [
+          {"name": "path", "type": "string", "required": true, "description": "File path"}
+        ],
+        "returns": "JSON array of authors",
+        "example": "query.sh file-authors './src/utils.4gl'",
+        "performance": "<1ms"
+      },
+      "author-expertise": {
+        "description": "Show what areas an author has expertise in",
+        "syntax": "query.sh author-expertise <author>",
+        "parameters": [
+          {"name": "author", "type": "string", "required": true, "description": "Author name"}
+        ],
+        "returns": "JSON object with expertise areas",
+        "example": "query.sh author-expertise 'John Smith'",
+        "performance": "<1ms"
+      },
+      "recent-changes": {
+        "description": "Find files modified in last N days",
+        "syntax": "query.sh recent-changes [days]",
+        "parameters": [
+          {"name": "days", "type": "integer", "required": false, "default": 30, "description": "Number of days"}
+        ],
+        "returns": "JSON array of recently modified files",
+        "example": "query.sh recent-changes 7",
+        "performance": "<1ms"
+      },
+      "search-references": {
+        "description": "Search references by pattern",
+        "syntax": "query.sh search-references <pattern>",
+        "parameters": [
+          {"name": "pattern", "type": "string", "required": true, "description": "Wildcard pattern"}
+        ],
+        "returns": "JSON array of matching references",
+        "example": "query.sh search-references 'EH100%'",
+        "performance": "<10ms"
+      }
+    },
+    "database_management": {
+      "create-dbs": {
+        "description": "Create both databases from JSON files",
+        "syntax": "query.sh create-dbs",
+        "parameters": [],
+        "returns": "Status message",
+        "example": "query.sh create-dbs",
+        "performance": "<5s"
+      },
+      "create-signatures-db": {
+        "description": "Create workspace.db from workspace.json",
+        "syntax": "query.sh create-signatures-db",
+        "parameters": [],
+        "returns": "Status message",
+        "example": "query.sh create-signatures-db",
+        "performance": "<3s"
+      },
+      "create-modules-db": {
+        "description": "Create modules.db from modules.json",
+        "syntax": "query.sh create-modules-db",
+        "parameters": [],
+        "returns": "Status message",
+        "example": "query.sh create-modules-db",
+        "performance": "<2s"
+      }
+    }
+  }
+}

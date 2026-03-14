@@ -1,0 +1,167 @@
+{
+  "api_documentation": {
+    "version": "1.0.0",
+    "description": "Complete API reference for genero-tools",
+    "files": {
+      "shell_commands": {
+        "file": "shell-commands.json",
+        "description": "All query.sh commands with syntax and examples",
+        "categories": [
+          "signature_queries",
+          "module_queries",
+          "module_scoped_queries",
+          "header_queries",
+          "database_management"
+        ]
+      },
+      "python_query_db": {
+        "file": "python-query-db.json",
+        "description": "Core query functions from scripts.query_db",
+        "functions": 13
+      },
+      "python_quality_analyzer": {
+        "file": "python-quality-analyzer.json",
+        "description": "Code quality metrics from scripts.quality_analyzer",
+        "class": "QualityAnalyzer",
+        "methods": 7
+      },
+      "python_query_headers": {
+        "file": "python-query-headers.json",
+        "description": "Header/reference queries from scripts.query_headers",
+        "functions": 7
+      },
+      "python_metrics_extractor": {
+        "file": "python-metrics-extractor.json",
+        "description": "Metrics extraction from scripts.metrics_extractor",
+        "class": "MetricsExtractor",
+        "methods": 2
+      },
+      "python_incremental_generator": {
+        "file": "python-incremental-generator.json",
+        "description": "Incremental updates from scripts.incremental_generator",
+        "class": "IncrementalGenerator",
+        "methods": 3
+      },
+      "python_db_conversion": {
+        "file": "python-db-conversion.json",
+        "description": "Database conversion tools from scripts.json_to_sqlite",
+        "functions": 2
+      },
+      "data_formats": {
+        "file": "data-formats.json",
+        "description": "JSON and output format specifications",
+        "formats": [
+          "workspace_json",
+          "modules_json",
+          "query_output",
+          "code_reference_formats",
+          "file_header_format"
+        ]
+      },
+      "database_schema": {
+        "file": "database-schema.json",
+        "description": "SQLite database schemas and query examples",
+        "databases": ["workspace_db", "modules_db"]
+      },
+      "quick_reference": {
+        "file": "quick-reference.json",
+        "description": "Quick reference for common tasks",
+        "sections": [
+          "setup",
+          "common_queries",
+          "python_imports",
+          "output_format",
+          "performance"
+        ]
+      },
+      "vim_plugin_guide": {
+        "file": "vim-plugin-guide.json",
+        "description": "Vim plugin integration guide",
+        "sections": [
+          "recommended_features",
+          "integration_approaches",
+          "setup_steps",
+          "caching_strategy",
+          "performance_tips",
+          "error_handling"
+        ]
+      }
+    },
+    "query_categories": {
+      "function_lookup": [
+        "find-function",
+        "search-functions",
+        "list-file-functions"
+      ],
+      "dependency_analysis": [
+        "find-function-dependencies",
+        "find-function-dependents",
+        "find-dead-code"
+      ],
+      "module_queries": [
+        "find-module",
+        "search-modules",
+        "list-file-modules",
+        "find-functions-in-module",
+        "find-module-for-function",
+        "find-functions-calling-in-module",
+        "find-module-dependencies"
+      ],
+      "header_queries": [
+        "find-reference",
+        "find-author",
+        "file-references",
+        "file-authors",
+        "author-expertise",
+        "recent-changes",
+        "search-references"
+      ],
+      "database_management": [
+        "create-dbs",
+        "create-signatures-db",
+        "create-modules-db"
+      ]
+    },
+    "interfaces": {
+      "shell": {
+        "entry_point": "query.sh",
+        "output_format": "JSON",
+        "performance": "<10ms for most queries"
+      },
+      "python": {
+        "modules": [
+          "scripts.query_db",
+          "scripts.quality_analyzer",
+          "scripts.query_headers",
+          "scripts.metrics_extractor",
+          "scripts.incremental_generator"
+        ],
+        "output_format": "Python objects/dicts",
+        "performance": "<1ms for most queries"
+      },
+      "database": {
+        "files": ["workspace.db", "modules.db"],
+        "type": "SQLite",
+        "output_format": "SQL result sets",
+        "performance": "<1ms for indexed queries"
+      }
+    },
+    "metrics": {
+      "available": [
+        "loc - Lines of Code",
+        "complexity - Cyclomatic Complexity",
+        "variables - Variable Count",
+        "parameters - Parameter Count",
+        "returns - Return Count",
+        "call_depth - Call Depth"
+      ]
+    },
+    "getting_started": {
+      "step_1": "Generate signatures: bash generate_signatures.sh /path/to/codebase",
+      "step_2": "Generate modules: bash generate_modules.sh /path/to/codebase",
+      "step_3": "Create databases: bash query.sh create-dbs",
+      "step_4": "Test query: query.sh find-function test_function",
+      "step_5": "Integrate into your tool"
+    }
+  }
+}

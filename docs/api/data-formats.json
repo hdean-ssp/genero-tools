@@ -1,0 +1,97 @@
+{
+  "formats": {
+    "workspace_json": {
+      "description": "Function signatures extracted from .4gl files",
+      "structure": {
+        "_metadata": {
+          "version": "string",
+          "generated": "ISO 8601 timestamp",
+          "files_processed": "integer"
+        },
+        "file_path": [
+          {
+            "name": "string - function name",
+            "line": {"start": "integer", "end": "integer"},
+            "signature": "string - human readable signature",
+            "parameters": [
+              {"name": "string", "type": "string"}
+            ],
+            "returns": [
+              {"name": "string", "type": "string"}
+            ],
+            "calls": [
+              {"name": "string", "line": "integer"}
+            ]
+          }
+        ]
+      }
+    },
+    "modules_json": {
+      "description": "Module dependencies from .m3 makefiles",
+      "structure": {
+        "_metadata": {
+          "version": "string",
+          "generated": "ISO 8601 timestamp",
+          "files_processed": "integer"
+        },
+        "modules": [
+          {
+            "module": "string - module name",
+            "file": "string - path to .m3 file",
+            "L4GLS": ["string - library file paths"],
+            "U4GLS": ["string - utility file paths"],
+            "4GLS": ["string - module file paths"]
+          }
+        ]
+      }
+    },
+    "query_output": {
+      "description": "Standard JSON output from query.sh commands",
+      "function_object": {
+        "name": "string",
+        "file": "string",
+        "line_start": "integer",
+        "line_end": "integer",
+        "signature": "string",
+        "parameters": [
+          {"name": "string", "type": "string"}
+        ],
+        "returns": [
+          {"name": "string", "type": "string"}
+        ],
+        "calls": [
+          {"name": "string", "line": "integer"}
+        ]
+      },
+      "module_object": {
+        "module": "string",
+        "file": "string",
+        "L4GLS": ["string"],
+        "U4GLS": ["string"],
+        "4GLS": ["string"]
+      }
+    },
+    "code_reference_formats": {
+      "description": "Supported code reference formats in file headers",
+      "examples": [
+        "PRB-299",
+        "EH100512",
+        "SR-40356-3",
+        "BUG-1234",
+        "FEATURE-567"
+      ]
+    },
+    "file_header_format": {
+      "description": "File modification header format",
+      "structure": {
+        "modifications_section": "Header comments containing modification history",
+        "columns": [
+          "Date",
+          "Author",
+          "Reference",
+          "Description"
+        ]
+      }
+    }
+  }
+}

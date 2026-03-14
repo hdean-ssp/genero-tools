@@ -1,0 +1,140 @@
+{
+  "module": "scripts.query_db",
+  "description": "Core query functions for function and module lookups",
+  "functions": {
+    "find_function": {
+      "signature": "find_function(db_file: str, name: str) -> List[Dict]",
+      "description": "Find function by exact name",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "name", "type": "str", "description": "Function name"}
+      ],
+      "returns": "List of function objects with signatures, parameters, returns, calls",
+      "example": "from scripts.query_db import find_function\nresults = find_function('workspace.db', 'calculate')"
+    },
+    "search_functions": {
+      "signature": "search_functions(db_file: str, pattern: str) -> List[Dict]",
+      "description": "Search functions by name pattern",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "pattern", "type": "str", "description": "Wildcard pattern (e.g., get_*)"}
+      ],
+      "returns": "List of matching function objects",
+      "example": "results = search_functions('workspace.db', 'get_*')"
+    },
+    "list_file_functions": {
+      "signature": "list_file_functions(db_file: str, path: str) -> List[Dict]",
+      "description": "List all functions in a file",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "path", "type": "str", "description": "File path"}
+      ],
+      "returns": "List of functions in file",
+      "example": "results = list_file_functions('workspace.db', './src/utils.4gl')"
+    },
+    "find_function_dependencies": {
+      "signature": "find_function_dependencies(db_file: str, name: str) -> List[Dict]",
+      "description": "Find all functions called by a function",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "name", "type": "str", "description": "Function name"}
+      ],
+      "returns": "List of called functions with line numbers",
+      "example": "results = find_function_dependencies('workspace.db', 'process_request')"
+    },
+    "find_function_dependents": {
+      "signature": "find_function_dependents(db_file: str, name: str) -> List[Dict]",
+      "description": "Find all functions that call a function",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "name", "type": "str", "description": "Function name"}
+      ],
+      "returns": "List of calling functions",
+      "example": "results = find_function_dependents('workspace.db', 'log_message')"
+    },
+    "find_dead_code": {
+      "signature": "find_dead_code(db_file: str) -> List[Dict]",
+      "description": "Find functions that are never called",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"}
+      ],
+      "returns": "List of unused functions",
+      "example": "results = find_dead_code('workspace.db')"
+    },
+    "find_module": {
+      "signature": "find_module(db_file: str, name: str) -> Dict",
+      "description": "Find module by exact name",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to modules.db"},
+        {"name": "name", "type": "str", "description": "Module name"}
+      ],
+      "returns": "Module object with files and dependencies",
+      "example": "result = find_module('modules.db', 'core')"
+    },
+    "search_modules": {
+      "signature": "search_modules(db_file: str, pattern: str) -> List[Dict]",
+      "description": "Search modules by name pattern",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to modules.db"},
+        {"name": "pattern", "type": "str", "description": "Wildcard pattern"}
+      ],
+      "returns": "List of matching modules",
+      "example": "results = search_modules('modules.db', 'lib_*')"
+    },
+    "list_file_modules": {
+      "signature": "list_file_modules(db_file: str, filename: str) -> List[Dict]",
+      "description": "Find modules using a file",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to modules.db"},
+        {"name": "filename", "type": "str", "description": "File name or path"}
+      ],
+      "returns": "List of modules using file",
+      "example": "results = list_file_modules('modules.db', 'util.4gl')"
+    },
+    "find_functions_in_module": {
+      "signature": "find_functions_in_module(modules_db: str, signatures_db: str, module_name: str) -> List[Dict]",
+      "description": "Find all functions in a module",
+      "parameters": [
+        {"name": "modules_db", "type": "str", "description": "Path to modules.db"},
+        {"name": "signatures_db", "type": "str", "description": "Path to workspace.db"},
+        {"name": "module_name", "type": "str", "description": "Module name"}
+      ],
+      "returns": "List of functions in module",
+      "example": "results = find_functions_in_module('modules.db', 'workspace.db', 'core')"
+    },
+    "find_module_for_function": {
+      "signature": "find_module_for_function(modules_db: str, signatures_db: str, func_name: str) -> List[Dict]",
+      "description": "Find which module(s) contain a function",
+      "parameters": [
+        {"name": "modules_db", "type": "str", "description": "Path to modules.db"},
+        {"name": "signatures_db", "type": "str", "description": "Path to workspace.db"},
+        {"name": "func_name", "type": "str", "description": "Function name"}
+      ],
+      "returns": "List of modules containing function",
+      "example": "results = find_module_for_function('modules.db', 'workspace.db', 'my_function')"
+    },
+    "find_functions_calling_in_module": {
+      "signature": "find_functions_calling_in_module(modules_db: str, signatures_db: str, module_name: str, func_name: str) -> List[Dict]",
+      "description": "Find functions in module that call a function",
+      "parameters": [
+        {"name": "modules_db", "type": "str", "description": "Path to modules.db"},
+        {"name": "signatures_db", "type": "str", "description": "Path to workspace.db"},
+        {"name": "module_name", "type": "str", "description": "Module name"},
+        {"name": "func_name", "type": "str", "description": "Function name"}
+      ],
+      "returns": "List of functions in module calling func",
+      "example": "results = find_functions_calling_in_module('modules.db', 'workspace.db', 'core', 'validate_input')"
+    },
+    "find_module_dependencies": {
+      "signature": "find_module_dependencies(modules_db: str, signatures_db: str, module_name: str) -> List[Dict]",
+      "description": "Find modules that a module depends on",
+      "parameters": [
+        {"name": "modules_db", "type": "str", "description": "Path to modules.db"},
+        {"name": "signatures_db", "type": "str", "description": "Path to workspace.db"},
+        {"name": "module_name", "type": "str", "description": "Module name"}
+      ],
+      "returns": "List of dependent modules",
+      "example": "results = find_module_dependencies('modules.db', 'workspace.db', 'core')"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "module": "scripts.metrics_extractor",
+  "description": "Extract code quality metrics from Genero/4GL files",
+  "class": "MetricsExtractor",
+  "constructor": {
+    "signature": "MetricsExtractor()",
+    "description": "Initialize metrics extractor",
+    "example": "from scripts.metrics_extractor import MetricsExtractor\nme = MetricsExtractor()"
+  },
+  "methods": {
+    "extract_file_metrics": {
+      "signature": "extract_file_metrics(file_path: str) -> List[FunctionMetrics]",
+      "description": "Extract metrics for all functions in a file",
+      "parameters": [
+        {"name": "file_path", "type": "str", "description": "Path to .4gl file"}
+      ],
+      "returns": "List of FunctionMetrics objects",
+      "example": "metrics = me.extract_file_metrics('./src/utils.4gl')"
+    },
+    "extract_function_metrics": {
+      "signature": "extract_function_metrics(file_path: str, func_name: str) -> FunctionMetrics",
+      "description": "Extract metrics for a specific function",
+      "parameters": [
+        {"name": "file_path", "type": "str", "description": "Path to .4gl file"},
+        {"name": "func_name", "type": "str", "description": "Function name"}
+      ],
+      "returns": "FunctionMetrics object",
+      "example": "metrics = me.extract_function_metrics('./src/utils.4gl', 'calculate')"
+    }
+  },
+  "FunctionMetrics": {
+    "description": "Data class containing function metrics",
+    "fields": {
+      "name": "str - Function name",
+      "file_path": "str - Path to file",
+      "line_start": "int - Starting line number",
+      "line_end": "int - Ending line number",
+      "loc": "int - Lines of code",
+      "complexity": "int - Cyclomatic complexity",
+      "variables": "int - Number of local variables",
+      "parameters": "int - Number of parameters",
+      "returns": "int - Number of return values",
+      "call_depth": "int - Maximum call nesting depth"
+    },
+    "methods": {
+      "to_dict": {
+        "signature": "to_dict() -> dict",
+        "description": "Convert to dictionary",
+        "example": "metrics_dict = metrics.to_dict()"
+      },
+      "from_dict": {
+        "signature": "from_dict(data: dict) -> FunctionMetrics",
+        "description": "Create from dictionary",
+        "example": "metrics = FunctionMetrics.from_dict(data)"
+      }
+    }
+  }
+}
