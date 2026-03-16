@@ -1,5 +1,6 @@
 # Generated output files
 workspace.json
+workspace_resolved.json
 modules.json
 codebase_index.json
 *.db

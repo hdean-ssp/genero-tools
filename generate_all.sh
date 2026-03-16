@@ -13,6 +13,7 @@ set -euo pipefail
 VERSION="1.0.0"
 VERBOSE="${VERBOSE:-0}"
 TARGET="${1:-.}"
+SCHEMA_FILE="${2:-}"  # Optional schema file parameter
 
 # Color codes for output
 RED='\033[0;31m'
@@ -57,6 +58,29 @@ fi
 
 log_info "Target directory: $TARGET"
 log_info "Found $GL4_COUNT .4gl files and $M3_COUNT .m3 files"
+
+# Find schema file if not provided
+if [[ -z "$SCHEMA_FILE" ]]; then
+    # Look for .sch files in the target directory
+    SCHEMA_FILES=$(find "$TARGET" -name "*.sch" -type f)
+    SCHEMA_COUNT=$(echo "$SCHEMA_FILES" | grep -c . || true)
+    
+    if [[ $SCHEMA_COUNT -gt 0 ]]; then
+        # Use the first schema file found
+        SCHEMA_FILE=$(echo "$SCHEMA_FILES" | head -1)
+        log_info "Found schema file: $SCHEMA_FILE"
+    else
+        log_info "No schema file found in target directory (type resolution will be skipped)"
+    fi
+else
+    # Validate provided schema file
+    if [[ ! -f "$SCHEMA_FILE" ]]; then
+        log_error "Schema file not found: $SCHEMA_FILE"
+        exit 1
+    fi
+    log_info "Using provided schema file: $SCHEMA_FILE"
+fi
+
 echo ""
 
 # Get script directory
@@ -121,7 +145,7 @@ fi
 
 echo ""
 
-# Step 4: Create SQLite databases for fast querying
+# Step 3: Create SQLite databases for fast querying
 log_step "Creating SQLite databases for fast querying..."
 
 # Remove old databases to avoid constraint errors
@@ -158,17 +182,63 @@ if [[ $M3_COUNT -gt 0 ]]; then
 fi
 
 echo ""
+
+# Step 4: Parse and load schema if available
+if [[ -n "$SCHEMA_FILE" && -f "$SCHEMA_FILE" ]]; then
+    log_step "Parsing schema file and loading into database..."
+    
+    # Create temp file for schema JSON
+    SCHEMA_JSON=$(mktemp)
+    trap 'rm -f "$SCHEMA_JSON"' EXIT
+    
+    # Parse schema file
+    if python3 "$SCRIPT_DIR/scripts/parse_schema.py" "$SCHEMA_FILE" "$SCHEMA_JSON" 2>/dev/null; then
+        log_success "Schema parsed: $SCHEMA_FILE"
+        
+        # Load schema into workspace.db
+        if python3 "$SCRIPT_DIR/scripts/json_to_sqlite_schema.py" "$SCHEMA_JSON" workspace.db 2>/dev/null; then
+            log_success "Schema loaded into workspace.db"
+            
+            # Enable type resolution for subsequent steps
+            export RESOLVE_TYPES=1
+            log_info "Type resolution enabled"
+        else
+            log_info "Could not load schema into database (type resolution will be skipped)"
+        fi
+    else
+        log_info "Could not parse schema file (type resolution will be skipped)"
+    fi
+else
+    log_info "No schema file available (type resolution will be skipped)"
+fi
+
+echo ""
+
+# Step 5: Generate resolved types if schema was loaded
+if [[ "${RESOLVE_TYPES:-0}" == "1" ]]; then
+    log_step "Generating type-resolved signatures..."
+    
+    if python3 "$SCRIPT_DIR/scripts/resolve_types.py" workspace.db workspace.json workspace_resolved.json 2>/dev/null; then
+        log_success "Type-resolved signatures generated (workspace_resolved.json)"
+    else
+        log_info "Could not generate type-resolved signatures (continuing)"
+    fi
+fi
+
+echo ""
 log_success "All generators completed successfully!"
 echo ""
 log_info "Generated files:"
 [[ $GL4_COUNT -gt 0 ]] && log_info "  - workspace.json (function signatures with headers)"
 [[ $GL4_COUNT -gt 0 ]] && log_info "  - workspace.db (SQLite database with signatures and headers)"
+[[ -n "$SCHEMA_FILE" && -f "$SCHEMA_FILE" ]] && log_info "  - workspace_resolved.json (signatures with resolved types)"
 [[ $M3_COUNT -gt 0 ]] && log_info "  - modules.json (module dependencies)"
 [[ $M3_COUNT -gt 0 ]] && log_info "  - modules.db (SQLite database for fast queries)"
 echo ""
 log_info "Summary:"
 log_info "  - $GL4_COUNT .4gl files processed"
 log_info "  - $M3_COUNT .m3 files processed"
+[[ -n "$SCHEMA_FILE" && -f "$SCHEMA_FILE" ]] && log_info "  - Schema file processed: $SCHEMA_FILE"
 echo ""
 log_info "To query the generated databases:"
 log_info "  bash query.sh find-function <name>"
