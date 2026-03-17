@@ -250,7 +250,7 @@ def main():
     try:
         # Check if input file exists
         if not Path(input_file).exists():
-            print(f"✗ Error: Input file not found: {input_file}", file=sys.stderr)
+            sys.stderr.write(f"Error: Input file not found: {input_file}\n")
             sys.exit(1)
         
         # Diagnostic: Check file size and first few lines
@@ -258,7 +258,7 @@ def main():
         file_size = file_path.stat().st_size
         
         if file_size == 0:
-            print(f"✗ Error: Schema file is empty: {input_file}", file=sys.stderr)
+            sys.stderr.write(f"Error: Schema file is empty: {input_file}\n")
             sys.exit(1)
         
         # Try to detect encoding and show first line for debugging
@@ -276,14 +276,14 @@ def main():
                 continue
         
         if first_line is None:
-            print(f"✗ Error: Could not read schema file with any supported encoding", file=sys.stderr)
+            sys.stderr.write(f"Error: Could not read schema file with any supported encoding\n")
             sys.exit(1)
         
         # Validate format
         if '^' not in first_line:
-            print(f"✗ Error: Schema file does not appear to be in pipe-delimited format", file=sys.stderr)
-            print(f"  Expected format: table_name^column_name^type_code^length^position^", file=sys.stderr)
-            print(f"  First line: {first_line[:100]}", file=sys.stderr)
+            sys.stderr.write(f"Error: Schema file does not appear to be in pipe-delimited format\n")
+            sys.stderr.write(f"  Expected format: table_name^column_name^type_code^length^position^\n")
+            sys.stderr.write(f"  First line: {first_line[:100]}\n")
             sys.exit(1)
         
         parser = SchemaParser()
@@ -291,27 +291,28 @@ def main():
         
         # Check if we parsed any lines
         if parser.lines_processed == 0 and len(parser.errors) == 0:
-            print(f"⚠ Warning: No valid lines parsed from {input_file}", file=sys.stderr)
-            print(f"  File may be empty or in an unexpected format", file=sys.stderr)
-            print(f"  Expected format: table_name^column_name^type_code^length^position^", file=sys.stderr)
+            sys.stderr.write(f"Warning: No valid lines parsed from {input_file}\n")
+            sys.stderr.write(f"  File may be empty or in an unexpected format\n")
+            sys.stderr.write(f"  Expected format: table_name^column_name^type_code^length^position^\n")
         
         # Write output
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(schema, f, indent=2)
         
-        print(f"✓ Parsed {parser.lines_processed} lines from {input_file}")
-        print(f"✓ Found {len(schema['tables'])} tables")
-        print(f"✓ Output written to {output_file}")
+        # Use ASCII-safe output for stdout to avoid encoding issues
+        print(f"[OK] Parsed {parser.lines_processed} lines from {input_file}")
+        print(f"[OK] Found {len(schema['tables'])} tables")
+        print(f"[OK] Output written to {output_file}")
         
         if parser.warnings:
-            print(f"\n⚠ Warnings ({len(parser.warnings)}):")
+            print(f"\n[WARN] Warnings ({len(parser.warnings)}):")
             for warning in parser.warnings[:5]:
                 print(f"  - {warning}")
             if len(parser.warnings) > 5:
                 print(f"  ... and {len(parser.warnings) - 5} more")
         
         if parser.errors:
-            print(f"\n✗ Errors ({len(parser.errors)}):")
+            print(f"\n[ERR] Errors ({len(parser.errors)}):")
             for error in parser.errors[:5]:
                 print(f"  - {error}")
             if len(parser.errors) > 5:
@@ -319,13 +320,13 @@ def main():
             sys.exit(1)
         
     except FileNotFoundError as e:
-        print(f"✗ Error: {e}", file=sys.stderr)
+        sys.stderr.write(f"Error: {e}\n")
         sys.exit(1)
     except IOError as e:
-        print(f"✗ Error: {e}", file=sys.stderr)
+        sys.stderr.write(f"Error: {e}\n")
         sys.exit(1)
     except Exception as e:
-        print(f"✗ Unexpected error: {e}", file=sys.stderr)
+        sys.stderr.write(f"Unexpected error: {e}\n")
         import traceback
         traceback.print_exc(file=sys.stderr)
         sys.exit(1)
