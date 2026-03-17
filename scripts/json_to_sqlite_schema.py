@@ -364,12 +364,12 @@ def load_schema_file(schema_json_file: str, db_file: str) -> None:
         db.create_tables()
         db.load_schema(schema_data)
         
-        print(f"✓ Loaded {db.tables_inserted} tables")
-        print(f"✓ Loaded {db.columns_inserted} columns")
-        print(f"✓ Database: {db_file}")
+        print(f"[OK] Loaded {db.tables_inserted} tables")
+        print(f"[OK] Loaded {db.columns_inserted} columns")
+        print(f"[OK] Database: {db_file}")
         
         if db.errors:
-            print(f"\n⚠ Warnings ({len(db.errors)}):")
+            print(f"\n[WARN] Warnings ({len(db.errors)}):")
             for error in db.errors[:5]:
                 print(f"  - {error}")
             if len(db.errors) > 5:
@@ -397,16 +397,18 @@ def main():
     try:
         load_schema_file(schema_file, db_file)
     except FileNotFoundError as e:
-        print(f"✗ Error: {e}", file=sys.stderr)
+        sys.stderr.write(f"Error: {e}\n")
         sys.exit(1)
     except json.JSONDecodeError as e:
-        print(f"✗ Error: {e}", file=sys.stderr)
+        sys.stderr.write(f"Error: {e}\n")
         sys.exit(1)
     except sqlite3.Error as e:
-        print(f"✗ Database error: {e}", file=sys.stderr)
+        sys.stderr.write(f"Database error: {e}\n")
         sys.exit(1)
     except Exception as e:
-        print(f"✗ Unexpected error: {e}", file=sys.stderr)
+        sys.stderr.write(f"Unexpected error: {e}\n")
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
 
 
