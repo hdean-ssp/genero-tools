@@ -5,6 +5,10 @@ modules.json
 codebase_index.json
 *.db
 
+# Production database schema (sensitive)
+castle.sch
+*.sch
+
 # Environment and secrets
 .env
 .env.local

@@ -55,6 +55,10 @@ Header/Reference queries (workspace.db):
   search-references <pattern>         Search references by pattern (partial match)
   search-reference-prefix <prefix>    Search references by prefix (e.g., "EH100512" finds "EH100512-9a")
 
+Batch queries:
+  batch-query <json_file>             Execute multiple queries in a single batch
+  batch-query --input <json_file> --output <output_file>  Execute batch with output file
+
 Database management:
   create-dbs                          Create both databases from JSON files
   create-signatures-db                Create workspace.db from workspace.json
@@ -73,6 +77,8 @@ Examples:
   query.sh file-references "./src/utils.4gl"
   query.sh author-expertise "John Smith"
   query.sh recent-changes 7
+  query.sh batch-query queries.json
+  query.sh batch-query --input queries.json --output results.json
 EOF
 }
 
@@ -186,6 +192,59 @@ case "$command" in
         ;;
     search-reference-prefix)
         python3 "$PROJECT_ROOT/scripts/query_headers.py" search-reference-prefix "$SIGNATURES_DB" "$@"
+        ;;
+    batch-query)
+        # Handle batch query with optional input/output parameters
+        input_file=""
+        output_file=""
+        
+        # Parse --input and --output parameters
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --input)
+                    input_file="$2"
+                    shift 2
+                    ;;
+                --output)
+                    output_file="$2"
+                    shift 2
+                    ;;
+                *)
+                    # First positional argument is the input file
+                    if [[ -z "$input_file" ]]; then
+                        input_file="$1"
+                    fi
+                    shift
+                    ;;
+            esac
+        done
+        
+        if [[ -z "$input_file" ]]; then
+            echo "Error: batch-query requires an input JSON file" >&2
+            echo "Usage: query.sh batch-query <json_file>" >&2
+            echo "       query.sh batch-query --input <json_file> --output <output_file>" >&2
+            exit 1
+        fi
+        
+        # Execute batch query
+        result=$(python3 "$PROJECT_ROOT/scripts/batch_query_handler.py" "$input_file" "$SIGNATURES_DB" "$MODULES_DB" "$PROJECT_ROOT")
+        
+        # Write to output file if specified, otherwise print to stdout
+        if [[ -n "$output_file" ]]; then
+            echo "$result" > "$output_file"
+            echo "Batch query results written to: $output_file"
+        else
+            echo "$result"
+        fi
+        ;;
+    find-dependents-in-module)
+        python3 "$PROJECT_ROOT/scripts/relationship_queries.py" find-dependents-in-module "$MODULES_DB" "$SIGNATURES_DB" "$@"
+        ;;
+    find-call-chain)
+        python3 "$PROJECT_ROOT/scripts/relationship_queries.py" find-call-chain "$SIGNATURES_DB" "$@"
+        ;;
+    find-common-callers)
+        python3 "$PROJECT_ROOT/scripts/relationship_queries.py" find-common-callers "$SIGNATURES_DB" "$@"
         ;;
     *)
         echo "Unknown command: $command" >&2

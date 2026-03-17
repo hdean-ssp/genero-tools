@@ -8,7 +8,7 @@ FUNCTION process_interval(time_span)
 	RETURN result
 END FUNCTION
 
-FUNCTION handle_text_blob(content)
+UNCTION handle_text_blob(content)
 	DEFINE content TEXT
 	DEFINE status SMALLINT
 	DEFINE row_count INTEGER

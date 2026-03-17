@@ -187,16 +187,23 @@ echo ""
 if [[ -n "$SCHEMA_FILE" && -f "$SCHEMA_FILE" ]]; then
     log_step "Parsing schema file and loading into database..."
     
-    # Create temp file for schema JSON
+    # Create temp files for schema JSON and output
     SCHEMA_JSON=$(mktemp)
-    trap 'rm -f "$SCHEMA_JSON"' EXIT
+    PARSE_OUTPUT=$(mktemp)
+    trap 'rm -f "$SCHEMA_JSON" "$PARSE_OUTPUT"' EXIT
     
-    # Parse schema file
-    if python3 "$SCRIPT_DIR/scripts/parse_schema.py" "$SCHEMA_FILE" "$SCHEMA_JSON" 2>/dev/null; then
+    # Parse schema file (capture both stdout and stderr)
+    if python3 "$SCRIPT_DIR/scripts/parse_schema.py" "$SCHEMA_FILE" "$SCHEMA_JSON" >"$PARSE_OUTPUT" 2>&1; then
+        # Show the output (which includes success messages)
+        cat "$PARSE_OUTPUT" >&2
         log_success "Schema parsed: $SCHEMA_FILE"
         
         # Load schema into workspace.db
-        if python3 "$SCRIPT_DIR/scripts/json_to_sqlite_schema.py" "$SCHEMA_JSON" workspace.db 2>/dev/null; then
+        LOAD_OUTPUT=$(mktemp)
+        trap 'rm -f "$LOAD_OUTPUT"' EXIT
+        
+        if python3 "$SCRIPT_DIR/scripts/json_to_sqlite_schema.py" "$SCHEMA_JSON" workspace.db >"$LOAD_OUTPUT" 2>&1; then
+            cat "$LOAD_OUTPUT" >&2
             log_success "Schema loaded into workspace.db"
             
             # Enable type resolution for subsequent steps
@@ -204,9 +211,13 @@ if [[ -n "$SCHEMA_FILE" && -f "$SCHEMA_FILE" ]]; then
             log_info "Type resolution enabled"
         else
             log_info "Could not load schema into database (type resolution will be skipped)"
+            echo -e "${BLUE}[INFO]${NC} Error details:" >&2
+            cat "$LOAD_OUTPUT" | sed 's/^/  /' >&2
         fi
     else
         log_info "Could not parse schema file (type resolution will be skipped)"
+        echo -e "${BLUE}[INFO]${NC} Error details:" >&2
+        cat "$PARSE_OUTPUT" | sed 's/^/  /' >&2
     fi
 else
     log_info "No schema file available (type resolution will be skipped)"

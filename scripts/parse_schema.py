@@ -84,9 +84,26 @@ class SchemaParser:
         self.lines_skipped = 0
         
         try:
-            with open(filename, 'r', encoding='utf-8') as f:
-                for line_num, line in enumerate(f, 1):
-                    self._parse_line(line, line_num)
+            # Try UTF-8 first, then fall back to other encodings
+            encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252']
+            file_content = None
+            used_encoding = None
+            
+            for encoding in encodings:
+                try:
+                    with open(filename, 'r', encoding=encoding) as f:
+                        file_content = f.readlines()
+                    used_encoding = encoding
+                    break
+                except (UnicodeDecodeError, LookupError):
+                    continue
+            
+            if file_content is None:
+                raise IOError(f"Could not read schema file with any supported encoding: {filename}")
+            
+            for line_num, line in enumerate(file_content, 1):
+                self._parse_line(line, line_num)
+                
         except FileNotFoundError:
             raise FileNotFoundError(f"Schema file not found: {filename}")
         except IOError as e:
@@ -101,6 +118,7 @@ class SchemaParser:
             "lines_processed": self.lines_processed,
             "lines_skipped": self.lines_skipped,
             "tables_count": len(self.schema["tables"]),
+            "encoding": used_encoding,
             "errors": self.errors,
             "warnings": self.warnings
         }
@@ -230,8 +248,52 @@ def main():
     output_file = sys.argv[2] if len(sys.argv) > 2 else "schema.json"
     
     try:
+        # Check if input file exists
+        if not Path(input_file).exists():
+            print(f"✗ Error: Input file not found: {input_file}", file=sys.stderr)
+            sys.exit(1)
+        
+        # Diagnostic: Check file size and first few lines
+        file_path = Path(input_file)
+        file_size = file_path.stat().st_size
+        
+        if file_size == 0:
+            print(f"✗ Error: Schema file is empty: {input_file}", file=sys.stderr)
+            sys.exit(1)
+        
+        # Try to detect encoding and show first line for debugging
+        encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252']
+        first_line = None
+        detected_encoding = None
+        
+        for encoding in encodings:
+            try:
+                with open(input_file, 'r', encoding=encoding) as f:
+                    first_line = f.readline()
+                detected_encoding = encoding
+                break
+            except (UnicodeDecodeError, LookupError):
+                continue
+        
+        if first_line is None:
+            print(f"✗ Error: Could not read schema file with any supported encoding", file=sys.stderr)
+            sys.exit(1)
+        
+        # Validate format
+        if '^' not in first_line:
+            print(f"✗ Error: Schema file does not appear to be in pipe-delimited format", file=sys.stderr)
+            print(f"  Expected format: table_name^column_name^type_code^length^position^", file=sys.stderr)
+            print(f"  First line: {first_line[:100]}", file=sys.stderr)
+            sys.exit(1)
+        
         parser = SchemaParser()
         schema = parser.parse_file(input_file)
+        
+        # Check if we parsed any lines
+        if parser.lines_processed == 0 and len(parser.errors) == 0:
+            print(f"⚠ Warning: No valid lines parsed from {input_file}", file=sys.stderr)
+            print(f"  File may be empty or in an unexpected format", file=sys.stderr)
+            print(f"  Expected format: table_name^column_name^type_code^length^position^", file=sys.stderr)
         
         # Write output
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -264,6 +326,8 @@ def main():
         sys.exit(1)
     except Exception as e:
         print(f"✗ Unexpected error: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
 
 
