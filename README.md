@@ -143,14 +143,28 @@ bash query.sh search-functions "get_*"
 
 # List functions in a file
 bash query.sh list-file-functions "path/to/file.4gl"
+
+# Find function by name and file path (for multi-instance disambiguation)
+bash query.sh find-function-by-name-and-path "my_function" "./src/module.4gl"
+
+# Find all instances of a function across files
+bash query.sh find-all-function-instances "my_function"
+
+# Debug type resolution issues
+bash query.sh unresolved-types
+
+# Validate type resolution data consistency
+bash query.sh validate-types
 ```
 
 **Benefits:**
 - Fast indexed queries (<1ms for exact lookups)
 - Fully indexed for fast pattern matching
 - Efficient storage with proper indexing
+- Type resolution debugging capabilities
+- Data consistency validation
 
-See [QUERYING.md](QUERYING.md) for complete documentation.
+See [QUERYING.md](QUERYING.md) and [TYPE_RESOLUTION_GUIDE.md](docs/TYPE_RESOLUTION_GUIDE.md) for complete documentation.
 
 ## Call Graph Queries
 
@@ -227,6 +241,15 @@ See [QUICK_START_HEADERS.md](docs/QUICK_START_HEADERS.md) for complete documenta
   - Quality analyzer with 5 query methods for code review
   - Property-based testing framework for correctness validation
   - See [QUERY_LAYER_GUIDE.md](docs/QUERY_LAYER_GUIDE.md) for details
+
+- ✅ **Type Resolution Improvements** - Enhanced LIKE reference resolution and data quality
+  - Empty parameter filtering - Eliminates invalid parameters from database
+  - LIKE reference resolution - Resolves both parameters and return types to actual schema types
+  - Multi-instance function resolution - Properly disambiguates functions with same name in different files
+  - Unresolved types debugging - Query command to identify and debug type resolution failures
+  - Data consistency validation - Comprehensive checks ensure data integrity
+  - Query functions: `find-function-by-name-and-path`, `find-all-function-instances`, `unresolved-types`, `validate-types`
+  - See [SCHEMA_RESOLUTION_IMPLEMENTATION.md](docs/SCHEMA_RESOLUTION_IMPLEMENTATION.md) and [TYPE_RESOLUTION_GUIDE.md](docs/TYPE_RESOLUTION_GUIDE.md) for details
 
 ## Use Cases
 

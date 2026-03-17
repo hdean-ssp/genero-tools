@@ -103,6 +103,55 @@ python3 scripts/json_to_sqlite_schema.py schema.json workspace.db
 RESOLVE_TYPES=1 bash src/generate_signatures.sh /path/to/codebase
 ```
 
+### Type Resolution Features (v2.1.0)
+
+**Empty Parameter Filtering**
+- Automatically removes invalid parameters with empty names
+- Enforces data quality constraints
+
+**LIKE Reference Resolution**
+- Resolves LIKE references in both parameters and return types
+- Supports `LIKE table.*` and `LIKE table.column` patterns
+- Stores resolved type information in database
+
+**Multi-Instance Function Resolution**
+- Properly handles functions with same name in different files
+- Stores file_path for each function instance
+- Query by name and file path for disambiguation
+
+```bash
+# Find specific function instance
+bash query.sh find-function-by-name-and-path my_function './src/module.4gl'
+
+# Find all instances of a function
+bash query.sh find-all-function-instances my_function
+```
+
+**Unresolved Types Debugging**
+- Query command to identify type resolution failures
+- Filter by error type (missing_table, missing_column, invalid_pattern)
+- Pagination support for large result sets
+
+```bash
+# Show all unresolved types
+bash query.sh unresolved-types
+
+# Filter by error type
+bash query.sh unresolved-types --filter missing_table
+
+# Paginate results
+bash query.sh unresolved-types --limit 10 --offset 5
+```
+
+**Data Consistency Validation**
+- Comprehensive validation of type resolution data
+- Checks for empty parameters, missing file_path, unresolved LIKE references
+- Validates schema consistency
+
+```bash
+bash query.sh validate-types
+```
+
 ## Database Queries
 
 Query extracted metadata using Python's sqlite3 module.

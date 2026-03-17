@@ -135,6 +135,42 @@
       ],
       "returns": "List of dependent modules",
       "example": "results = find_module_dependencies('modules.db', 'workspace.db', 'core')"
+    },
+    "find_function_by_name_and_path": {
+      "signature": "find_function_by_name_and_path(db_file: str, name: str, path: str) -> Dict",
+      "description": "Find function by name and file path for disambiguation",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "name", "type": "str", "description": "Function name"},
+        {"name": "path", "type": "str", "description": "File path"}
+      ],
+      "returns": "Function object with resolved type information",
+      "example": "result = find_function_by_name_and_path('workspace.db', 'process_data', './src/module1.4gl')",
+      "notes": "Use when same function name exists in multiple files"
+    },
+    "find_all_function_instances": {
+      "signature": "find_all_function_instances(db_file: str, name: str) -> List[Dict]",
+      "description": "Find all instances of a function across all files",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "name", "type": "str", "description": "Function name"}
+      ],
+      "returns": "List of all function instances with file paths and resolved types",
+      "example": "results = find_all_function_instances('workspace.db', 'process_data')",
+      "notes": "Returns all instances of function across codebase"
+    },
+    "find_unresolved_types": {
+      "signature": "find_unresolved_types(db_file: str, filter_type: str = None, limit: int = None, offset: int = None) -> List[Dict]",
+      "description": "Find all unresolved LIKE type references",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"},
+        {"name": "filter_type", "type": "str", "required": false, "description": "Filter by error type: missing_table, missing_column, invalid_pattern"},
+        {"name": "limit", "type": "int", "required": false, "description": "Maximum results to return"},
+        {"name": "offset", "type": "int", "required": false, "description": "Skip first N results for pagination"}
+      ],
+      "returns": "List of unresolved types with function name, file path, type name, original type, error reason, and error type",
+      "example": "results = find_unresolved_types('workspace.db', filter_type='missing_table', limit=10)",
+      "notes": "Helps identify and debug type resolution failures"
     }
   }
 }

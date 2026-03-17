@@ -209,6 +209,44 @@
         "performance": "<10ms"
       }
     },
+    "type_resolution_queries": {
+      "find-function-by-name-and-path": {
+        "description": "Find function by name and file path for disambiguation",
+        "syntax": "query.sh find-function-by-name-and-path <name> <path>",
+        "parameters": [
+          {"name": "name", "type": "string", "required": true, "description": "Function name"},
+          {"name": "path", "type": "string", "required": true, "description": "File path"}
+        ],
+        "returns": "JSON object with function details including resolved types",
+        "example": "query.sh find-function-by-name-and-path process_data './src/module1.4gl'",
+        "performance": "<1ms",
+        "notes": "Use when same function name exists in multiple files"
+      },
+      "find-all-function-instances": {
+        "description": "Find all instances of a function across all files",
+        "syntax": "query.sh find-all-function-instances <name>",
+        "parameters": [
+          {"name": "name", "type": "string", "required": true, "description": "Function name"}
+        ],
+        "returns": "JSON array of all function instances with file paths",
+        "example": "query.sh find-all-function-instances process_data",
+        "performance": "<1ms",
+        "notes": "Returns all instances of function across codebase"
+      },
+      "unresolved-types": {
+        "description": "Find all unresolved LIKE type references",
+        "syntax": "query.sh unresolved-types [--filter <type>] [--limit <n>] [--offset <n>]",
+        "parameters": [
+          {"name": "filter", "type": "string", "required": false, "description": "Filter by error type: missing_table, missing_column, invalid_pattern"},
+          {"name": "limit", "type": "integer", "required": false, "description": "Maximum results to return"},
+          {"name": "offset", "type": "integer", "required": false, "description": "Skip first N results for pagination"}
+        ],
+        "returns": "Formatted table with unresolved types and summary statistics",
+        "example": "query.sh unresolved-types --filter missing_table --limit 10",
+        "performance": "<100ms",
+        "notes": "Helps identify and debug type resolution failures"
+      }
+    },
     "database_management": {
       "create-dbs": {
         "description": "Create both databases from JSON files",

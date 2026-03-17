@@ -27,37 +27,66 @@ class ResolvedTypeMerger:
             'parameters_updated': 0,
             'parameters_resolved': 0,
             'parameters_unresolved': 0,
+            'returns_updated': 0,
+            'returns_resolved': 0,
+            'returns_unresolved': 0,
             'errors': []
         }
     
     def _ensure_columns(self):
-        """Ensure resolved type columns exist in parameters table."""
+        """Ensure resolved type columns exist in parameters and returns tables."""
         try:
-            # Check if columns exist
+            # Check if columns exist in parameters table
             self.cursor.execute("PRAGMA table_info(parameters)")
-            columns = {row[1] for row in self.cursor.fetchall()}
+            param_columns = {row[1] for row in self.cursor.fetchall()}
             
-            # Add missing columns
-            if 'actual_type' not in columns:
+            # Add missing columns to parameters table
+            if 'actual_type' not in param_columns:
                 self.cursor.execute("ALTER TABLE parameters ADD COLUMN actual_type TEXT")
             
-            if 'is_like_reference' not in columns:
+            if 'is_like_reference' not in param_columns:
                 self.cursor.execute("ALTER TABLE parameters ADD COLUMN is_like_reference INTEGER DEFAULT 0")
             
-            if 'resolved' not in columns:
+            if 'resolved' not in param_columns:
                 self.cursor.execute("ALTER TABLE parameters ADD COLUMN resolved INTEGER DEFAULT 0")
             
-            if 'resolution_error' not in columns:
+            if 'resolution_error' not in param_columns:
                 self.cursor.execute("ALTER TABLE parameters ADD COLUMN resolution_error TEXT")
             
-            if 'table_name' not in columns:
+            if 'table_name' not in param_columns:
                 self.cursor.execute("ALTER TABLE parameters ADD COLUMN table_name TEXT")
             
-            if 'columns' not in columns:
+            if 'columns' not in param_columns:
                 self.cursor.execute("ALTER TABLE parameters ADD COLUMN columns TEXT")
             
-            if 'types' not in columns:
+            if 'types' not in param_columns:
                 self.cursor.execute("ALTER TABLE parameters ADD COLUMN types TEXT")
+            
+            # Check if columns exist in returns table
+            self.cursor.execute("PRAGMA table_info(returns)")
+            return_columns = {row[1] for row in self.cursor.fetchall()}
+            
+            # Add missing columns to returns table
+            if 'actual_type' not in return_columns:
+                self.cursor.execute("ALTER TABLE returns ADD COLUMN actual_type TEXT")
+            
+            if 'is_like_reference' not in return_columns:
+                self.cursor.execute("ALTER TABLE returns ADD COLUMN is_like_reference INTEGER DEFAULT 0")
+            
+            if 'resolved' not in return_columns:
+                self.cursor.execute("ALTER TABLE returns ADD COLUMN resolved INTEGER DEFAULT 0")
+            
+            if 'resolution_error' not in return_columns:
+                self.cursor.execute("ALTER TABLE returns ADD COLUMN resolution_error TEXT")
+            
+            if 'table_name' not in return_columns:
+                self.cursor.execute("ALTER TABLE returns ADD COLUMN table_name TEXT")
+            
+            if 'columns' not in return_columns:
+                self.cursor.execute("ALTER TABLE returns ADD COLUMN columns TEXT")
+            
+            if 'types' not in return_columns:
+                self.cursor.execute("ALTER TABLE returns ADD COLUMN types TEXT")
             
             self.conn.commit()
         except sqlite3.Error as e:
@@ -98,8 +127,8 @@ class ResolvedTypeMerger:
                 if not func_name:
                     continue
                 
-                # Get function ID from database
-                self.cursor.execute('SELECT id FROM functions WHERE name = ?', (func_name,))
+                # Get function ID from database using both function_name and file_path
+                self.cursor.execute('SELECT id FROM functions WHERE name = ? AND file_path = ?', (func_name, file_path))
                 func_row = self.cursor.fetchone()
                 
                 if not func_row:
@@ -175,6 +204,75 @@ class ResolvedTypeMerger:
                         
                         except sqlite3.Error as e:
                             self.stats['errors'].append(f"Failed to update parameter {param_name} in function {func_name}: {e}")
+                
+                # Process return types
+                if 'returns' in func:
+                    for ret_idx, ret in enumerate(func['returns']):
+                        ret_name = ret.get('name')
+                        if not ret_name:
+                            continue
+                        
+                        # Build update data
+                        update_data = {
+                            'is_like_reference': 1 if ret.get('is_like_reference') else 0,
+                            'resolved': 1 if ret.get('resolved') else 0,
+                            'resolution_error': ret.get('error'),
+                            'actual_type': None,
+                            'table_name': ret.get('table'),
+                            'columns': None,
+                            'types': None
+                        }
+                        
+                        # Extract resolved type information
+                        if ret.get('types'):
+                            types_list = ret['types']
+                            if isinstance(types_list, list):
+                                update_data['actual_type'] = types_list[0] if types_list else None
+                                update_data['types'] = json.dumps(types_list)
+                            else:
+                                update_data['actual_type'] = types_list
+                                update_data['types'] = json.dumps([types_list])
+                        
+                        if ret.get('columns'):
+                            columns_list = ret['columns']
+                            if isinstance(columns_list, list):
+                                update_data['columns'] = ','.join(columns_list)
+                            else:
+                                update_data['columns'] = columns_list
+                        
+                        # Update database
+                        try:
+                            self.cursor.execute('''
+                                UPDATE returns 
+                                SET actual_type = ?, 
+                                    is_like_reference = ?, 
+                                    resolved = ?, 
+                                    resolution_error = ?,
+                                    table_name = ?,
+                                    columns = ?,
+                                    types = ?
+                                WHERE function_id = ? AND name = ?
+                            ''', (
+                                update_data['actual_type'],
+                                update_data['is_like_reference'],
+                                update_data['resolved'],
+                                update_data['resolution_error'],
+                                update_data['table_name'],
+                                update_data['columns'],
+                                update_data['types'],
+                                func_id,
+                                ret_name
+                            ))
+                            
+                            if self.cursor.rowcount > 0:
+                                self.stats['returns_updated'] += 1
+                                if update_data['resolved']:
+                                    self.stats['returns_resolved'] += 1
+                                else:
+                                    self.stats['returns_unresolved'] += 1
+                        
+                        except sqlite3.Error as e:
+                            self.stats['errors'].append(f"Failed to update return {ret_name} in function {func_name}: {e}")
         
         self.conn.commit()
     
@@ -212,6 +310,9 @@ def main():
         print(f"[OK] Parameters updated: {merger.stats['parameters_updated']}")
         print(f"[OK] Parameters resolved: {merger.stats['parameters_resolved']}")
         print(f"[OK] Parameters unresolved: {merger.stats['parameters_unresolved']}")
+        print(f"[OK] Returns updated: {merger.stats['returns_updated']}")
+        print(f"[OK] Returns resolved: {merger.stats['returns_resolved']}")
+        print(f"[OK] Returns unresolved: {merger.stats['returns_unresolved']}")
         
         if merger.stats['errors']:
             print(f"\n[WARN] Errors ({len(merger.stats['errors'])}):")

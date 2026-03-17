@@ -262,6 +262,33 @@ class TestTypeResolver(unittest.TestCase):
         self.assertTrue(result1['resolved'])
         self.assertTrue(result2['resolved'])
         self.assertTrue(result3['resolved'])
+    
+    def test_resolve_return_type_like_reference(self):
+        """Test resolving return type with LIKE reference."""
+        result = self.resolver.resolve_return_type('LIKE account.*')
+        
+        self.assertTrue(result['resolved'])
+        self.assertTrue(result['is_like_reference'])
+        self.assertEqual(result['table'], 'account')
+        self.assertEqual(result['columns'], ['id', 'name', 'balance'])
+    
+    def test_resolve_return_type_non_like(self):
+        """Test resolving return type without LIKE reference."""
+        result = self.resolver.resolve_return_type('INTEGER')
+        
+        self.assertTrue(result['resolved'])
+        self.assertFalse(result['is_like_reference'])
+        self.assertEqual(result['type'], 'INTEGER')
+    
+    def test_resolve_return_type_specific_column(self):
+        """Test resolving return type with LIKE table.column pattern."""
+        result = self.resolver.resolve_return_type('LIKE account.balance')
+        
+        self.assertTrue(result['resolved'])
+        self.assertTrue(result['is_like_reference'])
+        self.assertEqual(result['table'], 'account')
+        self.assertEqual(result['columns'], ['balance'])
+        self.assertEqual(result['types'], ['DECIMAL(10,2)'])
 
 
 class TestTypeResolutionIntegration(unittest.TestCase):
@@ -360,6 +387,207 @@ class TestTypeResolutionIntegration(unittest.TestCase):
         self.assertEqual(param['table'], 'orders')
         self.assertEqual(len(param['columns']), 3)
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_return_type_resolution_with_returns_array(self):
+        """Test resolving return types from 'returns' array."""
+        # Create workspace.json with returns array
+        workspace = {
+            "_metadata": {
+                "version": "1.0.0",
+                "generated": "2026-03-13T00:00:00Z",
+                "files_processed": 1
+            },
+            "./test.4gl": [
+                {
+                    'name': 'get_order',
+                    'parameters': [],
+                    'returns': [
+                        {'name': 'order_rec', 'type': 'LIKE orders.*'},
+                        {'name': 'status', 'type': 'INTEGER'}
+                    ]
+                }
+            ]
+        }
+        
+        with open(str(self.workspace_path), 'w') as f:
+            json.dump(workspace, f)
+        
+        # Resolve types
+        resolver = TypeResolver(str(self.db_path))
+        result = resolver.process_workspace_json(str(self.workspace_path))
+        resolver.close()
+        
+        # Verify results
+        func = result['./test.4gl'][0]
+        returns = func['returns']
+        
+        # Check first return (LIKE reference)
+        ret1 = returns[0]
+        self.assertTrue(ret1['resolved'])
+        self.assertTrue(ret1['is_like_reference'])
+        self.assertEqual(ret1['table'], 'orders')
+        self.assertEqual(len(ret1['columns']), 3)
+        
+        # Check second return (non-LIKE)
+        ret2 = returns[1]
+        self.assertTrue(ret2['resolved'])
+        self.assertFalse(ret2['is_like_reference'])
+        self.assertEqual(ret2['type'], 'INTEGER')
+    
+    def test_return_type_like_specific_column(self):
+        """Test resolving return type with LIKE table.column pattern."""
+        workspace = {
+            "_metadata": {
+                "version": "1.0.0",
+                "generated": "2026-03-13T00:00:00Z",
+                "files_processed": 1
+            },
+            "./test.4gl": [
+                {
+                    'name': 'get_order_id',
+                    'parameters': [],
+                    'returns': [
+                        {'name': 'order_id', 'type': 'LIKE orders.order_id'}
+                    ]
+                }
+            ]
+        }
+        
+        with open(str(self.workspace_path), 'w') as f:
+            json.dump(workspace, f)
+        
+        # Resolve types
+        resolver = TypeResolver(str(self.db_path))
+        result = resolver.process_workspace_json(str(self.workspace_path))
+        resolver.close()
+        
+        # Verify results
+        func = result['./test.4gl'][0]
+        ret = func['returns'][0]
+        
+        self.assertTrue(ret['resolved'])
+        self.assertTrue(ret['is_like_reference'])
+        self.assertEqual(ret['table'], 'orders')
+        self.assertEqual(ret['columns'], ['order_id'])
+        self.assertEqual(ret['types'], ['INTEGER'])
+    
+    def test_return_type_unresolved_missing_table(self):
+        """Test handling of unresolved return type with missing table."""
+        workspace = {
+            "_metadata": {
+                "version": "1.0.0",
+                "generated": "2026-03-13T00:00:00Z",
+                "files_processed": 1
+            },
+            "./test.4gl": [
+                {
+                    'name': 'get_data',
+                    'parameters': [],
+                    'returns': [
+                        {'name': 'data', 'type': 'LIKE nonexistent.*'}
+                    ]
+                }
+            ]
+        }
+        
+        with open(str(self.workspace_path), 'w') as f:
+            json.dump(workspace, f)
+        
+        # Resolve types
+        resolver = TypeResolver(str(self.db_path))
+        result = resolver.process_workspace_json(str(self.workspace_path))
+        resolver.close()
+        
+        # Verify results
+        func = result['./test.4gl'][0]
+        ret = func['returns'][0]
+        
+        self.assertFalse(ret['resolved'])
+        self.assertTrue(ret['is_like_reference'])
+        self.assertIn('not found', ret['error'].lower())
+    
+    def test_return_type_unresolved_missing_column(self):
+        """Test handling of unresolved return type with missing column."""
+        workspace = {
+            "_metadata": {
+                "version": "1.0.0",
+                "generated": "2026-03-13T00:00:00Z",
+                "files_processed": 1
+            },
+            "./test.4gl": [
+                {
+                    'name': 'get_data',
+                    'parameters': [],
+                    'returns': [
+                        {'name': 'data', 'type': 'LIKE orders.nonexistent'}
+                    ]
+                }
+            ]
+        }
+        
+        with open(str(self.workspace_path), 'w') as f:
+            json.dump(workspace, f)
+        
+        # Resolve types
+        resolver = TypeResolver(str(self.db_path))
+        result = resolver.process_workspace_json(str(self.workspace_path))
+        resolver.close()
+        
+        # Verify results
+        func = result['./test.4gl'][0]
+        ret = func['returns'][0]
+        
+        self.assertFalse(ret['resolved'])
+        self.assertTrue(ret['is_like_reference'])
+        self.assertIn('not found', ret['error'].lower())
+    
+    def test_mixed_parameters_and_returns(self):
+        """Test resolving both parameters and returns in same function."""
+        workspace = {
+            "_metadata": {
+                "version": "1.0.0",
+                "generated": "2026-03-13T00:00:00Z",
+                "files_processed": 1
+            },
+            "./test.4gl": [
+                {
+                    'name': 'process_and_return',
+                    'parameters': [
+                        {'name': 'input_order', 'type': 'LIKE orders.*'},
+                        {'name': 'amount', 'type': 'DECIMAL(10,2)'}
+                    ],
+                    'returns': [
+                        {'name': 'result_order', 'type': 'LIKE orders.*'},
+                        {'name': 'success', 'type': 'INTEGER'}
+                    ]
+                }
+            ]
+        }
+        
+        with open(str(self.workspace_path), 'w') as f:
+            json.dump(workspace, f)
+        
+        # Resolve types
+        resolver = TypeResolver(str(self.db_path))
+        result = resolver.process_workspace_json(str(self.workspace_path))
+        resolver.close()
+        
+        # Verify results
+        func = result['./test.4gl'][0]
+        
+        # Check parameters
+        param1 = func['parameters'][0]
+        self.assertTrue(param1['resolved'])
+        self.assertEqual(param1['table'], 'orders')
+        
+        param2 = func['parameters'][1]
+        self.assertTrue(param2['resolved'])
+        self.assertFalse(param2['is_like_reference'])
+        
+        # Check returns
+        ret1 = func['returns'][0]
+        self.assertTrue(ret1['resolved'])
+        self.assertEqual(ret1['table'], 'orders')
+        
+        ret2 = func['returns'][1]
+        self.assertTrue(ret2['resolved'])
+        self.assertFalse(ret2['is_like_reference'])

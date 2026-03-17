@@ -28,6 +28,14 @@ bash query.sh find-reference "PRB-299"
 
 # Find files by author
 bash query.sh find-author "Rich"
+
+# Type Resolution Queries
+bash query.sh find-function-by-name-and-path "my_function" "./src/module.4gl"
+bash query.sh find-all-function-instances "my_function"
+bash query.sh unresolved-types
+bash query.sh unresolved-types --filter missing_table
+bash query.sh unresolved-types --limit 10 --offset 5
+bash query.sh validate-types
 ```
 
 ## Python API
@@ -49,6 +57,40 @@ c.execute('''SELECT DISTINCT f.name FROM functions f
 results = [dict(row) for row in c.fetchall()]
 print(json.dumps(results, indent=2))
 conn.close()
+```
+
+## Type Resolution API
+
+```python
+from scripts.query_db import (
+    find_function_by_name_and_path,
+    find_all_function_instances,
+    find_unresolved_types,
+    validate_type_resolution
+)
+
+# Find specific function instance
+result = find_function_by_name_and_path('workspace.db', 'process_data', './src/module1.4gl')
+
+# Find all instances of a function
+instances = find_all_function_instances('workspace.db', 'process_data')
+
+# Find unresolved LIKE references
+unresolved = find_unresolved_types('workspace.db')
+
+# Filter by error type
+missing_tables = find_unresolved_types('workspace.db', filter_type='missing_table')
+
+# With pagination
+page = find_unresolved_types('workspace.db', limit=10, offset=20)
+
+# Validate data consistency
+report = validate_type_resolution('workspace.db')
+if report['status'] == 'valid':
+    print("Database is consistent")
+else:
+    for issue in report['issues']:
+        print(f"Issue: {issue['message']}")
 ```
 
 ## Quality Analysis
@@ -76,5 +118,7 @@ file_metrics = qa.get_file_metrics('path/to/file.4gl')
 - Exact lookup: <1ms
 - Pattern search: <10ms
 - Metrics queries: <10ms
+- Type resolution queries: <100ms
+- Validation: <1s
 
 See [FEATURES.md](FEATURES.md) for more examples.

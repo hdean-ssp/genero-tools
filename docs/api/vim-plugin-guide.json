@@ -31,6 +31,16 @@
         "query": "find-function-dependencies + find-function-dependents",
         "use_case": "Visualize function call relationships",
         "data_needed": "calls, dependents"
+      },
+      "type_resolution": {
+        "query": "find-function-by-name-and-path + find-all-function-instances",
+        "use_case": "Resolve function types and disambiguate same-named functions",
+        "data_needed": "file_path, actual_type, is_like_reference, resolved"
+      },
+      "type_debugging": {
+        "query": "unresolved-types + validate-types",
+        "use_case": "Debug type resolution issues and validate data consistency",
+        "data_needed": "error_reason, error_type, resolution_status"
       }
     },
     "integration_approaches": {

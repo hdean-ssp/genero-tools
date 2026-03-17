@@ -43,6 +43,29 @@
       "example_3": {
         "task": "Find files by author and reference",
         "code": "import sqlite3\n\nconn = sqlite3.connect('workspace.db')\nc = conn.cursor()\nc.execute('''\n  SELECT DISTINCT file FROM headers\n  WHERE author = ? AND reference LIKE ?\n''', ('John Smith', 'PRB%'))\nfor file in c.fetchall():\n    print(file[0])\nconn.close()"
+      },
+      "example_4": {
+        "task": "Find unresolved LIKE references",
+        "code": "import sqlite3\n\nconn = sqlite3.connect('workspace.db')\nc = conn.cursor()\nc.execute('''\n  SELECT f.name, f.file_path, p.name, p.original_type, p.resolution_error\n  FROM parameters p\n  JOIN functions f ON p.function_id = f.id\n  WHERE p.is_like_reference = 1 AND p.resolved = 0\n  ORDER BY f.name\n''')\nfor func_name, file_path, param_name, orig_type, error in c.fetchall():\n    print(f\"{func_name} ({file_path}): {param_name} - {error}\")\nconn.close()"
+      }
+    },
+    "type_resolution_integration": {
+      "description": "Type resolution and multi-instance function handling",
+      "example_1": {
+        "task": "Find specific function instance by name and path",
+        "code": "from scripts.query_db import find_function_by_name_and_path\n\nresult = find_function_by_name_and_path('workspace.db', 'process_data', './src/module1.4gl')\nif result:\n    print(f\"Found: {result['name']}\")\n    print(f\"Parameters: {len(result['parameters'])}\")\n    print(f\"Returns: {len(result['returns'])}\")"
+      },
+      "example_2": {
+        "task": "Find all instances of a function across files",
+        "code": "from scripts.query_db import find_all_function_instances\n\ninstances = find_all_function_instances('workspace.db', 'process_data')\nprint(f\"Found {len(instances)} instances:\")\nfor instance in instances:\n    print(f\"  - {instance['file_path']} (line {instance['line_start']})\")"
+      },
+      "example_3": {
+        "task": "Debug unresolved LIKE references",
+        "code": "from scripts.query_db import find_unresolved_types\n\n# Find all unresolved types\nunresolved = find_unresolved_types('workspace.db')\nprint(f\"Total unresolved: {len(unresolved)}\")\n\n# Filter by error type\nmissing_tables = find_unresolved_types('workspace.db', filter_type='missing_table')\nprint(f\"Missing tables: {len(missing_tables)}\")\n\n# Show details\nfor item in missing_tables[:5]:\n    print(f\"  {item['function_name']}: {item['original_type']} - {item['error_reason']}\")"
+      },
+      "example_4": {
+        "task": "Validate type resolution data consistency",
+        "code": "from scripts.query_db import validate_type_resolution\n\nreport = validate_type_resolution('workspace.db')\nprint(f\"Status: {report['status']}\")\nprint(f\"Functions: {report['summary']['total_functions']}\")\nprint(f\"Parameters: {report['summary']['total_parameters']}\")\nprint(f\"Unresolved types: {report['summary']['parameters_unresolved'] + report['summary']['returns_unresolved']}\")\n\nif report['issues']:\n    print(\"\\nIssues found:\")\n    for issue in report['issues']:\n        print(f\"  [{issue['severity']}] {issue['type']}: {issue['message']}\")"
       }
     },
     "vim_plugin_example": {

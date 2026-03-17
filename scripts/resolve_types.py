@@ -157,6 +157,28 @@ class TypeResolver:
         
         return resolution
     
+    def resolve_return_type(self, return_type: str) -> Dict:
+        """
+        Resolve a return type, handling LIKE references.
+        
+        Returns enhanced type info with resolution status.
+        This is similar to resolve_parameter_type but specifically for return types.
+        """
+        if not return_type.strip().upper().startswith('LIKE'):
+            # Not a LIKE reference, return as-is
+            return {
+                'type': return_type,
+                'is_like_reference': False,
+                'resolved': True
+            }
+        
+        # Resolve LIKE reference
+        resolution = self.resolve_like_reference(return_type)
+        resolution['is_like_reference'] = True
+        resolution['original_type'] = return_type
+        
+        return resolution
+    
     def process_workspace_json(self, workspace_json_path: str) -> Dict:
         """
         Process workspace.json and resolve all LIKE references.
@@ -165,8 +187,8 @@ class TypeResolver:
         {
             "_metadata": {...},
             "./path/to/file.4gl": [
-                {"name": "func1", "parameters": [...], ...},
-                {"name": "func2", "parameters": [...], ...}
+                {"name": "func1", "parameters": [...], "returns": [...], ...},
+                {"name": "func2", "parameters": [...], "returns": [...], ...}
             ]
         }
         
@@ -191,9 +213,16 @@ class TypeResolver:
                                 resolution = self.resolve_parameter_type(param['type'])
                                 param.update(resolution)
                     
-                    # Resolve return types
+                    # Resolve return types from 'returns' array
+                    if 'returns' in func and isinstance(func['returns'], list):
+                        for ret in func['returns']:
+                            if 'type' in ret:
+                                resolution = self.resolve_return_type(ret['type'])
+                                ret.update(resolution)
+                    
+                    # Also handle legacy 'return_type' field for backward compatibility
                     if 'return_type' in func:
-                        resolution = self.resolve_parameter_type(func['return_type'])
+                        resolution = self.resolve_return_type(func['return_type'])
                         func['return_type_resolved'] = resolution
         
         return workspace

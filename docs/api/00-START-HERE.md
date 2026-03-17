@@ -66,6 +66,7 @@ Complete, structured API documentation for genero-tools in JSON format. Use this
 - Dependency analysis
 - Module queries
 - Header/reference queries
+- Type resolution and debugging
 - Database management
 
 ### Interfaces
@@ -80,6 +81,13 @@ Complete, structured API documentation for genero-tools in JSON format. Use this
 - Parameter Count
 - Return Count
 - Call Depth
+
+### Type Resolution
+- LIKE reference resolution (parameters and return types)
+- Multi-instance function disambiguation
+- Unresolved types debugging
+- Data quality validation
+- Empty parameter filtering
 
 ### Integration Patterns
 - Shell-based integration

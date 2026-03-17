@@ -4,12 +4,92 @@
 import json
 import sqlite3
 import sys
+import logging
 from pathlib import Path
+
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(levelname)s: %(message)s'
+)
+
+def is_valid_parameter_name(name):
+    """
+    Validate if a parameter name is non-empty and non-null.
+    
+    Args:
+        name: The parameter name to validate
+        
+    Returns:
+        bool: True if the name is valid (non-empty, non-null), False otherwise
+    """
+    if name is None:
+        return False
+    if isinstance(name, str):
+        return len(name.strip()) > 0
+    return False
+
+def migrate_add_not_null_constraint(conn):
+    """
+    Migrate existing database to add NOT NULL constraint to parameters table.
+    
+    This function handles databases created before the NOT NULL constraint was added.
+    It creates a new parameters table with the constraint and migrates existing data,
+    skipping any parameters with NULL or empty names.
+    
+    Args:
+        conn: SQLite database connection
+    """
+    c = conn.cursor()
+    
+    try:
+        # Check if parameters table exists
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='parameters'")
+        if not c.fetchone():
+            # Table doesn't exist, no migration needed
+            return
+        
+        # Check if the table already has the NOT NULL constraint
+        c.execute("PRAGMA table_info(parameters)")
+        columns = c.fetchall()
+        name_column = next((col for col in columns if col[1] == 'name'), None)
+        
+        if name_column and name_column[3] == 1:  # notnull flag is set
+            # Constraint already exists
+            return
+        
+        # Migration needed: create new table with constraint and migrate data
+        c.execute('''CREATE TABLE parameters_new
+                     (id INTEGER PRIMARY KEY, function_id INTEGER, name TEXT NOT NULL, type TEXT,
+                      FOREIGN KEY(function_id) REFERENCES functions(id))''')
+        
+        # Copy valid data (non-null, non-empty names)
+        c.execute('''INSERT INTO parameters_new (id, function_id, name, type)
+                     SELECT id, function_id, name, type FROM parameters
+                     WHERE name IS NOT NULL AND TRIM(name) != ''
+                  ''')
+        
+        # Drop old table and rename new one
+        c.execute('DROP TABLE parameters')
+        c.execute('ALTER TABLE parameters_new RENAME TO parameters')
+        
+        # Recreate indexes
+        c.execute('CREATE INDEX IF NOT EXISTS idx_parameters_function ON parameters(function_id)')
+        
+        conn.commit()
+        logging.info("Successfully migrated parameters table with NOT NULL constraint")
+    except Exception as e:
+        logging.error(f"Migration failed: {e}")
+        conn.rollback()
+        raise
 
 def create_signatures_db(json_file, db_file):
     """Create SQLite database from workspace.json signatures."""
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
+    
+    # Run migration for existing databases
+    migrate_add_not_null_constraint(conn)
     
     # Create tables
     c.execute('''CREATE TABLE IF NOT EXISTS files
@@ -17,11 +97,14 @@ def create_signatures_db(json_file, db_file):
     
     c.execute('''CREATE TABLE IF NOT EXISTS functions
                  (id INTEGER PRIMARY KEY, file_id INTEGER, name TEXT, 
-                  line_start INTEGER, line_end INTEGER, signature TEXT,
+                  line_start INTEGER, line_end INTEGER, signature TEXT, file_path TEXT,
                   FOREIGN KEY(file_id) REFERENCES files(id))''')
     
+    # Parameters table with NOT NULL constraint on name column to ensure data quality.
+    # This constraint prevents insertion of parameters with null or empty names,
+    # maintaining database integrity and ensuring all parameters have valid identifiers.
     c.execute('''CREATE TABLE IF NOT EXISTS parameters
-                 (id INTEGER PRIMARY KEY, function_id INTEGER, name TEXT, type TEXT,
+                 (id INTEGER PRIMARY KEY, function_id INTEGER, name TEXT NOT NULL, type TEXT,
                   FOREIGN KEY(function_id) REFERENCES functions(id))''')
     
     c.execute('''CREATE TABLE IF NOT EXISTS returns
@@ -47,6 +130,8 @@ def create_signatures_db(json_file, db_file):
     
     data.pop('_metadata', None)
     
+    empty_param_count = 0
+    
     for file_path, functions in data.items():
         # Determine file type
         file_type = "L4GLS" if "L4GLS" in file_path else ("U4GLS" if "U4GLS" in file_path else "4GLS")
@@ -55,15 +140,20 @@ def create_signatures_db(json_file, db_file):
         file_id = c.lastrowid
         
         for func in functions:
-            c.execute('''INSERT INTO functions (file_id, name, line_start, line_end, signature)
-                        VALUES (?, ?, ?, ?, ?)''',
-                     (file_id, func['name'], func['line']['start'], func['line']['end'], func['signature']))
+            c.execute('''INSERT INTO functions (file_id, name, line_start, line_end, signature, file_path)
+                        VALUES (?, ?, ?, ?, ?, ?)''',
+                     (file_id, func['name'], func['line']['start'], func['line']['end'], func['signature'], file_path))
             func_id = c.lastrowid
             
-            # Insert parameters
+            # Insert parameters - filter out empty names
             for param in func.get('parameters', []):
-                c.execute('INSERT INTO parameters (function_id, name, type) VALUES (?, ?, ?)',
-                         (func_id, param['name'], param['type']))
+                param_name = param.get('name')
+                if not is_valid_parameter_name(param_name):
+                    logging.warning(f"Skipping empty parameter in function '{func['name']}' at {file_path}")
+                    empty_param_count += 1
+                else:
+                    c.execute('INSERT INTO parameters (function_id, name, type) VALUES (?, ?, ?)',
+                             (func_id, param_name.strip(), param.get('type', '')))
             
             # Insert returns
             for ret in func.get('returns', []):
@@ -77,6 +167,10 @@ def create_signatures_db(json_file, db_file):
     
     conn.commit()
     conn.close()
+    
+    if empty_param_count > 0:
+        logging.warning(f"Total empty parameters skipped: {empty_param_count}")
+    
     print(f"Created {db_file} from {json_file}")
 
 def create_modules_db(json_file, db_file):

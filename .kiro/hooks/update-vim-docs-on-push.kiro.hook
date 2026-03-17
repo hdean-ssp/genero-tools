@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "name": "Update Vim Docs After Changes",
+  "description": "Automatically reminds to review and update vim/neovim example configs and quickstart guides whenever features or fixes are pushed to the codebase",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A feature or fix has been completed. Please review the changes and update the following documentation if needed: example configs (docs/api/vim-plugin-guide.json), quickstart guides (docs/api/00-START-HERE.md), and any related integration documentation to reflect the new changes. include root markdown files as these are the first stop for a user"
+  },
+  "workspaceFolderName": "genero-tools",
+  "shortName": "update-vim-docs-on-push"
+}
