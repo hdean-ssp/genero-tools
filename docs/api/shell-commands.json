@@ -245,6 +245,15 @@
         "example": "query.sh unresolved-types --filter missing_table --limit 10",
         "performance": "<100ms",
         "notes": "Helps identify and debug type resolution failures"
+      },
+      "validate-types": {
+        "description": "Validate type resolution data consistency and integrity",
+        "syntax": "query.sh validate-types",
+        "parameters": [],
+        "returns": "Validation report with status, summary, and issues",
+        "example": "query.sh validate-types",
+        "performance": "<1s",
+        "notes": "Checks for empty parameters, missing file_path, unresolved LIKE references, and schema consistency"
       }
     },
     "database_management": {

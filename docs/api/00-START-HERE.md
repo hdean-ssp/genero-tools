@@ -62,16 +62,17 @@ Complete, structured API documentation for genero-tools in JSON format. Use this
 ## Key Features Documented
 
 ### Query Types
-- Function lookup and search
+- Function lookup and search (including resolved types)
 - Dependency analysis
 - Module queries
 - Header/reference queries
 - Type resolution and debugging
 - Database management
+- Multi-instance function resolution
 
 ### Interfaces
-- **Shell**: `query.sh` commands
-- **Python**: Direct module imports
+- **Shell**: `query.sh` commands (30+ commands)
+- **Python**: Direct module imports (13+ functions)
 - **Database**: Direct SQLite queries
 
 ### Metrics
@@ -82,12 +83,14 @@ Complete, structured API documentation for genero-tools in JSON format. Use this
 - Return Count
 - Call Depth
 
-### Type Resolution
+### Type Resolution (v2.1.0)
 - LIKE reference resolution (parameters and return types)
 - Multi-instance function disambiguation
-- Unresolved types debugging
+- Unresolved types debugging with filtering
 - Data quality validation
 - Empty parameter filtering
+- Automatic schema detection
+- Resolved types merged into workspace.db
 
 ### Integration Patterns
 - Shell-based integration

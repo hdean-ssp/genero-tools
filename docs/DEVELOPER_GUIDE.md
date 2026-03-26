@@ -80,6 +80,12 @@ The project follows a multi-stage pipeline:
                                     ↓
                           merge_headers.py (merge into JSON)
                                     ↓
+                          parse_schema.py (extract schema)
+                                    ↓
+                          resolve_types.py (resolve LIKE references)
+                                    ↓
+                          merge_resolved_types.py (merge resolved types)
+                                    ↓
                           metrics_extractor.py (extract metrics)
                                     ↓
                           json_to_sqlite.py (optional: create DB)
@@ -90,9 +96,11 @@ The project follows a multi-stage pipeline:
 **Key Stages:**
 1. **Signature Extraction** - Parse .4gl files for function signatures
 2. **Header Parsing** - Extract code references and author information
-3. **Metrics Extraction** - Calculate code quality metrics (Phase 2)
-4. **Database Creation** - Optional SQLite database for fast queries
-5. **Query Interface** - Python and shell wrappers for querying
+3. **Schema Parsing** - Extract database schema definitions
+4. **Type Resolution** - Resolve LIKE references to schema types (v2.1.0)
+5. **Metrics Extraction** - Calculate code quality metrics (Phase 2)
+6. **Database Creation** - Optional SQLite database for fast queries
+7. **Query Interface** - Python and shell wrappers for querying
 
 ### 2. Making Changes
 

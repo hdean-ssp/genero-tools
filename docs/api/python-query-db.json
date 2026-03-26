@@ -171,6 +171,16 @@
       "returns": "List of unresolved types with function name, file path, type name, original type, error reason, and error type",
       "example": "results = find_unresolved_types('workspace.db', filter_type='missing_table', limit=10)",
       "notes": "Helps identify and debug type resolution failures"
+    },
+    "validate_type_resolution": {
+      "signature": "validate_type_resolution(db_file: str) -> Dict",
+      "description": "Validate type resolution data consistency and integrity",
+      "parameters": [
+        {"name": "db_file", "type": "str", "description": "Path to workspace.db"}
+      ],
+      "returns": "Validation report with status, summary, and issues list",
+      "example": "report = validate_type_resolution('workspace.db')\nif report['status'] == 'valid':\n    print('Database is consistent')\nelse:\n    for issue in report['issues']:\n        print(f\"Issue: {issue['message']}\")",
+      "notes": "Checks for empty parameters, missing file_path, unresolved LIKE references, and schema consistency"
     }
   }
 }

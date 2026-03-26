@@ -86,7 +86,7 @@ Complete API documentation for genero-tools in JSON format for easy parsing and 
     - Performance metrics
 
 13. **vim-plugin-guide.json** (3.5 KB)
-    - Recommended features
+    - Recommended features (including type resolution)
     - Integration approaches
     - Setup steps
     - Caching strategies
@@ -97,6 +97,7 @@ Complete API documentation for genero-tools in JSON format for easy parsing and 
     - Shell integration examples
     - Python integration examples
     - Database integration examples
+    - Type resolution integration examples (NEW)
     - Vim plugin examples
     - Incremental update examples
 

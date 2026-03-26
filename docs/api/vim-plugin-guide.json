@@ -1,6 +1,7 @@
 {
   "vim_plugin_integration": {
     "overview": "Guide for integrating genero-tools into Vim plugins",
+    "version": "2.1.0",
     "recommended_features": {
       "hover_information": {
         "query": "find-function",
@@ -33,14 +34,23 @@
         "data_needed": "calls, dependents"
       },
       "type_resolution": {
-        "query": "find-function-by-name-and-path + find-all-function-instances",
-        "use_case": "Resolve function types and disambiguate same-named functions",
-        "data_needed": "file_path, actual_type, is_like_reference, resolved"
+        "query": "find-function-resolved + find-function-by-name-and-path + find-all-function-instances",
+        "use_case": "Resolve function types, show resolved LIKE references, disambiguate same-named functions",
+        "data_needed": "file_path, actual_type, is_like_reference, resolved, resolved_columns, resolved_types",
+        "new_in_v2_1": true
       },
       "type_debugging": {
         "query": "unresolved-types + validate-types",
         "use_case": "Debug type resolution issues and validate data consistency",
-        "data_needed": "error_reason, error_type, resolution_status"
+        "data_needed": "error_reason, error_type, resolution_status",
+        "new_in_v2_1": true
+      },
+      "hover_with_resolved_types": {
+        "query": "find-function-resolved",
+        "use_case": "Show resolved LIKE types in hover information (v2.1.0+)",
+        "data_needed": "resolved_columns, resolved_types, table_name",
+        "example": "LIKE account.* resolves to [id, name, balance] with types [INTEGER, VARCHAR(100), DECIMAL(10,2)]",
+        "new_in_v2_1": true
       }
     },
     "integration_approaches": {
@@ -64,12 +74,21 @@
       }
     },
     "setup_steps": [
-      "1. Generate workspace.json: bash generate_signatures.sh /path/to/codebase",
-      "2. Generate modules.json: bash generate_modules.sh /path/to/codebase",
-      "3. Create databases: bash query.sh create-dbs",
-      "4. Verify databases exist: ls -la workspace.db modules.db",
-      "5. Test query: query.sh find-function test_function"
+      "1. Generate all metadata (automatic schema detection): bash generate_all.sh /path/to/codebase",
+      "2. Create databases: bash query.sh create-dbs",
+      "3. Verify databases exist: ls -la workspace.db modules.db",
+      "4. Test basic query: query.sh find-function test_function",
+      "5. Test type resolution: query.sh find-function-resolved test_function (if schema available)"
     ],
+    "setup_steps_detailed": {
+      "automatic_setup": "bash generate_all.sh /path/to/codebase - Generates signatures, modules, parses schema (if present), and resolves types",
+      "manual_setup": [
+        "bash generate_signatures.sh /path/to/codebase - Extract function signatures",
+        "bash generate_modules.sh /path/to/codebase - Parse module dependencies",
+        "bash query.sh create-dbs - Create indexed SQLite databases"
+      ],
+      "schema_detection": "Schema files (.sch) are automatically detected and processed. Type resolution is skipped gracefully if no schema is found."
+    },
     "caching_strategy": {
       "cache_level_1": "In-memory cache of recent queries (1000 entries)",
       "cache_level_2": "File-based cache of function metadata (updated hourly)",
@@ -80,8 +99,18 @@
       "Use pattern search for autocomplete (faster than full scan)",
       "Batch multiple queries when possible",
       "Use database interface for complex queries",
-      "Implement incremental updates for large codebases"
+      "Implement incremental updates for large codebases",
+      "Cache resolved type information for frequently accessed functions",
+      "Use find-function-by-name-and-path for multi-instance disambiguation"
     ],
+    "new_in_v2_1": {
+      "resolved_types_in_database": "Resolved LIKE types are now stored directly in workspace.db for efficient querying",
+      "find_function_resolved": "New query command to get functions with resolved type information",
+      "multi_instance_queries": "find-function-by-name-and-path and find-all-function-instances for disambiguation",
+      "type_debugging": "unresolved-types and validate-types commands for debugging type resolution",
+      "automatic_schema_detection": "Schema files are automatically found and processed during generate_all.sh",
+      "example_resolved_type_query": "query.sh find-function-resolved process_contract returns resolved LIKE types with actual columns and types"
+    },
     "error_handling": {
       "database_not_found": "Prompt user to run 'query.sh create-dbs'",
       "query_timeout": "Set 5s timeout, show cached results if available",

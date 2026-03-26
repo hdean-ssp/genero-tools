@@ -24,7 +24,7 @@ fi
 # Show usage
 usage() {
     cat << 'EOF'
-Usage: query.sh <command> [args...]
+Usage: query.sh <command> [args...] [--format=FORMAT] [--filter=FILTER]
 
 Signature queries (workspace.db):
   find-function <name>                Find function by exact name
@@ -72,6 +72,16 @@ Database management:
   create-signatures-db                Create workspace.db from workspace.json
   create-modules-db                   Create modules.db from modules.json
 
+Output format options (for Vim plugin integration):
+  --format=vim                        Concise single-line function signatures
+  --format=vim-hover                  Multi-line format with file location and metrics
+  --format=vim-completion             Tab-separated format for Vim/Neovim completion
+
+Output filter options (for Vim plugin integration):
+  --filter=functions-only             Exclude procedures (functions with no return type)
+  --filter=no-metrics                 Remove complexity and LOC metrics
+  --filter=no-file-info               Remove file path and line number
+
 Examples:
   query.sh find-function my_function
   query.sh search-functions "get_*"
@@ -90,6 +100,18 @@ Examples:
   query.sh unresolved-types --limit 10 --offset 5
   query.sh batch-query queries.json
   query.sh batch-query --input queries.json --output results.json
+
+Vim plugin integration examples:
+  query.sh find-function "calculate" --format=vim
+  query.sh find-function "calculate" --format=vim-hover
+  query.sh search-functions "get_*" --format=vim-completion
+  query.sh search-functions "*" --format=vim --filter=functions-only
+  query.sh search-functions "get_*" --format=vim-hover --filter=no-metrics
+  query.sh search-functions "*" --format=vim-completion --filter=functions-only
+
+For more information, see:
+  docs/VIM_OUTPUT_FORMATS.md - Complete format reference
+  docs/VIM_PLUGIN_INTEGRATION_GUIDE.md - Vim/Neovim integration guide
 EOF
 }
 

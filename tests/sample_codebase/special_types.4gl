@@ -8,7 +8,7 @@ FUNCTION process_interval(time_span)
 	RETURN result
 END FUNCTION
 
-UNCTION handle_text_blob(content)
+FUNCTION handle_text_blob(content)
 	DEFINE content TEXT
 	DEFINE status SMALLINT
 	DEFINE row_count INTEGER
@@ -59,7 +59,7 @@ FUNCTION handle_boolean_logic(flag1, flag2)
 	DEFINE flag1 BOOLEAN
 	DEFINE flag2 BOOLEAN
 	DEFINE result BOOLEAN
-	
+
 	LET result = flag1 AND flag2
 	CALL log_boolean(result)
 	RETURN result

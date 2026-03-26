@@ -19,6 +19,12 @@
 - LIKE type reference resolution to database schema types
 - Code quality metrics (complexity, LOC, parameters)
 - Type-aware function signatures
+- **Type Resolution Improvements v2.1.0** (NEW):
+  - Empty parameter filtering for data quality
+  - LIKE reference resolution for both parameters and return types
+  - Multi-instance function resolution with file_path disambiguation
+  - Unresolved types debugging and query commands
+  - Data consistency validation and reporting
 
 **Documentation:**
 - LSP integration guides (comprehensive and summary)

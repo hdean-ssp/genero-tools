@@ -85,7 +85,38 @@ This document describes the architecture and design of the Genero Function Signa
 - Enables module-scoped queries
 - Supports dependency analysis
 
-### 4. Metrics Extraction (`scripts/metrics_extractor.py`)
+### 4. Type Resolution (`scripts/resolve_types.py`, `scripts/merge_resolved_types.py`)
+
+**Purpose:** Resolve LIKE references to actual database schema types
+
+**Features:**
+1. **LIKE Reference Resolution** - Resolves "LIKE table.*" and "LIKE table.column" patterns
+2. **Parameter Type Resolution** - Resolves LIKE references in function parameters
+3. **Return Type Resolution** - Resolves LIKE references in return values
+4. **Multi-Instance Function Resolution** - Stores file_path to disambiguate same-named functions
+5. **Empty Parameter Filtering** - Removes invalid parameters with empty names
+6. **Data Consistency Validation** - Validates type resolution data integrity
+
+**Process:**
+1. Parse schema file to extract table and column definitions
+2. For each LIKE reference, find matching table/column in schema
+3. Store resolved type information with original type
+4. Handle multi-instance functions by storing file_path
+5. Validate data consistency and report unresolved types
+
+**Output:** `workspace_resolved.json`
+- Enhanced function signatures with resolved types
+- File path information for disambiguation
+- Resolution status and error information
+
+**Key Features:**
+- Handles both "LIKE table.*" and "LIKE table.column" patterns
+- Stores original type for debugging
+- Tracks resolution errors for troubleshooting
+- Supports multi-instance function disambiguation
+- Validates data consistency
+
+### 5. Metrics Extraction (`scripts/metrics_extractor.py`)
 
 **Purpose:** Extract code quality metrics from function signatures
 
