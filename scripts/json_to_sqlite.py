@@ -116,6 +116,10 @@ def create_signatures_db(json_file, db_file):
                   line_number INTEGER,
                   FOREIGN KEY(function_id) REFERENCES functions(id))''')
     
+    c.execute('''CREATE TABLE IF NOT EXISTS variables
+                 (id INTEGER PRIMARY KEY, function_id INTEGER, name TEXT, type TEXT,
+                  FOREIGN KEY(function_id) REFERENCES functions(id))''')
+    
     # Create indexes
     c.execute('CREATE INDEX IF NOT EXISTS idx_functions_name ON functions(name)')
     c.execute('CREATE INDEX IF NOT EXISTS idx_functions_file ON functions(file_id)')
@@ -123,6 +127,7 @@ def create_signatures_db(json_file, db_file):
     c.execute('CREATE INDEX IF NOT EXISTS idx_returns_function ON returns(function_id)')
     c.execute('CREATE INDEX IF NOT EXISTS idx_calls_function ON calls(function_id)')
     c.execute('CREATE INDEX IF NOT EXISTS idx_calls_called_name ON calls(called_function_name)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_variables_function ON variables(function_id)')
     
     # Load data
     with open(json_file, 'r') as f:
@@ -164,6 +169,11 @@ def create_signatures_db(json_file, db_file):
             for call in func.get('calls', []):
                 c.execute('INSERT INTO calls (function_id, called_function_name, line_number) VALUES (?, ?, ?)',
                          (func_id, call['name'], call['line']))
+            
+            # Insert variables
+            for var in func.get('variables', []):
+                c.execute('INSERT INTO variables (function_id, name, type) VALUES (?, ?, ?)',
+                         (func_id, var['name'], var['type']))
     
     conn.commit()
     conn.close()

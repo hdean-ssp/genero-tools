@@ -1,0 +1,39 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "generated": "2026-04-01T10:01:26Z",
+    "files_processed": 8
+  },
+  "no_returns.4gl": {
+    "globals": [],
+    "imports": []
+  },
+  "special_types.4gl": {
+    "globals": [],
+    "imports": []
+  },
+  "simple_functions.4gl": {
+    "globals": [],
+    "imports": []
+  },
+  "whitespace_variations.4gl": {
+    "globals": [],
+    "imports": []
+  },
+  "edge_cases.4gl": {
+    "globals": [],
+    "imports": []
+  },
+  "lib/complex_types.4gl": {
+    "globals": [],
+    "imports": []
+  },
+  "multiple_returns.4gl": {
+    "globals": [],
+    "imports": []
+  },
+  "test_like_types.4gl": {
+    "globals": [],
+    "imports": []
+  }
+}

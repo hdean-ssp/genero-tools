@@ -130,7 +130,19 @@ fi
 
 echo ""
 
-# Step 2: Generate module dependencies
+# Step 1c: Generate modular information (GLOBALS and IMPORT statements)
+if [[ $GL4_COUNT -gt 0 ]]; then
+    log_step "Generating modular information from .4gl files..."
+    if bash "$SCRIPT_DIR/src/generate_modulars.sh" "$TARGET" 2>&1 | tee /tmp/gen_mod_output.log; then
+        log_success "Modular information generated (modulars.json)"
+    else
+        log_info "Could not generate modular information (continuing)"
+    fi
+else
+    log_info "Skipping modular generation (no .4gl files found)"
+fi
+
+echo ""
 if [[ $M3_COUNT -gt 0 ]]; then
     log_step "Generating module dependencies from .m3 files..."
     if bash "$SCRIPT_DIR/src/generate_modules.sh" "$TARGET"; then

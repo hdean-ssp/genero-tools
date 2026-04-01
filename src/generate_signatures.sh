@@ -107,9 +107,15 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         delete return_order
         return_count = 0  # Initialize return count to 0
         for (i = 1; i <= param_count; i++) {
-            if (split(param_arr[i], parts, /[ \t]+/) >= 2) {
-                name = parts[1]
-                type = parts[2]
+            # Trim leading/trailing whitespace from parameter
+            gsub(/^[ \t]+|[ \t]+$/, "", param_arr[i])
+            
+            # Extract name (first word) and type (everything after first word)
+            if (match(param_arr[i], /^[^ \t]+/)) {
+                name = substr(param_arr[i], RSTART, RLENGTH)
+                # Type is everything after the name
+                type = substr(param_arr[i], RLENGTH + 1)
+                gsub(/^[ \t]+|[ \t]+$/, "", type)  # Trim type whitespace
             } else {
                 name = param_arr[i]
                 type = ""
@@ -131,6 +137,7 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         var_type = $0
         gsub(/^[ \t]+|[ \t]+$/, "", var_type)  # Trim whitespace
 
+        # Update parameter type if this is a parameter redefinition
         if (var_name in param_types) {
             param_types[var_name] = var_type
         }
@@ -233,15 +240,35 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
             calls_json = calls_json sprintf("{\"name\":\"%s\",\"line\":%d}", called_name, call_line)
         }
 
+        # Build variables array (all defined variables except parameters)
+        variables_json = ""
+        var_count = 0
+        for (var_name in vars) {
+            # Skip if parameter (already in parameters array)
+            is_param = 0
+            for (j = 1; j <= param_count; j++) {
+                if (param_order[j] == var_name) {
+                    is_param = 1
+                    break
+                }
+            }
+            if (!is_param && var_name != "") {
+                var_count++
+                var_type = vars[var_name]
+                variables_json = variables_json (var_count > 1 ? ", " : "")
+                variables_json = variables_json sprintf("{\"name\":\"%s\",\"type\":\"%s\"}", var_name, var_type ? var_type : "unknown")
+            }
+        }
+
         # Create signature string with line numbers
         function_sig = function_start_line "-" function_end_line ": " current_function "(" params_str ")"
         if (returns_str != "" && return_count > 0) {
             function_sig = function_sig ":" returns_str
         }
 
-        # Print structured JSON with calls
-        printf "{\"file\":\"%s\",\"name\":\"%s\",\"line\":{\"start\":%d,\"end\":%d},\"signature\":\"%s\",\"parameters\":[%s],\"returns\":[%s],\"calls\":[%s]}\n",
-               file, current_function, function_start_line, function_end_line, function_sig, params_json, returns_json, calls_json
+        # Print structured JSON with calls and variables
+        printf "{\"file\":\"%s\",\"name\":\"%s\",\"line\":{\"start\":%d,\"end\":%d},\"signature\":\"%s\",\"parameters\":[%s],\"returns\":[%s],\"calls\":[%s],\"variables\":[%s]}\n",
+               file, current_function, function_start_line, function_end_line, function_sig, params_json, returns_json, calls_json, variables_json
 
         in_function = 0
         delete vars
