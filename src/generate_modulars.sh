@@ -67,11 +67,16 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
     }
     
     /^GLOBALS/ {
-        globals_count++
         global_name = $0
-        sub(/^GLOBALS[ \t]+/, "", global_name)
+        sub(/^GLOBALS[ \t]*/, "", global_name)
+        # Strip trailing inline comments (# ...)
+        sub(/[ \t]*#.*/, "", global_name)
+        # Strip all quote characters
+        gsub(/["'"'"']/, "", global_name)
         gsub(/^[ \t]+|[ \t]+$/, "", global_name)
-        if (global_name != "") {
+        # Only record if there is a filename (skip bare GLOBALS blocks)
+        if (global_name != "" && global_name != "GLOBALS") {
+            globals_count++
             globals[globals_count] = global_name
         }
         next
@@ -81,6 +86,10 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         imports_count++
         import_name = $0
         sub(/^IMPORT[ \t]+/, "", import_name)
+        # Strip trailing inline comments (# ...)
+        sub(/[ \t]*#.*/, "", import_name)
+        # Strip all quote characters (handles IMPORT FGL "module" patterns)
+        gsub(/["'"'"']/, "", import_name)
         gsub(/^[ \t]+|[ \t]+$/, "", import_name)
         if (import_name != "") {
             imports[imports_count] = import_name
