@@ -63,6 +63,13 @@ Type resolution queries:
   unresolved-types --offset <n>       Skip first N items (for pagination)
   validate-types                      Validate type resolution data consistency
 
+Schema queries (workspace.db):
+  get-table <table_name>              Get full table definition with all columns
+  get-column <table_name> <column>    Get a single column definition
+  search-tables <pattern>             Search tables by name pattern
+  search-columns <pattern>            Search columns by name across all tables
+  resolve-like <like_ref>             Resolve a LIKE reference (table.column or table.*)
+
 Batch queries:
   batch-query <json_file>             Execute multiple queries in a single batch
   batch-query --input <json_file> --output <output_file>  Execute batch with output file
@@ -93,6 +100,13 @@ Examples:
   query.sh find-reference PRB-299
   query.sh find-author "John Smith"
   query.sh file-references "./src/utils.4gl"
+  query.sh author-expertise "John Smith"
+  query.sh recent-changes 7
+  query.sh get-table account
+  query.sh get-column account acc_code
+  query.sh search-tables "acc*"
+  query.sh resolve-like "account.acc_code"
+  query.sh resolve-like "account.*"
   query.sh author-expertise "John Smith"
   query.sh recent-changes 7
   query.sh unresolved-types
@@ -444,6 +458,21 @@ case "$command" in
     validate-types)
         # Validate type resolution data consistency
         python3 "$PROJECT_ROOT/scripts/query_db.py" validate_type_resolution "$SIGNATURES_DB" | format_validation_report
+        ;;
+    get-table)
+        python3 "$PROJECT_ROOT/scripts/query_schema.py" get-table "$SIGNATURES_DB" "$@"
+        ;;
+    get-column)
+        python3 "$PROJECT_ROOT/scripts/query_schema.py" get-column "$SIGNATURES_DB" "$@"
+        ;;
+    search-tables)
+        python3 "$PROJECT_ROOT/scripts/query_schema.py" search-tables "$SIGNATURES_DB" "$@"
+        ;;
+    search-columns)
+        python3 "$PROJECT_ROOT/scripts/query_schema.py" search-columns "$SIGNATURES_DB" "$@"
+        ;;
+    resolve-like)
+        python3 "$PROJECT_ROOT/scripts/query_schema.py" resolve-like "$SIGNATURES_DB" "$@"
         ;;
     *)
         echo "Unknown command: $command" >&2
