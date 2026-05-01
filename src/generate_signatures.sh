@@ -68,7 +68,7 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         relative_file=$(basename "$file")
     fi
     
-    sed 's/[^[:print:]\t]//g' "$file" | awk -v file="$relative_file" '
+    sed 's/[^[:print:]\t]//g; s/\r//g' "$file" | awk -v file="$relative_file" '
 
 
     BEGIN {
@@ -295,7 +295,7 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         delete function_calls
         call_count = 0
     }
-    ' "$file" >> "$TEMP_FILE" 2>/dev/null || true
+    ' >> "$TEMP_FILE" 2>/dev/null || true
 done
 
 # Generate timestamp in ISO 8601 format

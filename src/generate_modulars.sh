@@ -60,7 +60,7 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
     fi
     
     # Extract GLOBALS and IMPORT statements
-    sed 's/[^[:print:]\t]//g' "$file" | awk -v file="$relative_file" '
+    sed 's/[^[:print:]\t]//g; s/\r//g' "$file" | awk -v file="$relative_file" '
     BEGIN {
         globals_count = 0
         imports_count = 0
@@ -116,7 +116,7 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         printf "{\"file\":\"%s\",\"globals\":[%s],\"imports\":[%s]}\n",
                file, globals_json, imports_json
     }
-    ' "$file" >> "$TEMP_FILE" 2>/dev/null || true
+    ' >> "$TEMP_FILE" 2>/dev/null || true
 done
 
 # Generate timestamp in ISO 8601 format
