@@ -97,19 +97,35 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         sub(/\(.*/, "", current_function)
         gsub(/^[ \t]+|[ \t]+$/, "", current_function)  # Trim whitespace
 
-        sub(/.*\(/, "", $0)
-        sub(/\).*/, "", $0)
-        params = $0
+        # Accumulate the full parameter list across multiple lines
+        # In Genero/4GL, parameters can span multiple lines:
+        #   FUNCTION foo(param1,
+        #       param2, param3)
+        full_line = $0
+        while (index(full_line, ")") == 0) {
+            if ((getline next_line) <= 0) break
+            full_line = full_line " " next_line
+        }
+
+        sub(/.*\(/, "", full_line)
+        sub(/\).*/, "", full_line)
+        params = full_line
         param_count = split(params, param_arr, /, */)
 
         delete param_order
         delete param_types
         delete return_order
         return_count = 0  # Initialize return count to 0
+        actual_param_count = 0
         for (i = 1; i <= param_count; i++) {
             # Trim leading/trailing whitespace from parameter
             gsub(/^[ \t]+|[ \t]+$/, "", param_arr[i])
             
+            # Skip empty parameter names (from trailing commas or blank splits)
+            if (param_arr[i] == "") continue
+
+            actual_param_count++
+
             # Extract name (first word) and type (everything after first word)
             if (match(param_arr[i], /^[^ \t]+/)) {
                 name = substr(param_arr[i], RSTART, RLENGTH)
@@ -120,10 +136,11 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
                 name = param_arr[i]
                 type = ""
             }
-            param_order[i] = name
+            param_order[actual_param_count] = name
             param_types[name] = type
             vars[name] = type
         }
+        param_count = actual_param_count
         next
     }
 
