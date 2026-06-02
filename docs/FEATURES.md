@@ -39,17 +39,50 @@ Output: `modules.json` with module definitions and file lists.
 
 ## Call Graphs
 
-Track which functions call which other functions.
+Track which functions call which other functions, with automatic cross-file resolution. Called function names are resolved to their actual database IDs, enabling true file-to-file dependency analysis.
 
 ```bash
 # Find what a function calls
 bash query.sh find-function-dependencies process_request
 
-# Find what calls a function
+# Find what calls a function (resolves across files)
 bash query.sh find-function-dependents log_message
+
+# Find dead code (functions never called by anything)
+bash query.sh find-dead-code
+```
+
+**Cross-file resolution:** The `calls` table includes a `resolved_function_id` column linking each call to the callee's actual function record. This enables queries like:
+
+```sql
+-- Find all cross-file dependencies
+SELECT f1.name AS caller, fi1.path AS caller_file,
+       f2.name AS callee, fi2.path AS callee_file
+FROM calls c
+JOIN functions f1 ON c.function_id = f1.id
+JOIN files fi1 ON f1.file_id = fi1.id
+JOIN functions f2 ON c.resolved_function_id = f2.id
+JOIN files fi2 ON f2.file_id = fi2.id
+WHERE fi1.path != fi2.path
 ```
 
 **Use cases:** Impact analysis, dependency tracking, dead code detection.
+
+## Schema Impact Analysis
+
+Find all functions that reference a given database table or column via LIKE types. Essential for planning schema migrations.
+
+```bash
+# Which functions reference the customer table at all?
+bash query.sh find-functions-using customer
+
+# Which functions specifically use customer.cus_name?
+bash query.sh find-functions-using customer cus_name
+```
+
+Searches parameters, returns, and local variables for LIKE references matching the specified table/column.
+
+**Use cases:** Schema migration planning, impact assessment before column changes.
 
 ## File Headers
 

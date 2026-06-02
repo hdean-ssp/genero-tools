@@ -5,10 +5,12 @@ Comprehensive codebase analysis tool that extracts and indexes rich metadata fro
 ## Features
 
 - **Function Signature Extraction** - Names, parameters, return types, line numbers
-- **Call Graph Analysis** - Track which functions call which other functions
+- **Call Graph Analysis** - Track which functions call which, with cross-file resolution
+- **Schema Impact Analysis** - Find all functions affected by a table/column change
 - **File Header Parsing** - Extract code references and author information for impact analysis
 - **Code Quality Metrics** - Lines of code, cyclomatic complexity, variable count, parameter count, return count, call depth
 - **Type Resolution** - Resolve LIKE references to actual schema types, handle multi-instance functions
+- **Incremental Generation** - Only re-process changed files on subsequent runs
 - **Structured Metadata** - JSON and SQLite databases for fast querying
 - **Comprehensive Type Support** - All Genero data types including complex and special types
 
@@ -68,11 +70,24 @@ bash query.sh validate-types
 # Find what a function calls
 bash query.sh find-function-dependencies process_request
 
-# Find what calls a function
+# Find what calls a function (cross-file resolution included)
 bash query.sh find-function-dependents log_message
+
+# Find dead code (functions never called by anything)
+bash query.sh find-dead-code
 ```
 
-### 4. Search Code References
+### 4. Schema Impact Analysis
+
+```bash
+# Which functions break if I change the customer table?
+bash query.sh find-functions-using customer
+
+# Which functions reference a specific column?
+bash query.sh find-functions-using customer cus_name
+```
+
+### 5. Search Code References
 
 ```bash
 # Find files containing a code reference
@@ -202,9 +217,10 @@ Command-line tools for common development tasks:
 3. **Modular extraction** — Parse GLOBALS/IMPORT statements from `.4gl` files
 4. **Module dependencies** — Parse `.m3` makefiles for file relationships
 5. **Database creation** — Convert JSON to indexed SQLite databases
-6. **Schema parsing** — Load `.sch` files for type resolution (if found)
-7. **Type resolution** — Resolve LIKE references to actual schema types
-8. **Metrics extraction** — Extract LOC, complexity, and other quality metrics
+6. **Call resolution** — Resolve cross-file function call references
+7. **Schema parsing** — Load `.sch` files for type resolution (if found)
+8. **Type resolution** — Resolve LIKE references to actual schema types
+9. **Metrics extraction** — Extract LOC, complexity, and other quality metrics
 
 ### Incremental Mode
 
