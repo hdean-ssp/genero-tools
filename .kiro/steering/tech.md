@@ -28,13 +28,37 @@ genero-tools/
 ### Main Generation Pipeline
 
 ```bash
-# Generate all metadata (signatures, modules, metrics)
+# Generate all metadata (signatures, modules, metrics) - incremental by default
 bash generate_all.sh /path/to/genero/code
+
+# With explicit schema file
+bash generate_all.sh /path/to/genero/code /path/to/schema.sch
+
+# Force full rebuild (bypass incremental cache)
+FORCE_FULL=1 bash generate_all.sh /path/to/genero/code
+
+# Disable incremental mode
+INCREMENTAL=0 bash generate_all.sh /path/to/genero/code
 
 # Or individual components:
 bash src/generate_signatures.sh /path/to/code      # Extract function signatures
 bash src/generate_modules.sh /path/to/code         # Parse module dependencies
 bash src/generate_codebase_index.sh                # Merge signatures and modules
+```
+
+### Incremental Mode
+
+The pipeline tracks file content hashes in `.genero-manifest.json`. On subsequent runs, only changed/added files are re-processed and merged into the existing workspace.json. Deleted files are removed from the index.
+
+```bash
+# First run: full rebuild, creates .genero-manifest.json
+bash generate_all.sh /path/to/code
+
+# Second run: only processes changed files
+bash generate_all.sh /path/to/code
+
+# Force full rebuild when needed
+FORCE_FULL=1 bash generate_all.sh /path/to/code
 ```
 
 ### Database Creation (Optional)

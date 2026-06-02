@@ -28,6 +28,8 @@ genero-tools/
 │   ├── metrics_db.py                  # Metrics database operations
 │   ├── quality_analyzer.py            # Analyze metrics and code quality
 │   ├── incremental_generator.py       # Incremental metric updates
+│   ├── extract_and_store_metrics.py   # Pipeline: extract metrics into workspace.db
+│   ├── incremental_signatures.py      # Pipeline: incremental signature generation
 │   │
 │   ├── batch_query_handler.py         # Handle batch query operations
 │   ├── pagination_handler.py          # Handle pagination for large result sets

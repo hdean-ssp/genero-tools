@@ -25,13 +25,21 @@ No external dependencies like `jq` needed - everything uses built-in Python.
 ### 1. Generate Metadata
 
 ```bash
-# Automatic schema detection and type resolution
+# Full pipeline: signatures, modules, headers, schema, metrics
 bash generate_all.sh /path/to/codebase
 
-# Or individual steps
-bash generate_signatures.sh /path/to/codebase
-bash generate_modules.sh /path/to/codebase
-bash query.sh create-dbs
+# With a specific schema file
+bash generate_all.sh /path/to/codebase /path/to/schema.sch
+```
+
+On the first run, all files are processed. On subsequent runs, **only changed files are re-processed** (incremental mode). To force a full rebuild:
+
+```bash
+# Force full rebuild (ignore cached hashes)
+FORCE_FULL=1 bash generate_all.sh /path/to/codebase
+
+# Disable incremental mode entirely
+INCREMENTAL=0 bash generate_all.sh /path/to/codebase
 ```
 
 ### 2. Query Functions
@@ -178,11 +186,47 @@ Command-line tools for common development tasks:
 | Operation | Time |
 |-----------|------|
 | Signature extraction | <1ms per file |
+| Incremental re-run (no changes) | <1s total |
 | Module parsing | <1ms per file |
 | Database exact lookup | <1ms |
 | Database pattern search | <10ms |
 | Type resolution query | <1ms |
 | Metrics extraction | <1ms per function |
+
+## Pipeline
+
+`generate_all.sh` runs the following steps in order:
+
+1. **Signature extraction** — Parse `.4gl` files for function signatures (incremental)
+2. **Header extraction** — Extract code references and author info from file headers
+3. **Modular extraction** — Parse GLOBALS/IMPORT statements from `.4gl` files
+4. **Module dependencies** — Parse `.m3` makefiles for file relationships
+5. **Database creation** — Convert JSON to indexed SQLite databases
+6. **Schema parsing** — Load `.sch` files for type resolution (if found)
+7. **Type resolution** — Resolve LIKE references to actual schema types
+8. **Metrics extraction** — Extract LOC, complexity, and other quality metrics
+
+### Incremental Mode
+
+File content hashes are stored in `.genero-manifest.json`. On subsequent runs, only files whose content has changed are re-processed. This is the default behavior when a manifest exists.
+
+| Environment Variable | Effect |
+|---------------------|--------|
+| `INCREMENTAL=0` | Disable incremental mode, always do full rebuild |
+| `FORCE_FULL=1` | One-time full rebuild (still updates manifest for next run) |
+| `VERBOSE=1` | Show detailed progress output |
+
+### Generated Files
+
+| File | Description |
+|------|-------------|
+| `workspace.json` | Function signatures grouped by file |
+| `workspace.db` | SQLite database (signatures, headers, metrics) |
+| `workspace_resolved.json` | Signatures with resolved LIKE types |
+| `modules.json` | Module dependencies from `.m3` files |
+| `modules.db` | SQLite database for module queries |
+| `modulars.json` | GLOBALS/IMPORT statements per file |
+| `.genero-manifest.json` | File hashes for incremental mode (not committed) |
 
 ## Testing
 

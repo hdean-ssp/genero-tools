@@ -94,13 +94,17 @@ The project follows a multi-stage pipeline:
 ```
 
 **Key Stages:**
-1. **Signature Extraction** - Parse .4gl files for function signatures
+1. **Signature Extraction** - Parse .4gl files for function signatures (incremental by default)
 2. **Header Parsing** - Extract code references and author information
-3. **Schema Parsing** - Extract database schema definitions
-4. **Type Resolution** - Resolve LIKE references to schema types (v2.1.0)
-5. **Metrics Extraction** - Calculate code quality metrics (Phase 2)
-6. **Database Creation** - Optional SQLite database for fast queries
-7. **Query Interface** - Python and shell wrappers for querying
+3. **Modular Extraction** - Parse GLOBALS/IMPORT statements
+4. **Module Dependencies** - Parse .m3 makefiles
+5. **Schema Parsing** - Extract database schema definitions
+6. **Type Resolution** - Resolve LIKE references to schema types
+7. **Metrics Extraction** - Calculate code quality metrics (LOC, complexity, etc.)
+8. **Database Creation** - SQLite database for fast queries
+9. **Query Interface** - Python and shell wrappers for querying
+
+**Incremental Mode:** Signature extraction tracks file hashes in `.genero-manifest.json`. On subsequent runs, only changed files are re-processed. Use `FORCE_FULL=1` to bypass or `INCREMENTAL=0` to disable.
 
 ### 2. Making Changes
 

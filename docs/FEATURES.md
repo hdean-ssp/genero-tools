@@ -75,17 +75,43 @@ Extract and analyze code metrics for quality assessment.
 **Metrics extracted:**
 - Lines of Code (LOC)
 - Cyclomatic Complexity
-- Variable Count
+- Local Variable Count
 - Parameter Count
 - Return Count
+- Early Returns
 - Call Depth
+- Comment Lines and Comment Ratio
+
+Metrics are automatically extracted during `generate_all.sh` and stored in the `function_metrics` table in workspace.db.
 
 ```bash
-# Find complex functions
-python3 -c "from scripts.quality_analyzer import QualityAnalyzer; qa = QualityAnalyzer('workspace.db'); print(qa.find_complex_functions(threshold=10))"
+# Find complex functions (via Python API)
+python3 -c "
+import sys; sys.path.insert(0, 'scripts')
+from quality_analyzer import QualityAnalyzer
+qa = QualityAnalyzer('workspace.db')
+for f in qa.find_complex_functions(max_complexity=10, max_loc=100, max_parameters=5):
+    print(f'{f[\"name\"]} - complexity:{f[\"complexity\"]}, loc:{f[\"loc\"]}')
+"
 
-# Get function metrics
-python3 -c "from scripts.quality_analyzer import QualityAnalyzer; qa = QualityAnalyzer('workspace.db'); print(qa.get_function_metrics('my_function'))"
+# Direct SQL query for full control
+sqlite3 workspace.db "
+  SELECT f.name, fi.path, fm.complexity, fm.loc, fm.parameters
+  FROM function_metrics fm
+  JOIN functions f ON fm.function_id = f.id
+  JOIN files fi ON f.file_id = fi.id
+  WHERE fm.complexity > 10
+  ORDER BY fm.complexity DESC
+"
+
+# Find functions by flexible criteria
+python3 -c "
+import sys; sys.path.insert(0, 'scripts')
+from quality_analyzer import QualityAnalyzer
+qa = QualityAnalyzer('workspace.db')
+results = qa.find_by_metrics({'complexity': {'gt': 5}, 'loc': {'gt': 50}})
+print(f'Found {len(results)} functions')
+"
 ```
 
 ## Type Resolution
@@ -190,18 +216,29 @@ print(json.dumps(results, indent=2))
 conn.close()
 ```
 
-## Incremental Updates
+## Incremental Generation
 
-Efficiently update metrics for changed files only.
+The pipeline tracks file content hashes in `.genero-manifest.json`. On subsequent runs, only changed or added files are re-processed and merged into the existing workspace.json. Deleted files are automatically removed from the index.
 
-```python
-from scripts.incremental_generator import IncrementalGenerator
+```bash
+# First run: processes all files, creates .genero-manifest.json
+bash generate_all.sh /path/to/codebase
 
-gen = IncrementalGenerator('workspace.db')
-gen.update_metrics('/path/to/codebase')
+# Subsequent runs: only re-processes changed files
+bash generate_all.sh /path/to/codebase
+
+# Force full rebuild when needed (e.g. after tool update)
+FORCE_FULL=1 bash generate_all.sh /path/to/codebase
+
+# Disable incremental mode entirely
+INCREMENTAL=0 bash generate_all.sh /path/to/codebase
 ```
 
-**Benefits:** Fast updates for CI/CD pipelines, preserves existing data.
+**Benefits:**
+- Fast re-runs: skips unchanged files entirely
+- Ideal for CI/CD pipelines where only a few files change per commit
+- Preserves existing data for unchanged files
+- Automatically handles added and deleted files
 
 ## Performance
 
