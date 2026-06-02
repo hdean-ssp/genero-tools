@@ -45,6 +45,13 @@ python3 scripts/json_to_sqlite.py workspace.json workspace.db
 python3 scripts/json_to_sqlite_headers.py workspace.json workspace.db
 ```
 
+### Metrics Extraction (Automatic in generate_all.sh)
+
+```bash
+# Extract and store code quality metrics into workspace.db
+python3 scripts/extract_and_store_metrics.py /path/to/code workspace.db
+```
+
 ### Querying
 
 ```bash

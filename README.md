@@ -121,6 +121,35 @@ bash query.sh validate-types
 - Comprehensive type resolution debugging
 - Data consistency validation
 
+## Code Quality Metrics
+
+Automatically extracted during `generate_all.sh` and stored in `workspace.db` for instant querying.
+
+**Metrics per function:**
+- Lines of Code (LOC), cyclomatic complexity, local variable count
+- Parameter count, return count, early returns, call depth
+- Comment lines and comment ratio
+
+```bash
+# Find complex functions (complexity > 10, LOC > 100, or params > 5)
+python3 -c "
+import sys; sys.path.insert(0, 'scripts')
+from quality_analyzer import QualityAnalyzer
+qa = QualityAnalyzer('workspace.db')
+for f in qa.find_complex_functions():
+    print(f'{f[\"name\"]} - complexity:{f[\"complexity\"]}, loc:{f[\"loc\"]}')
+"
+
+# Direct SQL query
+sqlite3 workspace.db "
+  SELECT f.name, fm.complexity, fm.loc, fm.parameters
+  FROM function_metrics fm
+  JOIN functions f ON fm.function_id = f.id
+  WHERE fm.complexity > 10
+  ORDER BY fm.complexity DESC
+"
+```
+
 ## Use Cases
 
 ### IDE/Editor Integration
