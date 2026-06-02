@@ -24,30 +24,33 @@ No external dependencies like `jq` needed - everything uses built-in Python.
 
 ## Quick Start
 
-### 1. Generate Metadata
+### Generate the index for your workspace
+
+From the genero-tools directory, point `generate_all.sh` at your Genero codebase:
 
 ```bash
-# Full pipeline: signatures, modules, headers, schema, metrics
-bash generate_all.sh /path/to/codebase
+# Basic usage - auto-detects .sch schema files in the target directory
+bash generate_all.sh /path/to/your/genero/codebase
 
-# With a specific schema file
-bash generate_all.sh /path/to/codebase /path/to/schema.sch
+# If your schema file is stored elsewhere
+bash generate_all.sh /path/to/your/genero/codebase /path/to/database.sch
+
+# Verbose output to see what's happening
+VERBOSE=1 bash generate_all.sh /path/to/your/genero/codebase
 ```
 
-On the first run, all files are processed. On subsequent runs, **only changed files are re-processed** (incremental mode). To force a full rebuild:
+This produces:
+- `workspace.json` + `workspace.db` — function signatures, metrics, call graphs
+- `modules.json` + `modules.db` — module dependencies from `.m3` files
+- `modulars.json` — GLOBALS/IMPORT relationships
+- `workspace_resolved.json` — signatures with resolved LIKE types (if schema found)
+
+**Re-running is fast** — only changed files are re-processed automatically. To force a full rebuild: `FORCE_FULL=1 bash generate_all.sh ...`
+
+### Query the results
 
 ```bash
-# Force full rebuild (ignore cached hashes)
-FORCE_FULL=1 bash generate_all.sh /path/to/codebase
-
-# Disable incremental mode entirely
-INCREMENTAL=0 bash generate_all.sh /path/to/codebase
-```
-
-### 2. Query Functions
-
-```bash
-# Find a function
+# Find a function by name
 bash query.sh find-function my_function
 
 # Search functions by pattern
@@ -64,7 +67,7 @@ bash query.sh unresolved-types
 bash query.sh validate-types
 ```
 
-### 3. Analyze Dependencies
+### Analyze dependencies
 
 ```bash
 # Find what a function calls
@@ -75,9 +78,15 @@ bash query.sh find-function-dependents log_message
 
 # Find dead code (functions never called by anything)
 bash query.sh find-dead-code
+
+# What GLOBALS/IMPORT does a file depend on?
+bash query.sh file-deps my_module.4gl
+
+# What files include a specific globals file?
+bash query.sh file-dependents shared_globals
 ```
 
-### 4. Schema Impact Analysis
+### Schema impact analysis
 
 ```bash
 # Which functions break if I change the customer table?
@@ -87,7 +96,7 @@ bash query.sh find-functions-using customer
 bash query.sh find-functions-using customer cus_name
 ```
 
-### 5. Search Code References
+### Search code references
 
 ```bash
 # Find files containing a code reference
@@ -99,6 +108,8 @@ bash query.sh find-author "Rich"
 # Show author expertise areas
 bash query.sh author-expertise "Chilly"
 ```
+
+For the full list of available commands: `bash query.sh --help`
 
 ## Documentation
 
