@@ -87,15 +87,39 @@ echo ""
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Step 1: Generate function signatures
+INCREMENTAL="${INCREMENTAL:-1}"  # Incremental by default when manifest exists
+
 if [[ $GL4_COUNT -gt 0 ]]; then
-    log_step "Generating function signatures from .4gl files..."
-    if ! bash "$SCRIPT_DIR/src/generate_signatures.sh" "$TARGET" 2>&1 | tee /tmp/gen_sig_output.log; then
-        log_error "Failed to generate function signatures"
-        log_error "Last output:"
-        tail -20 /tmp/gen_sig_output.log >&2
-        exit 1
+    if [[ "$INCREMENTAL" == "1" && -f ".genero-manifest.json" && -f "workspace.json" ]]; then
+        log_step "Generating function signatures (incremental mode)..."
+        SIG_OUTPUT=$(mktemp)
+        if python3 "$SCRIPT_DIR/scripts/incremental_signatures.py" "$TARGET" --output workspace.json --manifest .genero-manifest.json >"$SIG_OUTPUT" 2>&1; then
+            cat "$SIG_OUTPUT" >&2
+            log_success "Function signatures updated (workspace.json)"
+        else
+            log_info "Incremental generation failed, falling back to full rebuild..."
+            if ! bash "$SCRIPT_DIR/src/generate_signatures.sh" "$TARGET" 2>&1 | tee /tmp/gen_sig_output.log; then
+                log_error "Failed to generate function signatures"
+                tail -20 /tmp/gen_sig_output.log >&2
+                exit 1
+            fi
+            # Create manifest for next run
+            python3 "$SCRIPT_DIR/scripts/incremental_signatures.py" "$TARGET" --manifest .genero-manifest.json --manifest-only 2>/dev/null || true
+            log_success "Function signatures generated (workspace.json) [full rebuild]"
+        fi
+        rm -f "$SIG_OUTPUT"
+    else
+        log_step "Generating function signatures from .4gl files..."
+        if ! bash "$SCRIPT_DIR/src/generate_signatures.sh" "$TARGET" 2>&1 | tee /tmp/gen_sig_output.log; then
+            log_error "Failed to generate function signatures"
+            log_error "Last output:"
+            tail -20 /tmp/gen_sig_output.log >&2
+            exit 1
+        fi
+        # Create manifest for next incremental run
+        python3 "$SCRIPT_DIR/scripts/incremental_signatures.py" "$TARGET" --manifest .genero-manifest.json --manifest-only 2>/dev/null || true
+        log_success "Function signatures generated (workspace.json)"
     fi
-    log_success "Function signatures generated (workspace.json)"
 else
     log_info "Skipping function signature generation (no .4gl files found)"
 fi

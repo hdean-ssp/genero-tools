@@ -2,8 +2,10 @@
 workspace.json
 workspace_resolved.json
 modules.json
+modulars.json
 codebase_index.json
 *.db
+.genero-manifest.json
 
 # Production database schema (sensitive)
 castle.sch
