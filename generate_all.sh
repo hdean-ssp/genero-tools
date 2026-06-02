@@ -88,22 +88,40 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Step 1: Generate function signatures
 INCREMENTAL="${INCREMENTAL:-1}"  # Incremental by default when manifest exists
+CHANGES_FILE=""  # Will be set if incremental mode detects changes
+IS_INCREMENTAL=0  # Track if we're in incremental mode with an existing DB
 
 if [[ $GL4_COUNT -gt 0 ]]; then
-    if [[ "$INCREMENTAL" == "1" && -f ".genero-manifest.json" && -f "workspace.json" ]]; then
+    if [[ "$INCREMENTAL" == "1" && -f ".genero-manifest.json" && -f "workspace.json" && -f "workspace.db" ]]; then
         log_step "Generating function signatures (incremental mode)..."
+        CHANGES_FILE=$(mktemp)
         SIG_OUTPUT=$(mktemp)
-        if python3 "$SCRIPT_DIR/scripts/incremental_signatures.py" "$TARGET" --output workspace.json --manifest .genero-manifest.json >"$SIG_OUTPUT" 2>&1; then
+        if python3 "$SCRIPT_DIR/scripts/incremental_signatures.py" "$TARGET" --output workspace.json --manifest .genero-manifest.json --changes-out "$CHANGES_FILE" >"$SIG_OUTPUT" 2>&1; then
             cat "$SIG_OUTPUT" >&2
+            IS_INCREMENTAL=1
+            
+            # Check if there were actually any changes
+            CHANGE_COUNT=$(python3 -c "import json; d=json.load(open('$CHANGES_FILE')); print(len(d.get('changed',[])) + len(d.get('added',[])) + len(d.get('removed',[])))" 2>/dev/null || echo "0")
+            
+            if [[ "$CHANGE_COUNT" == "0" ]]; then
+                log_success "No changes detected - skipping downstream steps"
+                echo ""
+                log_success "All generators completed successfully! (no changes)"
+                rm -f "$SIG_OUTPUT" "$CHANGES_FILE"
+                exit 0
+            fi
+            
             log_success "Function signatures updated (workspace.json)"
         else
             log_info "Incremental generation failed, falling back to full rebuild..."
+            IS_INCREMENTAL=0
+            rm -f "$CHANGES_FILE"
+            CHANGES_FILE=""
             if ! bash "$SCRIPT_DIR/src/generate_signatures.sh" "$TARGET" 2>&1 | tee /tmp/gen_sig_output.log; then
                 log_error "Failed to generate function signatures"
                 tail -20 /tmp/gen_sig_output.log >&2
                 exit 1
             fi
-            # Create manifest for next run
             python3 "$SCRIPT_DIR/scripts/incremental_signatures.py" "$TARGET" --manifest .genero-manifest.json --manifest-only 2>/dev/null || true
             log_success "Function signatures generated (workspace.json) [full rebuild]"
         fi
@@ -116,7 +134,6 @@ if [[ $GL4_COUNT -gt 0 ]]; then
             tail -20 /tmp/gen_sig_output.log >&2
             exit 1
         fi
-        # Create manifest for next incremental run
         python3 "$SCRIPT_DIR/scripts/incremental_signatures.py" "$TARGET" --manifest .genero-manifest.json --manifest-only 2>/dev/null || true
         log_success "Function signatures generated (workspace.json)"
     fi
@@ -191,19 +208,33 @@ fi
 
 echo ""
 
-# Step 3: Create SQLite databases for fast querying
+# Step 3: Create/update SQLite databases
 log_step "Creating SQLite databases for fast querying..."
 
-# Remove old databases to avoid constraint errors
-rm -f workspace.db modules.db
+if [[ $IS_INCREMENTAL -eq 1 && -f "workspace.db" && -n "$CHANGES_FILE" ]]; then
+    # Incremental DB update - only update changed files
+    log_info "Updating workspace.db incrementally..."
+    if python3 "$SCRIPT_DIR/scripts/update_db_incremental.py" workspace.json workspace.db "$CHANGES_FILE" 2>&1; then
+        log_success "workspace.db updated (incremental)"
+    else
+        log_info "Incremental DB update failed, rebuilding from scratch..."
+        rm -f workspace.db
+        python3 "$SCRIPT_DIR/scripts/json_to_sqlite.py" signatures workspace.json workspace.db
+        log_success "workspace.db recreated (full)"
+    fi
+else
+    # Full DB rebuild
+    rm -f workspace.db modules.db
 
-if [[ $GL4_COUNT -gt 0 ]]; then
-    log_info "Creating workspace.db from workspace.json..."
-    python3 "$SCRIPT_DIR/scripts/json_to_sqlite.py" signatures workspace.json workspace.db
-    log_success "workspace.db created"
-    
-    # Add header tables to database - reuse headers from Step 1b if available
-    # Re-extract only if HEADERS_TEMP is not available (shouldn't happen in normal flow)
+    if [[ $GL4_COUNT -gt 0 ]]; then
+        log_info "Creating workspace.db from workspace.json..."
+        python3 "$SCRIPT_DIR/scripts/json_to_sqlite.py" signatures workspace.json workspace.db
+        log_success "workspace.db created"
+    fi
+fi
+
+# Add header tables to database
+if [[ $GL4_COUNT -gt 0 && -f "workspace.db" ]]; then
     if [[ ! -s "${HEADERS_TEMP:-}" ]]; then
         HEADERS_TEMP=$(mktemp)
         trap 'rm -f "$HEADERS_TEMP"' EXIT
@@ -212,7 +243,6 @@ if [[ $GL4_COUNT -gt 0 ]]; then
             python3 "$SCRIPT_DIR/scripts/parse_headers.py" "$file" "$TARGET" >> "$HEADERS_TEMP" 2>/dev/null || true
         done
         
-        # Check for subshell variable loss: if temp file is empty after processing files, warn
         if [[ $GL4_COUNT -gt 0 && ! -s "$HEADERS_TEMP" ]]; then
             log_info "Warning: Header extraction produced no output for $GL4_COUNT files (possible parse_headers.py issue)"
         fi
@@ -234,13 +264,18 @@ if [[ $GL4_COUNT -gt 0 ]]; then
     fi
 fi
 
-if [[ $M3_COUNT -gt 0 ]]; then
+if [[ $M3_COUNT -gt 0 && ! -f "modules.db" ]]; then
+    log_info "Creating modules.db from modules.json..."
+    python3 "$SCRIPT_DIR/scripts/json_to_sqlite.py" modules modules.json modules.db
+    log_success "modules.db created"
+elif [[ $M3_COUNT -gt 0 && $IS_INCREMENTAL -eq 0 ]]; then
+    rm -f modules.db
     log_info "Creating modules.db from modules.json..."
     python3 "$SCRIPT_DIR/scripts/json_to_sqlite.py" modules modules.json modules.db
     log_success "modules.db created"
 fi
 
-# Resolve cross-file call references
+# Resolve cross-file call references (only for changed functions in incremental mode)
 if [[ -f "workspace.db" ]]; then
     log_info "Resolving cross-file call references..."
     CALLS_OUT=$(mktemp)
@@ -348,15 +383,29 @@ if [[ $GL4_COUNT -gt 0 && -f "workspace.db" ]]; then
     
     METRICS_LOG=$(mktemp)
     METRICS_OUT=$(mktemp)
-    if python3 "$SCRIPT_DIR/scripts/extract_and_store_metrics.py" "$TARGET" workspace.db >"$METRICS_OUT" 2>"$METRICS_LOG"; then
-        log_success "Code quality metrics extracted and stored in workspace.db"
-        # Show summary
-        cat "$METRICS_OUT" >&2
+    
+    if [[ $IS_INCREMENTAL -eq 1 && -n "$CHANGES_FILE" && -f "$CHANGES_FILE" ]]; then
+        # Incremental: only extract metrics for changed files
+        if python3 "$SCRIPT_DIR/scripts/extract_and_store_metrics.py" "$TARGET" workspace.db "$CHANGES_FILE" >"$METRICS_OUT" 2>"$METRICS_LOG"; then
+            log_success "Code quality metrics updated (incremental)"
+            cat "$METRICS_OUT" >&2
+        else
+            log_info "Could not extract metrics (continuing)"
+            if [[ -s "$METRICS_LOG" ]]; then
+                tail -5 "$METRICS_LOG" | sed 's/^/  /' >&2
+            fi
+        fi
     else
-        log_info "Could not extract metrics (continuing without metrics)"
-        if [[ -s "$METRICS_LOG" ]]; then
-            log_info "Metrics error details:"
-            tail -5 "$METRICS_LOG" | sed 's/^/  /' >&2
+        # Full metrics extraction
+        if python3 "$SCRIPT_DIR/scripts/extract_and_store_metrics.py" "$TARGET" workspace.db >"$METRICS_OUT" 2>"$METRICS_LOG"; then
+            log_success "Code quality metrics extracted and stored in workspace.db"
+            cat "$METRICS_OUT" >&2
+        else
+            log_info "Could not extract metrics (continuing without metrics)"
+            if [[ -s "$METRICS_LOG" ]]; then
+                log_info "Metrics error details:"
+                tail -5 "$METRICS_LOG" | sed 's/^/  /' >&2
+            fi
         fi
     fi
     rm -f "$METRICS_LOG" "$METRICS_OUT"
@@ -364,6 +413,9 @@ fi
 
 echo ""
 log_success "All generators completed successfully!"
+
+# Cleanup temp files
+[[ -n "${CHANGES_FILE:-}" && -f "${CHANGES_FILE:-}" ]] && rm -f "$CHANGES_FILE"
 echo ""
 log_info "Generated files:"
 [[ $GL4_COUNT -gt 0 ]] && log_info "  - workspace.json (function signatures with headers)"

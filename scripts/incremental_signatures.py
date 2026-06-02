@@ -220,6 +220,7 @@ def main():
     parser.add_argument("--manifest", default=DEFAULT_MANIFEST, help="Path to manifest file")
     parser.add_argument("--output", default=WORKSPACE_JSON, help="Output workspace.json path")
     parser.add_argument("--manifest-only", action="store_true", help="Only create/update manifest without processing")
+    parser.add_argument("--changes-out", default=None, help="Write changed/added/removed file lists to this JSON path")
     args = parser.parse_args()
     
     target_dir = args.target
@@ -288,9 +289,22 @@ def main():
     if not files_to_process and not removed:
         print(f"[OK] No changes detected - workspace.json is up to date ({total_files} files)")
         save_manifest(manifest_path, current_hashes)
+        # Write empty changes file if requested
+        if args.changes_out:
+            with open(args.changes_out, 'w') as f:
+                json.dump({"changed": [], "added": [], "removed": []}, f)
         return
     
     print(f"[INFO] Incremental update: {len(changed)} changed, {len(added)} added, {len(removed)} removed (of {total_files} total)")
+    
+    # Write changes file for downstream pipeline steps
+    if args.changes_out:
+        with open(args.changes_out, 'w') as f:
+            json.dump({
+                "changed": sorted(changed),
+                "added": sorted(added),
+                "removed": sorted(removed)
+            }, f)
     
     if verbose:
         for f in sorted(changed):

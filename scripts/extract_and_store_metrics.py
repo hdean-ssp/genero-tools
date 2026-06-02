@@ -92,11 +92,12 @@ def find_file_in_index(file_functions, rel_path):
 
 def main():
     if len(sys.argv) < 3:
-        print("Usage: extract_and_store_metrics.py <target_directory> <workspace_db>", file=sys.stderr)
+        print("Usage: extract_and_store_metrics.py <target_directory> <workspace_db> [changed_files_json]", file=sys.stderr)
         sys.exit(1)
     
     target_dir = sys.argv[1]
     db_path = sys.argv[2]
+    changed_files_path = sys.argv[3] if len(sys.argv) > 3 else None
     verbose = os.environ.get('VERBOSE', '0') == '1'
     
     # Validate inputs
@@ -123,8 +124,28 @@ def main():
         total_in_db = sum(len(v) for v in file_functions.values())
         print("  DB contains {} functions across {} files".format(total_in_db, len(file_functions)), file=sys.stderr)
     
-    # Find all .4gl files
-    files = find_4gl_files(target_dir)
+    # Find .4gl files to process
+    all_files = find_4gl_files(target_dir)
+    
+    # Filter to only changed files if a changes list is provided
+    if changed_files_path and os.path.exists(changed_files_path):
+        import json as json_mod
+        with open(changed_files_path, 'r') as cf:
+            changes = json_mod.load(cf)
+        changed_set = set(changes.get('changed', []) + changes.get('added', []))
+        if changed_set:
+            files = [f for f in all_files if any(
+                os.path.relpath(str(f), target_dir) == c or
+                './' + os.path.relpath(str(f), target_dir) == c or
+                os.path.relpath(str(f), target_dir) == c.lstrip('./')
+                for c in changed_set
+            )]
+            if verbose:
+                print("  Filtering to {} changed files (of {} total)".format(len(files), len(all_files)), file=sys.stderr)
+        else:
+            files = all_files
+    else:
+        files = all_files
     
     if verbose:
         print("  Extracting metrics from {} .4gl files...".format(len(files)), file=sys.stderr)
