@@ -104,7 +104,7 @@ The project follows a multi-stage pipeline:
 8. **Database Creation** - SQLite database for fast queries
 9. **Query Interface** - Python and shell wrappers for querying
 
-**Incremental Mode:** Signature extraction tracks file hashes in `.genero-manifest.json`. On subsequent runs, only changed files are re-processed. Use `FORCE_FULL=1` to bypass or `INCREMENTAL=0` to disable.
+**Incremental Mode:** The pipeline auto-detects whether to run incrementally (manifest + workspace.json + workspace.db all exist) or do a full rebuild (first run or files missing). Use `FORCE_FULL=1` to force a full rebuild.
 
 ### 2. Making Changes
 

@@ -37,9 +37,6 @@ bash generate_all.sh /path/to/genero/code /path/to/schema.sch
 # Force full rebuild (bypass incremental cache)
 FORCE_FULL=1 bash generate_all.sh /path/to/genero/code
 
-# Disable incremental mode
-INCREMENTAL=0 bash generate_all.sh /path/to/genero/code
-
 # Or individual components:
 bash src/generate_signatures.sh /path/to/code      # Extract function signatures
 bash src/generate_modules.sh /path/to/code         # Parse module dependencies

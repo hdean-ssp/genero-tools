@@ -242,8 +242,7 @@ This is the default behavior when a manifest and workspace.db already exist.
 
 | Environment Variable | Effect |
 |---------------------|--------|
-| `INCREMENTAL=0` | Disable incremental mode, always do full rebuild |
-| `FORCE_FULL=1` | One-time full rebuild (still updates manifest for next run) |
+| `FORCE_FULL=1` | Force full rebuild even when incremental is possible |
 | `VERBOSE=1` | Show detailed progress output |
 
 | Scenario | Time (3,400 files) |

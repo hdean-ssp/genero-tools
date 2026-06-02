@@ -87,12 +87,23 @@ echo ""
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Step 1: Generate function signatures
-INCREMENTAL="${INCREMENTAL:-1}"  # Incremental by default when manifest exists
 CHANGES_FILE=""  # Will be set if incremental mode detects changes
 IS_INCREMENTAL=0  # Track if we're in incremental mode with an existing DB
 
+# Auto-detect mode: incremental if all required files exist, full otherwise
+# FORCE_FULL=1 overrides to always do a full rebuild
+CAN_INCREMENTAL=0
+if [[ -f ".genero-manifest.json" && -f "workspace.json" && -f "workspace.db" ]]; then
+    CAN_INCREMENTAL=1
+fi
+
+if [[ "${FORCE_FULL:-0}" == "1" ]]; then
+    CAN_INCREMENTAL=0
+    log_info "Full rebuild forced (FORCE_FULL=1)"
+fi
+
 if [[ $GL4_COUNT -gt 0 ]]; then
-    if [[ "$INCREMENTAL" == "1" && -f ".genero-manifest.json" && -f "workspace.json" && -f "workspace.db" ]]; then
+    if [[ $CAN_INCREMENTAL -eq 1 ]]; then
         log_step "Generating function signatures (incremental mode)..."
         CHANGES_FILE=$(mktemp)
         SIG_OUTPUT=$(mktemp)

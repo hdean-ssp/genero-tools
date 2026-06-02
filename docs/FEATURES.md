@@ -254,17 +254,14 @@ conn.close()
 The pipeline tracks file content hashes in `.genero-manifest.json`. On subsequent runs, only changed or added files are re-processed and merged into the existing workspace.json. Deleted files are automatically removed from the index.
 
 ```bash
-# First run: processes all files, creates .genero-manifest.json
+# First run: processes all files, creates manifest and databases
 bash generate_all.sh /path/to/codebase
 
-# Subsequent runs: only re-processes changed files
+# Subsequent runs: auto-detects changes, only re-processes what changed
 bash generate_all.sh /path/to/codebase
 
 # Force full rebuild when needed (e.g. after tool update)
 FORCE_FULL=1 bash generate_all.sh /path/to/codebase
-
-# Disable incremental mode entirely
-INCREMENTAL=0 bash generate_all.sh /path/to/codebase
 ```
 
 **Benefits:**
