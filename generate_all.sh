@@ -12,7 +12,7 @@ set -euo pipefail
 # Configuration
 VERSION="1.0.0"
 VERBOSE="${VERBOSE:-0}"
-TARGET="${1:-.}"
+TARGET="${1:-${WORKSPACE:-.}}"
 SCHEMA_FILE="${2:-}"  # Optional schema file parameter
 
 # Color codes for output

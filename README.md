@@ -29,14 +29,17 @@ No external dependencies like `jq` needed - everything uses built-in Python.
 From the genero-tools directory, point `generate_all.sh` at your Genero codebase:
 
 ```bash
-# Basic usage - auto-detects .sch schema files in the target directory
+# Uses $WORKSPACE if set, otherwise current directory
+bash generate_all.sh
+
+# Or specify a path explicitly
 bash generate_all.sh /path/to/your/genero/codebase
 
-# If your schema file is stored elsewhere
+# With a specific schema file
 bash generate_all.sh /path/to/your/genero/codebase /path/to/database.sch
 
 # Verbose output to see what's happening
-VERBOSE=1 bash generate_all.sh /path/to/your/genero/codebase
+VERBOSE=1 bash generate_all.sh
 ```
 
 This produces:
