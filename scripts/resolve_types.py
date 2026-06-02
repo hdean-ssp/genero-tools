@@ -276,7 +276,46 @@ def main():
         with open(output_path, 'w') as f:
             json.dump(workspace, f, indent=2)
         
+        # Summarize resolution results
+        resolved_count = 0
+        unresolved_count = 0
+        unresolved_items = []
+        
+        for file_path, functions in workspace.items():
+            if file_path == '_metadata':
+                continue
+            if not isinstance(functions, list):
+                continue
+            for func in functions:
+                for param in func.get('parameters', []):
+                    if param.get('is_like_reference'):
+                        if param.get('resolved'):
+                            resolved_count += 1
+                        else:
+                            unresolved_count += 1
+                            unresolved_items.append(
+                                f"param {param.get('name')} in {func.get('name')} ({file_path}): {param.get('error', 'unknown')}"
+                            )
+                for ret in func.get('returns', []):
+                    if ret.get('is_like_reference'):
+                        if ret.get('resolved'):
+                            resolved_count += 1
+                        else:
+                            unresolved_count += 1
+                            unresolved_items.append(
+                                f"return {ret.get('name')} in {func.get('name')} ({file_path}): {ret.get('error', 'unknown')}"
+                            )
+        
         print(f"Type resolution complete. Output: {output_path}")
+        print(f"  LIKE references resolved: {resolved_count}")
+        print(f"  LIKE references unresolved: {unresolved_count}")
+        
+        if unresolved_items:
+            print(f"\n  Unresolved LIKE references:")
+            for item in unresolved_items[:20]:
+                print(f"    - {item}")
+            if len(unresolved_items) > 20:
+                print(f"    ... and {len(unresolved_items) - 20} more")
     finally:
         resolver.close()
 

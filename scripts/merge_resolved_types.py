@@ -30,6 +30,7 @@ class ResolvedTypeMerger:
             'returns_updated': 0,
             'returns_resolved': 0,
             'returns_unresolved': 0,
+            'unresolved_details': [],
             'errors': []
         }
     
@@ -230,6 +231,9 @@ class ResolvedTypeMerger:
                                     self.stats['parameters_resolved'] += 1
                                 else:
                                     self.stats['parameters_unresolved'] += 1
+                                    self.stats['unresolved_details'].append(
+                                        f"param {param_name} in {func_name} ({file_path}): {update_data.get('resolution_error', 'unknown reason')}"
+                                    )
                         
                         except sqlite3.Error as e:
                             self.stats['errors'].append(f"Failed to update parameter {param_name} in function {func_name}: {e}")
@@ -299,6 +303,9 @@ class ResolvedTypeMerger:
                                     self.stats['returns_resolved'] += 1
                                 else:
                                     self.stats['returns_unresolved'] += 1
+                                    self.stats['unresolved_details'].append(
+                                        f"return {ret_name} in {func_name} ({file_path}): {update_data.get('resolution_error', 'unknown reason')}"
+                                    )
                         
                         except sqlite3.Error as e:
                             self.stats['errors'].append(f"Failed to update return {ret_name} in function {func_name}: {e}")
@@ -342,6 +349,13 @@ def main():
         print(f"[OK] Returns updated: {merger.stats['returns_updated']}")
         print(f"[OK] Returns resolved: {merger.stats['returns_resolved']}")
         print(f"[OK] Returns unresolved: {merger.stats['returns_unresolved']}")
+        
+        if merger.stats['unresolved_details']:
+            print(f"\n[UNRESOLVED] Failed to resolve ({len(merger.stats['unresolved_details'])} items):")
+            for detail in merger.stats['unresolved_details'][:20]:
+                print(f"  - {detail}")
+            if len(merger.stats['unresolved_details']) > 20:
+                print(f"  ... and {len(merger.stats['unresolved_details']) - 20} more")
         
         if merger.stats['errors']:
             print(f"\n[WARN] Errors ({len(merger.stats['errors'])}):")
