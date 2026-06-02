@@ -4,8 +4,8 @@
 
 - [x] 1. **Wire metrics into pipeline** — Integrate `metrics_extractor.py` into `generate_all.sh` so `function_metrics` table is populated in workspace.db automatically. Quality analyzer works without fallback paths.
 - [x] 2. **Incremental signature generation** — Track file content hashes in `.genero-manifest.json`; re-process only changed `.4gl` files and merge into existing workspace.json. Full rebuild when no manifest exists or `FORCE_FULL=1`. Disable with `INCREMENTAL=0`.
-- [ ] 3. **Cross-file call resolution** — Resolve called function names to their actual `function_id` in the DB. Enrich `calls` table with `resolved_function_id` to enable true file-to-file dependency graphs and reliable dead code detection.
-- [ ] 4. **Reverse schema impact query** — Add `find-functions-using-column <table> <column>` query to answer "which functions are affected if I change this schema column?" Essential for schema migration planning.
+- [x] 3. **Cross-file call resolution** — Resolve called function names to their actual `function_id` in the DB. Enrich `calls` table with `resolved_function_id` to enable true file-to-file dependency graphs and reliable dead code detection.
+- [x] 4. **Reverse schema impact query** — Add `find-functions-using <table> [column]` query to answer "which functions are affected if I change this schema column?" Searches parameters, returns, and variables.
 
 ## Medium Priority
 

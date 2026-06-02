@@ -240,6 +240,19 @@ if [[ $M3_COUNT -gt 0 ]]; then
     log_success "modules.db created"
 fi
 
+# Resolve cross-file call references
+if [[ -f "workspace.db" ]]; then
+    log_info "Resolving cross-file call references..."
+    CALLS_OUT=$(mktemp)
+    if python3 "$SCRIPT_DIR/scripts/resolve_calls.py" workspace.db >"$CALLS_OUT" 2>&1; then
+        cat "$CALLS_OUT" >&2
+        log_success "Call references resolved"
+    else
+        log_info "Could not resolve call references (continuing)"
+    fi
+    rm -f "$CALLS_OUT"
+fi
+
 echo ""
 
 # Step 4: Parse and load schema if available

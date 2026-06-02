@@ -69,6 +69,7 @@ Schema queries (workspace.db):
   search-tables <pattern>             Search tables by name pattern
   search-columns <pattern>            Search columns by name across all tables
   resolve-like <like_ref>             Resolve a LIKE reference (table.column or table.*)
+  find-functions-using <table> [col]  Find functions that reference a table/column (schema impact)
 
 Batch queries:
   batch-query <json_file>             Execute multiple queries in a single batch
@@ -473,6 +474,9 @@ case "$command" in
         ;;
     resolve-like)
         python3 "$PROJECT_ROOT/scripts/query_schema.py" resolve-like "$SIGNATURES_DB" "$@"
+        ;;
+    find-functions-using)
+        python3 "$PROJECT_ROOT/scripts/query_schema.py" find-functions-using "$SIGNATURES_DB" "$@"
         ;;
     *)
         echo "Unknown command: $command" >&2

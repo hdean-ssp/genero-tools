@@ -278,6 +278,115 @@ def resolve_like(db_file: str, like_ref: str) -> Optional[Dict[str, Any]]:
         return result
 
 
+def find_functions_using_column(db_file: str, table_name: str, column_name: str = None) -> List[Dict[str, Any]]:
+    """
+    Find all functions that reference a given table or column via LIKE types.
+
+    Searches both parameters and returns tables for LIKE references matching
+    the specified table/column. Useful for schema impact analysis.
+
+    Args:
+        db_file: Path to SQLite database
+        table_name: Table name to search for
+        column_name: Optional column name (if None, finds all refs to the table)
+
+    Returns:
+        List of functions with their LIKE references to this table/column
+    """
+    try:
+        conn = sqlite3.connect(db_file)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        results = []
+
+        # Search parameters with LIKE references
+        if column_name:
+            # Specific column: match "LIKE table.column"
+            like_pattern = f"%{table_name}.{column_name}%"
+        else:
+            # Any reference to the table: match "LIKE table." or "LIKE table.*"
+            like_pattern = f"%{table_name}.%"
+
+        # Search parameters
+        cursor.execute("""
+            SELECT f.name AS function_name, fi.path AS file_path,
+                   p.name AS param_name, p.type AS param_type,
+                   f.line_start, f.line_end,
+                   'parameter' AS ref_kind
+            FROM parameters p
+            JOIN functions f ON p.function_id = f.id
+            JOIN files fi ON f.file_id = fi.id
+            WHERE LOWER(p.type) LIKE LOWER(?)
+            ORDER BY fi.path, f.name
+        """, (like_pattern,))
+
+        for row in cursor.fetchall():
+            results.append({
+                "function": row["function_name"],
+                "file": row["file_path"],
+                "line_start": row["line_start"],
+                "line_end": row["line_end"],
+                "ref_kind": row["ref_kind"],
+                "name": row["param_name"],
+                "type": row["param_type"]
+            })
+
+        # Search returns
+        cursor.execute("""
+            SELECT f.name AS function_name, fi.path AS file_path,
+                   r.name AS return_name, r.type AS return_type,
+                   f.line_start, f.line_end,
+                   'return' AS ref_kind
+            FROM returns r
+            JOIN functions f ON r.function_id = f.id
+            JOIN files fi ON f.file_id = fi.id
+            WHERE LOWER(r.type) LIKE LOWER(?)
+            ORDER BY fi.path, f.name
+        """, (like_pattern,))
+
+        for row in cursor.fetchall():
+            results.append({
+                "function": row["function_name"],
+                "file": row["file_path"],
+                "line_start": row["line_start"],
+                "line_end": row["line_end"],
+                "ref_kind": row["ref_kind"],
+                "name": row["return_name"],
+                "type": row["return_type"]
+            })
+
+        # Also search variables that have LIKE types
+        cursor.execute("""
+            SELECT f.name AS function_name, fi.path AS file_path,
+                   v.name AS var_name, v.type AS var_type,
+                   f.line_start, f.line_end,
+                   'variable' AS ref_kind
+            FROM variables v
+            JOIN functions f ON v.function_id = f.id
+            JOIN files fi ON f.file_id = fi.id
+            WHERE LOWER(v.type) LIKE LOWER(?)
+            ORDER BY fi.path, f.name
+        """, (like_pattern,))
+
+        for row in cursor.fetchall():
+            results.append({
+                "function": row["function_name"],
+                "file": row["file_path"],
+                "line_start": row["line_start"],
+                "line_end": row["line_end"],
+                "ref_kind": row["ref_kind"],
+                "name": row["var_name"],
+                "type": row["var_type"]
+            })
+
+        conn.close()
+        return results
+    except Exception as e:
+        print(f"Error querying database: {e}", file=sys.stderr)
+        return []
+
+
 def main():
     """Command-line interface for schema queries."""
     if len(sys.argv) < 3:
@@ -289,6 +398,7 @@ def main():
         print("  search-tables <pattern>              Search tables by name", file=sys.stderr)
         print("  search-columns <pattern>             Search columns by name", file=sys.stderr)
         print("  resolve-like <like_ref>              Resolve LIKE reference", file=sys.stderr)
+        print("  find-functions-using <table> [col]   Find functions referencing table/column", file=sys.stderr)
         sys.exit(1)
 
     command = sys.argv[1]
@@ -308,6 +418,10 @@ def main():
         # Join remaining args to handle "LIKE table.col" as a single reference
         like_ref = " ".join(sys.argv[3:])
         result = resolve_like(db_file, like_ref)
+    elif command == "find-functions-using" and len(sys.argv) > 3:
+        table_name = sys.argv[3]
+        column_name = sys.argv[4] if len(sys.argv) > 4 else None
+        result = find_functions_using_column(db_file, table_name, column_name)
     else:
         print(f"Unknown command or missing arguments: {command}", file=sys.stderr)
         sys.exit(1)
