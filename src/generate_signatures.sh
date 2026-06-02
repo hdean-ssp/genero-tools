@@ -80,6 +80,11 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         delete record_fields
         delete function_calls
         call_count = 0
+        # Build ord lookup for hashing (printable ASCII)
+        _ord_str = " !\"#$%&'"'"'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+        for (_oi = 1; _oi <= length(_ord_str); _oi++) {
+            _ord[substr(_ord_str, _oi, 1)] = _oi + 31
+        }
     }
 
     /^FUNCTION / {
@@ -95,6 +100,7 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         
         in_function = 1
         function_start_line = NR  # Track start line
+        body_text = ""  # Accumulate body for hashing
         current_function = substr($0, index($0, "FUNCTION ") + 9)
         sub(/\(.*/, "", current_function)
         gsub(/^[ \t]+|[ \t]+$/, "", current_function)  # Trim whitespace
@@ -150,6 +156,11 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         }
         param_count = actual_param_count
         next
+    }
+
+    # Accumulate function body text for hashing (runs for every line inside a function)
+    in_function {
+        body_text = body_text $0 "\n"
     }
 
     in_function && /^[ \t]*DEFINE / {
@@ -491,6 +502,16 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
             function_sig = function_sig ":" returns_str
         }
 
+        # Compute body hash for change detection (polynomial rolling hash)
+        body_loc = function_end_line - function_start_line - 1
+        _h = 0
+        for (_ci = 1; _ci <= length(body_text); _ci++) {
+            _ch = substr(body_text, _ci, 1)
+            _cv = (_ch in _ord) ? _ord[_ch] : 10
+            _h = (_h * 31 + _cv) % 2147483647
+        }
+        body_hash = sprintf("%08x", _h)
+
         # Build record_types object (field definitions for RECORD variables)
         record_types_json = ""
         rf_count = 0
@@ -502,14 +523,15 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
 
         # Print structured JSON with calls, variables, and record types
         if (rf_count > 0) {
-            printf "{\"file\":\"%s\",\"name\":\"%s\",\"line\":{\"start\":%d,\"end\":%d},\"signature\":\"%s\",\"parameters\":[%s],\"returns\":[%s],\"calls\":[%s],\"variables\":[%s],\"record_types\":{%s}}\n",
-                   file, current_function, function_start_line, function_end_line, function_sig, params_json, returns_json, calls_json, variables_json, record_types_json
+            printf "{\"file\":\"%s\",\"name\":\"%s\",\"line\":{\"start\":%d,\"end\":%d},\"body_hash\":\"%s\",\"body_loc\":%d,\"signature\":\"%s\",\"parameters\":[%s],\"returns\":[%s],\"calls\":[%s],\"variables\":[%s],\"record_types\":{%s}}\n",
+                   file, current_function, function_start_line, function_end_line, body_hash, body_loc, function_sig, params_json, returns_json, calls_json, variables_json, record_types_json
         } else {
-            printf "{\"file\":\"%s\",\"name\":\"%s\",\"line\":{\"start\":%d,\"end\":%d},\"signature\":\"%s\",\"parameters\":[%s],\"returns\":[%s],\"calls\":[%s],\"variables\":[%s]}\n",
-                   file, current_function, function_start_line, function_end_line, function_sig, params_json, returns_json, calls_json, variables_json
+            printf "{\"file\":\"%s\",\"name\":\"%s\",\"line\":{\"start\":%d,\"end\":%d},\"body_hash\":\"%s\",\"body_loc\":%d,\"signature\":\"%s\",\"parameters\":[%s],\"returns\":[%s],\"calls\":[%s],\"variables\":[%s]}\n",
+                   file, current_function, function_start_line, function_end_line, body_hash, body_loc, function_sig, params_json, returns_json, calls_json, variables_json
         }
 
         in_function = 0
+        body_text = ""
         delete vars
         delete param_order
         delete param_types

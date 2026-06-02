@@ -253,6 +253,16 @@ if [[ -f "workspace.db" ]]; then
     rm -f "$CALLS_OUT"
 fi
 
+# Load GLOBALS/IMPORT dependencies into workspace.db
+if [[ -f "workspace.db" && -f "modulars.json" ]]; then
+    log_info "Loading file dependencies (GLOBALS/IMPORT)..."
+    if python3 "$SCRIPT_DIR/scripts/load_modulars.py" load modulars.json workspace.db 2>/dev/null; then
+        log_success "File dependencies loaded into workspace.db"
+    else
+        log_info "Could not load file dependencies (continuing)"
+    fi
+fi
+
 echo ""
 
 # Step 4: Parse and load schema if available

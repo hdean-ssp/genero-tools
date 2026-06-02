@@ -71,6 +71,10 @@ Schema queries (workspace.db):
   resolve-like <like_ref>             Resolve a LIKE reference (table.column or table.*)
   find-functions-using <table> [col]  Find functions that reference a table/column (schema impact)
 
+File dependency queries (workspace.db):
+  file-deps <file_path>               Show what a file depends on (GLOBALS/IMPORT)
+  file-dependents <name>              Find files that depend on a globals file or import
+
 Batch queries:
   batch-query <json_file>             Execute multiple queries in a single batch
   batch-query --input <json_file> --output <output_file>  Execute batch with output file
@@ -477,6 +481,12 @@ case "$command" in
         ;;
     find-functions-using)
         python3 "$PROJECT_ROOT/scripts/query_schema.py" find-functions-using "$SIGNATURES_DB" "$@"
+        ;;
+    file-deps)
+        python3 "$PROJECT_ROOT/scripts/load_modulars.py" deps "$SIGNATURES_DB" "$@"
+        ;;
+    file-dependents)
+        python3 "$PROJECT_ROOT/scripts/load_modulars.py" dependents "$SIGNATURES_DB" "$@"
         ;;
     *)
         echo "Unknown command: $command" >&2

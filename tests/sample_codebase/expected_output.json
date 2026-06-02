@@ -1,7 +1,7 @@
 {
   "_metadata": {
     "version": "1.0.0",
-    "generated": "2026-06-02T09:06:42Z",
+    "generated": "2026-06-02T12:17:48Z",
     "files_processed": 16
   },
   "./no_returns.4gl": [
@@ -11,6 +11,8 @@
         "start": 3,
         "end": 8
       },
+      "body_hash": "35193c14",
+      "body_loc": 4,
       "signature": "3-8: display_message(msg STRING)",
       "parameters": [
         {
@@ -33,6 +35,8 @@
         "start": 10,
         "end": 18
       },
+      "body_hash": "4db24eaa",
+      "body_loc": 7,
       "signature": "10-18: update_database(id INTEGER, value STRING)",
       "parameters": [
         {
@@ -63,6 +67,8 @@
         "start": 20,
         "end": 26
       },
+      "body_hash": "631ee5f7",
+      "body_loc": 5,
       "signature": "20-26: log_error(error_code INTEGER, error_text VARCHAR(100))",
       "parameters": [
         {
@@ -93,6 +99,8 @@
         "start": 28,
         "end": 32
       },
+      "body_hash": "0a0da0c7",
+      "body_loc": 3,
       "signature": "28-32: initialize_system()",
       "parameters": [],
       "returns": [],
@@ -114,6 +122,8 @@
         "start": 34,
         "end": 41
       },
+      "body_hash": "58ebc129",
+      "body_loc": 6,
       "signature": "34-41: process_request(request_id INTEGER, request_data STRING)",
       "parameters": [
         {
@@ -150,6 +160,8 @@
         "start": 16,
         "end": 19
       },
+      "body_hash": "0690b8b1",
+      "body_loc": 2,
       "signature": "16-19: test_func(param1 INTEGER):param1 INTEGER",
       "parameters": [
         {
@@ -174,6 +186,8 @@
         "start": 11,
         "end": 21
       },
+      "body_hash": "36b2f86c",
+      "body_loc": 9,
       "signature": "11-21: customer_insert(p_rec RECORD)",
       "parameters": [
         {
@@ -205,6 +219,8 @@
         "start": 23,
         "end": 33
       },
+      "body_hash": "65e74547",
+      "body_loc": 9,
       "signature": "23-33: customer_update(p_cus_id INTEGER, p_rec RECORD)",
       "parameters": [
         {
@@ -240,6 +256,8 @@
         "start": 35,
         "end": 40
       },
+      "body_hash": "24b4f579",
+      "body_loc": 4,
       "signature": "35-40: customer_remove(p_cus_id INTEGER)",
       "parameters": [
         {
@@ -266,6 +284,8 @@
         "start": 42,
         "end": 48
       },
+      "body_hash": "1efde0e2",
+      "body_loc": 5,
       "signature": "42-48: customer_exists(p_cus_id INTEGER):(l_count > 0) BOOLEAN",
       "parameters": [
         {
@@ -298,6 +318,8 @@
         "start": 50,
         "end": 60
       },
+      "body_hash": "6891d693",
+      "body_loc": 9,
       "signature": "50-60: customer_load(p_cus_id INTEGER, p_rec RECORD)",
       "parameters": [
         {
@@ -333,6 +355,8 @@
         "start": 63,
         "end": 73
       },
+      "body_hash": "4dfce3fc",
+      "body_loc": 9,
       "signature": "63-73: customer_load_by_name(p_name STRING, p_results DYNAMIC ARRAY OF RECORD)",
       "parameters": [
         {
@@ -368,6 +392,8 @@
         "start": 75,
         "end": 81
       },
+      "body_hash": "555f9300",
+      "body_loc": 5,
       "signature": "75-81: customer_count_by_name(p_name STRING):l_count INTEGER",
       "parameters": [
         {
@@ -402,6 +428,8 @@
         "start": 3,
         "end": 9
       },
+      "body_hash": "3c32934c",
+      "body_loc": 5,
       "signature": "3-9: process_interval(time_span INTERVAL DAY TO HOUR):result INTEGER",
       "parameters": [
         {
@@ -434,6 +462,8 @@
         "start": 11,
         "end": 20
       },
+      "body_hash": "6bfca538",
+      "body_loc": 8,
       "signature": "11-20: handle_text_blob(content TEXT):status SMALLINT, row_count INTEGER",
       "parameters": [
         {
@@ -474,6 +504,8 @@
         "start": 22,
         "end": 33
       },
+      "body_hash": "61a4d173",
+      "body_loc": 10,
       "signature": "22-33: calculate_money(amount1 MONEY(10,2), amount2 MONEY(10,2)):total MONEY(10,2), tax DECIMAL(5,2)",
       "parameters": [
         {
@@ -522,6 +554,8 @@
         "start": 35,
         "end": 43
       },
+      "body_hash": "0904b7f6",
+      "body_loc": 7,
       "signature": "35-43: get_serial_value():new_id SERIAL, success BOOLEAN",
       "parameters": [],
       "returns": [
@@ -557,6 +591,8 @@
         "start": 45,
         "end": 56
       },
+      "body_hash": "2a8b7e06",
+      "body_loc": 10,
       "signature": "45-56: process_dynamic_array(data DYNAMIC ARRAY OF RECORD):count INTEGER",
       "parameters": [
         {
@@ -597,6 +633,8 @@
         "start": 58,
         "end": 66
       },
+      "body_hash": "1916c924",
+      "body_loc": 7,
       "signature": "58-66: handle_boolean_logic(flag1 BOOLEAN, flag2 BOOLEAN):result BOOLEAN",
       "parameters": [
         {
@@ -635,6 +673,8 @@
         "start": 3,
         "end": 7
       },
+      "body_hash": "197a4e15",
+      "body_loc": 3,
       "signature": "3-7: single_line_params(param1 INTEGER, param2 STRING):param1 INTEGER",
       "parameters": [
         {
@@ -661,6 +701,8 @@
         "start": 9,
         "end": 15
       },
+      "body_hash": "036a9c19",
+      "body_loc": 5,
       "signature": "9-15: multiline_two_lines(param1 INTEGER, param2 STRING, param3 DECIMAL):param1 INTEGER",
       "parameters": [
         {
@@ -691,6 +733,8 @@
         "start": 17,
         "end": 26
       },
+      "body_hash": "08aa99a8",
+      "body_loc": 8,
       "signature": "17-26: multiline_each_line(alpha INTEGER, beta STRING, gamma DECIMAL):alpha INTEGER",
       "parameters": [
         {
@@ -721,6 +765,8 @@
         "start": 28,
         "end": 34
       },
+      "body_hash": "253c6164",
+      "body_loc": 5,
       "signature": "28-34: multiline_paren_on_same_line(x INTEGER, y INTEGER, z INTEGER):x INTEGER",
       "parameters": [
         {
@@ -751,6 +797,8 @@
         "start": 36,
         "end": 40
       },
+      "body_hash": "092910df",
+      "body_loc": 3,
       "signature": "36-40: no_params_multiline():status INTEGER",
       "parameters": [],
       "returns": [
@@ -773,6 +821,8 @@
         "start": 42,
         "end": 57
       },
+      "body_hash": "31ee6a7d",
+      "body_loc": 14,
       "signature": "42-57: lib4_win_display_list(p_arrcnt INTEGER, p_lenf1 INTEGER, p_lenf2 INTEGER, p_lenf3 INTEGER, p_lenf4 INTEGER, p_lenf5 INTEGER, p_retfld INTEGER, p_winsize INTEGER, p_row INTEGER, p_col INTEGER, p_def_list_pos INTEGER):p_arrcnt INTEGER",
       "parameters": [
         {
@@ -837,6 +887,8 @@
         "start": 45,
         "end": 54
       },
+      "body_hash": "686df63e",
+      "body_loc": 8,
       "signature": "45-54: add_numbers(a INTEGER, b INTEGER):result INTEGER",
       "parameters": [
         {
@@ -873,6 +925,8 @@
         "start": 56,
         "end": 65
       },
+      "body_hash": "6d5a686e",
+      "body_loc": 8,
       "signature": "56-65: get_user_name(user_id INTEGER):name STRING",
       "parameters": [
         {
@@ -905,6 +959,8 @@
         "start": 67,
         "end": 71
       },
+      "body_hash": "0de0adf4",
+      "body_loc": 3,
       "signature": "67-71: no_params_no_return()",
       "parameters": [],
       "returns": [],
@@ -922,6 +978,8 @@
         "start": 73,
         "end": 78
       },
+      "body_hash": "35193c14",
+      "body_loc": 4,
       "signature": "73-78: display_message(msg STRING)",
       "parameters": [
         {
@@ -946,6 +1004,8 @@
         "start": 11,
         "end": 34
       },
+      "body_hash": "6673a076",
+      "body_loc": 22,
       "signature": "11-34: validate_customer(p_rec RECORD):FALSE BOOLEAN",
       "parameters": [
         {
@@ -998,6 +1058,8 @@
         "start": 36,
         "end": 48
       },
+      "body_hash": "519542fb",
+      "body_loc": 11,
       "signature": "36-48: validate_name(p_name STRING):FALSE BOOLEAN",
       "parameters": [
         {
@@ -1029,6 +1091,8 @@
         "start": 51,
         "end": 69
       },
+      "body_hash": "21bca72a",
+      "body_loc": 17,
       "signature": "51-69: validate_email(p_email STRING):FALSE BOOLEAN",
       "parameters": [
         {
@@ -1069,6 +1133,8 @@
         "start": 71,
         "end": 81
       },
+      "body_hash": "4d03a1b8",
+      "body_loc": 9,
       "signature": "71-81: validate_phone(p_phone STRING):FALSE BOOLEAN",
       "parameters": [
         {
@@ -1098,6 +1164,8 @@
         "start": 3,
         "end": 11
       },
+      "body_hash": "04c97ec1",
+      "body_loc": 7,
       "signature": "3-11: spaced_function(param1 INTEGER, param2 STRING):result CHAR(5)",
       "parameters": [
         {
@@ -1134,6 +1202,8 @@
         "start": 13,
         "end": 21
       },
+      "body_hash": "2ac42840",
+      "body_loc": 7,
       "signature": "13-21: compact_function(a INTEGER, b INTEGER, c INTEGER):sum INTEGER",
       "parameters": [
         {
@@ -1174,6 +1244,8 @@
         "start": 23,
         "end": 30
       },
+      "body_hash": "02a908a4",
+      "body_loc": 6,
       "signature": "23-30: tabbed_function(value DECIMAL):output INTEGER",
       "parameters": [
         {
@@ -1206,6 +1278,8 @@
         "start": 32,
         "end": 41
       },
+      "body_hash": "57210645",
+      "body_loc": 8,
       "signature": "32-41: mixed_whitespace(x INTEGER, y INTEGER):z INTEGER",
       "parameters": [
         {
@@ -1248,6 +1322,8 @@
         "start": 3,
         "end": 15
       },
+      "body_hash": "7a386011",
+      "body_loc": 11,
       "signature": "3-15: function_with_long_params(param1 VARCHAR(255), param2 DECIMAL(10,2), param3 DATETIME YEAR TO SECOND, param4 MONEY(16,2), param5 BYTE):result INTEGER",
       "parameters": [
         {
@@ -1300,6 +1376,8 @@
         "start": 17,
         "end": 22
       },
+      "body_hash": "4c49c071",
+      "body_loc": 4,
       "signature": "17-22: inline_return():status INTEGER",
       "parameters": [],
       "returns": [
@@ -1327,6 +1405,8 @@
         "start": 24,
         "end": 33
       },
+      "body_hash": "4607dd9c",
+      "body_loc": 8,
       "signature": "24-33: function_with_comments(value INTEGER):result STRING",
       "parameters": [
         {
@@ -1359,6 +1439,8 @@
         "start": 35,
         "end": 43
       },
+      "body_hash": "1c52e13b",
+      "body_loc": 7,
       "signature": "35-43: mixed_case_FUNCTION(MixedParam CHAR(10)):Output_Value SMALLINT",
       "parameters": [
         {
@@ -1395,6 +1477,8 @@
         "start": 45,
         "end": 57
       },
+      "body_hash": "06a048ae",
+      "body_loc": 11,
       "signature": "45-57: complex_call_patterns(input_val STRING):result1 INTEGER, result2 STRING",
       "parameters": [
         {
@@ -1447,6 +1531,8 @@
         "start": 59,
         "end": 89
       },
+      "body_hash": "0347f506",
+      "body_loc": 29,
       "signature": "59-89: control_flow_calls(value INTEGER):status INTEGER",
       "parameters": [
         {
@@ -1515,6 +1601,8 @@
         "start": 91,
         "end": 105
       },
+      "body_hash": "3931966c",
+      "body_loc": 13,
       "signature": "91-105: nested_function_calls(param1 STRING, param2 INTEGER):result STRING",
       "parameters": [
         {
@@ -1565,6 +1653,8 @@
         "start": 12,
         "end": 25
       },
+      "body_hash": "74b16daa",
+      "body_loc": 12,
       "signature": "12-25: process_record(rec RECORD, status_flag CHAR(1)):success SMALLINT",
       "parameters": [
         {
@@ -1610,6 +1700,8 @@
         "start": 27,
         "end": 40
       },
+      "body_hash": "76b3d17c",
+      "body_loc": 12,
       "signature": "27-40: get_date_range(start_date DATE, end_date DATE):days_between INTEGER, is_valid SMALLINT",
       "parameters": [
         {
@@ -1658,6 +1750,8 @@
         "start": 42,
         "end": 57
       },
+      "body_hash": "223182b9",
+      "body_loc": 14,
       "signature": "42-57: transform_data(input_rec RECORD):output_rec RECORD",
       "parameters": [
         {
@@ -1698,6 +1792,8 @@
         "start": 10,
         "end": 27
       },
+      "body_hash": "73036124",
+      "body_loc": 16,
       "signature": "10-27: report_main()",
       "parameters": [],
       "returns": [],
@@ -1740,6 +1836,8 @@
         "start": 29,
         "end": 39
       },
+      "body_hash": "5107c4e4",
+      "body_loc": 9,
       "signature": "29-39: report_customer_summary()",
       "parameters": [],
       "returns": [],
@@ -1774,6 +1872,8 @@
         "start": 41,
         "end": 59
       },
+      "body_hash": "2034991f",
+      "body_loc": 17,
       "signature": "41-59: report_customer_detail()",
       "parameters": [],
       "returns": [],
@@ -1818,6 +1918,8 @@
         "start": 3,
         "end": 18
       },
+      "body_hash": "4a2cda04",
+      "body_loc": 14,
       "signature": "3-18: calculate_stats(values ARRAY OF DECIMAL):total DECIMAL, average DECIMAL, count INTEGER",
       "parameters": [
         {
@@ -1866,6 +1968,8 @@
         "start": 20,
         "end": 34
       },
+      "body_hash": "1e0866a8",
+      "body_loc": 13,
       "signature": "20-34: validate_user(username STRING, password STRING):is_valid SMALLINT, error_msg STRING",
       "parameters": [
         {
@@ -1914,6 +2018,8 @@
         "start": 36,
         "end": 49
       },
+      "body_hash": "71436797",
+      "body_loc": 12,
       "signature": "36-49: process_data(input_data STRING):result_code INTEGER, result_message STRING, result_data STRING",
       "parameters": [
         {
@@ -1968,6 +2074,8 @@
         "start": 11,
         "end": 33
       },
+      "body_hash": "1889a69d",
+      "body_loc": 21,
       "signature": "11-33: customer_main()",
       "parameters": [],
       "returns": [],
@@ -2022,6 +2130,8 @@
         "start": 36,
         "end": 65
       },
+      "body_hash": "7743806e",
+      "body_loc": 28,
       "signature": "36-65: customer_search_by_name(p_name STRING)",
       "parameters": [
         {
@@ -2083,6 +2193,8 @@
         "start": 67,
         "end": 88
       },
+      "body_hash": "2a9b6d69",
+      "body_loc": 20,
       "signature": "67-88: customer_add_new()",
       "parameters": [],
       "returns": [],
@@ -2130,6 +2242,8 @@
         "start": 91,
         "end": 109
       },
+      "body_hash": "257e7974",
+      "body_loc": 17,
       "signature": "91-109: customer_delete()",
       "parameters": [],
       "returns": [],
@@ -2176,6 +2290,8 @@
         "start": 111,
         "end": 142
       },
+      "body_hash": "28a25d97",
+      "body_loc": 30,
       "signature": "111-142: customer_edit()",
       "parameters": [],
       "returns": [],
@@ -2243,6 +2359,8 @@
         "start": 146,
         "end": 150
       },
+      "body_hash": "2b868dad",
+      "body_loc": 3,
       "signature": "146-150: record_like_table():l_cust.cus_id RECORD LIKE customer.* (field)",
       "parameters": [],
       "returns": [
@@ -2265,6 +2383,8 @@
         "start": 152,
         "end": 155
       },
+      "body_hash": "6bb03a7c",
+      "body_loc": 2,
       "signature": "152-155: record_like_table_param(p_rec RECORD LIKE customer.*):p_rec.cus_id RECORD LIKE customer.* (field)",
       "parameters": [
         {
@@ -2287,6 +2407,8 @@
         "start": 157,
         "end": 163
       },
+      "body_hash": "591d373c",
+      "body_loc": 5,
       "signature": "157-163: record_inline_single_field():l_rec.status INTEGER",
       "parameters": [],
       "returns": [
@@ -2312,6 +2434,8 @@
         "start": 165,
         "end": 173
       },
+      "body_hash": "33964610",
+      "body_loc": 7,
       "signature": "165-173: record_with_like_fields():l_rec.balance DECIMAL(12,2)",
       "parameters": [],
       "returns": [
@@ -2339,6 +2463,8 @@
         "start": 175,
         "end": 179
       },
+      "body_hash": "7464fd15",
+      "body_loc": 3,
       "signature": "175-179: record_array_of_record_like():l_arr[1].cus_id DYNAMIC ARRAY OF RECORD LIKE customer.* (element field)",
       "parameters": [],
       "returns": [
@@ -2361,6 +2487,8 @@
         "start": 181,
         "end": 186
       },
+      "body_hash": "145e5cbd",
+      "body_loc": 4,
       "signature": "181-186: record_dynamic_array_of_record_like():l_arr[1].cus_id DYNAMIC ARRAY OF RECORD LIKE customer.* (element field)",
       "parameters": [],
       "returns": [
@@ -2383,6 +2511,8 @@
         "start": 188,
         "end": 204
       },
+      "body_hash": "093b3db1",
+      "body_loc": 15,
       "signature": "188-204: record_nested_types():l_rec.cus_id INTEGER",
       "parameters": [],
       "returns": [
@@ -2418,6 +2548,8 @@
         "start": 206,
         "end": 220
       },
+      "body_hash": "3daad48a",
+      "body_loc": 13,
       "signature": "206-220: record_multiple_records():l_header.doc_id INTEGER",
       "parameters": [],
       "returns": [
@@ -2455,6 +2587,8 @@
         "start": 222,
         "end": 239
       },
+      "body_hash": "7aba2a0a",
+      "body_loc": 16,
       "signature": "222-239: record_dynamic_array_inline(p_limit INTEGER):l_data.getLength() INTEGER",
       "parameters": [
         {
@@ -2499,6 +2633,8 @@
         "start": 241,
         "end": 249
       },
+      "body_hash": "743e9f5c",
+      "body_loc": 7,
       "signature": "241-249: record_static_array_inline():l_items[1].item_id ARRAY[50] OF RECORD (element field)",
       "parameters": [],
       "returns": [
@@ -2526,6 +2662,8 @@
         "start": 251,
         "end": 266
       },
+      "body_hash": "29619c2c",
+      "body_loc": 14,
       "signature": "251-266: record_mixed_defines():l_count INTEGER",
       "parameters": [],
       "returns": [
@@ -2570,6 +2708,8 @@
         "start": 268,
         "end": 278
       },
+      "body_hash": "053edc8a",
+      "body_loc": 9,
       "signature": "268-278: record_like_partial_fields():l_rec.cus_id LIKE customer.cus_id",
       "parameters": [],
       "returns": [
@@ -2602,6 +2742,8 @@
         "start": 280,
         "end": 291
       },
+      "body_hash": "4ade25eb",
+      "body_loc": 10,
       "signature": "280-291: record_param_and_local(p_input RECORD LIKE order_header.*):l_line.line_no SMALLINT",
       "parameters": [
         {
@@ -2640,6 +2782,8 @@
         "start": 1,
         "end": 8
       },
+      "body_hash": "66f50c18",
+      "body_loc": 6,
       "signature": "1-8: process_abi_message(msg LIKE abi_message.*):msg_id INTEGER",
       "parameters": [
         {
@@ -2667,6 +2811,8 @@
         "start": 10,
         "end": 14
       },
+      "body_hash": "50524cd6",
+      "body_loc": 3,
       "signature": "10-14: get_message_id(id LIKE abi_message.msg_id):id LIKE abi_message.msg_id",
       "parameters": [
         {
@@ -2689,6 +2835,8 @@
         "start": 16,
         "end": 20
       },
+      "body_hash": "2cbc6a79",
+      "body_loc": 3,
       "signature": "16-20: process_segment(seg LIKE abi_segments.*):seg.seg_id LIKE abi_segments.* (field)",
       "parameters": [
         {
@@ -2711,6 +2859,8 @@
         "start": 22,
         "end": 26
       },
+      "body_hash": "68813cc2",
+      "body_loc": 3,
       "signature": "22-26: get_field_name(field LIKE abi_fields.field_name):field LIKE abi_fields.field_name",
       "parameters": [
         {
@@ -2735,6 +2885,8 @@
         "start": 14,
         "end": 20
       },
+      "body_hash": "5295e355",
+      "body_loc": 5,
       "signature": "14-20: log_message(p_msg STRING)",
       "parameters": [
         {
@@ -2757,6 +2909,8 @@
         "start": 22,
         "end": 29
       },
+      "body_hash": "7500e8d7",
+      "body_loc": 6,
       "signature": "22-29: log_error(p_msg STRING)",
       "parameters": [
         {
@@ -2779,6 +2933,8 @@
         "start": 33,
         "end": 38
       },
+      "body_hash": "39f87945",
+      "body_loc": 4,
       "signature": "33-38: display_error(p_msg STRING)",
       "parameters": [
         {
@@ -2801,6 +2957,8 @@
         "start": 40,
         "end": 44
       },
+      "body_hash": "08fa475d",
+      "body_loc": 3,
       "signature": "40-44: display_info(p_msg STRING)",
       "parameters": [
         {
@@ -2818,6 +2976,8 @@
         "start": 48,
         "end": 56
       },
+      "body_hash": "066aaf39",
+      "body_loc": 7,
       "signature": "48-56: prompt_user(p_prompt STRING):l_input STRING",
       "parameters": [
         {
@@ -2845,6 +3005,8 @@
         "start": 58,
         "end": 66
       },
+      "body_hash": "7f71e2b0",
+      "body_loc": 7,
       "signature": "58-66: prompt_user_int(p_prompt STRING):l_value INTEGER",
       "parameters": [
         {
@@ -2881,6 +3043,8 @@
         "start": 68,
         "end": 73
       },
+      "body_hash": "540fb624",
+      "body_loc": 4,
       "signature": "68-73: get_user_action():upshift(l_action) STRING",
       "parameters": [],
       "returns": [
@@ -2912,6 +3076,8 @@
         "start": 77,
         "end": 89
       },
+      "body_hash": "60239266",
+      "body_loc": 11,
       "signature": "77-89: find_char(p_str STRING, p_char STRING):i INTEGER",
       "parameters": [
         {
@@ -2943,6 +3109,8 @@
         "start": 91,
         "end": 100
       },
+      "body_hash": "43d62cbd",
+      "body_loc": 8,
       "signature": "91-100: pad_right(p_str STRING, p_len INTEGER):p_str STRING",
       "parameters": [
         {
@@ -2974,6 +3142,8 @@
         "start": 102,
         "end": 114
       },
+      "body_hash": "4523a474",
+      "body_loc": 11,
       "signature": "102-114: repeat_char(p_char STRING, p_count INTEGER):l_result STRING",
       "parameters": [
         {
@@ -3009,6 +3179,8 @@
         "start": 116,
         "end": 120
       },
+      "body_hash": "01ea44fc",
+      "body_loc": 3,
       "signature": "116-120: format_string(p_str STRING):p_str CLIPPED STRING",
       "parameters": [
         {
@@ -3031,6 +3203,8 @@
         "start": 124,
         "end": 126
       },
+      "body_hash": "07f864a6",
+      "body_loc": 1,
       "signature": "124-126: init_customer_cache()",
       "parameters": [],
       "returns": [],
@@ -3048,6 +3222,8 @@
         "start": 128,
         "end": 132
       },
+      "body_hash": "58a38834",
+      "body_loc": 3,
       "signature": "128-132: invalidate_customer_cache(p_cus_id INTEGER)",
       "parameters": [
         {
@@ -3070,6 +3246,8 @@
         "start": 136,
         "end": 145
       },
+      "body_hash": "4b17ab75",
+      "body_loc": 8,
       "signature": "136-145: db_execute_insert(p_table STRING, p_rec RECORD)",
       "parameters": [
         {
@@ -3101,6 +3279,8 @@
         "start": 147,
         "end": 157
       },
+      "body_hash": "69574c22",
+      "body_loc": 9,
       "signature": "147-157: db_execute_update(p_table STRING, p_id INTEGER, p_rec RECORD)",
       "parameters": [
         {
@@ -3136,6 +3316,8 @@
         "start": 159,
         "end": 164
       },
+      "body_hash": "30d0f7ef",
+      "body_loc": 4,
       "signature": "159-164: db_execute_delete(p_table STRING, p_id INTEGER)",
       "parameters": [
         {
@@ -3162,6 +3344,8 @@
         "start": 166,
         "end": 173
       },
+      "body_hash": "07fff0f3",
+      "body_loc": 6,
       "signature": "166-173: db_count(p_table STRING, p_field STRING, p_value INTEGER):1 INTEGER",
       "parameters": [
         {
@@ -3192,6 +3376,8 @@
         "start": 175,
         "end": 181
       },
+      "body_hash": "69360e77",
+      "body_loc": 5,
       "signature": "175-181: db_count_like(p_table STRING, p_field STRING, p_pattern STRING):5 INTEGER",
       "parameters": [
         {
@@ -3222,6 +3408,8 @@
         "start": 183,
         "end": 193
       },
+      "body_hash": "73bd3666",
+      "body_loc": 9,
       "signature": "183-193: db_select_by_id(p_table STRING, p_id INTEGER, p_rec RECORD)",
       "parameters": [
         {
@@ -3257,6 +3445,8 @@
         "start": 195,
         "end": 206
       },
+      "body_hash": "03288f4d",
+      "body_loc": 10,
       "signature": "195-206: db_select_by_field(p_table STRING, p_field STRING, p_value STRING, p_results DYNAMIC ARRAY OF RECORD)",
       "parameters": [
         {
@@ -3298,6 +3488,8 @@
         "start": 10,
         "end": 30
       },
+      "body_hash": "213b829f",
+      "body_loc": 19,
       "signature": "10-30: customer_display_list(p_results DYNAMIC ARRAY OF RECORD)",
       "parameters": [
         {
@@ -3342,6 +3534,8 @@
         "start": 32,
         "end": 40
       },
+      "body_hash": "615ba287",
+      "body_loc": 7,
       "signature": "32-40: customer_display_row(p_id INTEGER, p_name STRING, p_email STRING)",
       "parameters": [
         {
@@ -3377,6 +3571,8 @@
         "start": 50,
         "end": 52
       },
+      "body_hash": "6dff37b5",
+      "body_loc": 1,
       "signature": "50-52: display_separator()",
       "parameters": [],
       "returns": [],

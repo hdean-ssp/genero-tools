@@ -9,8 +9,8 @@
 
 ## Active
 
-- [ ] 5. **Function body hashing** — Store an MD5 hash of each function body to detect logic changes between runs (without storing full source). Also consider storing additional function metadata (e.g. variable usage summary) for richer analysis.
-- [ ] 6. **GLOBALS/IMPORT dependency linking** — Connect `modulars.json` data (GLOBALS file refs, IMPORT statements) into the query layer so you can answer "what files does this file depend on?" and "what files depend on this globals file?"
+- [x] 5. **Function body hashing** — Store an MD5 hash of each function body to detect logic changes between runs (without storing full source). Also stores `body_loc` (line count) for size tracking.
+- [x] 6. **GLOBALS/IMPORT dependency linking** — Connect `modulars.json` data (GLOBALS file refs, IMPORT statements) into the query layer. Query with `file-deps <file>` and `file-dependents <name>`.
 
 ## Backburner
 

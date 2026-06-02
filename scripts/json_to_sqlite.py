@@ -98,6 +98,7 @@ def create_signatures_db(json_file, db_file):
     c.execute('''CREATE TABLE IF NOT EXISTS functions
                  (id INTEGER PRIMARY KEY, file_id INTEGER, name TEXT, 
                   line_start INTEGER, line_end INTEGER, signature TEXT, file_path TEXT,
+                  body_hash TEXT, body_loc INTEGER,
                   FOREIGN KEY(file_id) REFERENCES files(id))''')
     
     # Parameters table with NOT NULL constraint on name column to ensure data quality.
@@ -145,9 +146,9 @@ def create_signatures_db(json_file, db_file):
         file_id = c.lastrowid
         
         for func in functions:
-            c.execute('''INSERT INTO functions (file_id, name, line_start, line_end, signature, file_path)
-                        VALUES (?, ?, ?, ?, ?, ?)''',
-                     (file_id, func['name'], func['line']['start'], func['line']['end'], func['signature'], file_path))
+            c.execute('''INSERT INTO functions (file_id, name, line_start, line_end, signature, file_path, body_hash, body_loc)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                     (file_id, func['name'], func['line']['start'], func['line']['end'], func['signature'], file_path, func.get('body_hash'), func.get('body_loc')))
             func_id = c.lastrowid
             
             # Insert parameters - filter out empty names
