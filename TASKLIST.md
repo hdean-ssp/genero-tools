@@ -1,34 +1,43 @@
-# Generate Pipeline Fix Tasklist
+# genero-tools Improvement Tasklist
 
-## AWK Parser (src/generate_signatures.sh)
+## High Priority
 
-- [x] 1. **RETURN expression resolution** — Resolve base variables from expressions (`l_rec.field` → lookup `l_rec`), recognize literals (`TRUE`/`FALSE` → BOOLEAN, `0`/`1` → INTEGER), handle function calls and operators as expression types.
-- [x] 2. **Multi-variable DEFINE** — Handle `DEFINE a, b, c INTEGER` by splitting on commas and assigning the trailing type to all listed variables.
-- [x] 3. **Multi-line RECORD field tracking** — Accumulate fields between RECORD/END RECORD so `l_rec.field` return lookups can resolve to the field's actual type.
-- [x] 4. **Last RETURN overwrites previous** — Capture the first RETURN (or the one with the most values) instead of always overwriting with the last.
-- [x] 5. **RETURN without space** — Add pattern to match `RETURN(value)` in addition to `RETURN value`.
-- [x] 6. **`next` prevents multi-match lines** — Extract function calls from RETURN expressions before `next`, so calls in RETURN statements are captured in the call graph.
-- [x] 7. **Premature multi-line param stop** — Strip comment lines and inline comments during parameter accumulation to avoid `)` in comments stopping accumulation.
+- [x] 1. **Wire metrics into pipeline** — Integrate `metrics_extractor.py` into `generate_all.sh` so `function_metrics` table is populated in workspace.db automatically. Quality analyzer works without fallback paths.
+- [ ] 2. **Incremental signature generation** — Track file modification times/hashes; re-process only changed `.4gl` files and merge into existing workspace.json/db rather than full re-generation.
+- [ ] 3. **Cross-file call resolution** — Resolve called function names to their actual `function_id` in the DB. Enrich `calls` table with `resolved_function_id` to enable true file-to-file dependency graphs and reliable dead code detection.
+- [ ] 4. **Reverse schema impact query** — Add `find-functions-using-column <table> <column>` query to answer "which functions are affected if I change this schema column?" Essential for schema migration planning.
 
-## Type Resolution (scripts/resolve_types.py)
+## Medium Priority
 
-- [x] 8. **Schema-qualified LIKE references** — Extend regex to handle `LIKE schema:table.column` and `LIKE formonly.field`.
-- [x] 9. **Case-insensitive column lookup** — Use case-insensitive comparison for both table and column name matching.
-- [x] 10. **Silent schema load failure** — Exit with error when schema_tables is missing, rather than silently continuing with all resolutions failing.
+- [ ] 5. **Packaged Neovim plugin** — Ship a minimal `genero.nvim` plugin (lua/ directory + plugin/ entry point) using the existing `--format=vim-*` output options. Cover: hover, go-to-definition, find-references, completion.
+- [ ] 6. **Function body storage** — Store full function body text (or hash) in the DB to enable real duplication detection, body diffing between runs, and AI code review with full context.
+- [ ] 7. **GLOBALS/IMPORT dependency linking** — Connect `modulars.json` data (GLOBALS file refs, IMPORT statements) into the query layer so you can answer "what files does this file depend on?" and "what files depend on this globals file?"
+- [ ] 8. **Complexity trend tracking** — Store historical metrics snapshots (date + function + metrics) to track codebase complexity over time. Useful for tech debt visibility.
 
-## Merge (scripts/merge_resolved_types.py)
+## Lower Priority
 
-- [x] 11. **Path normalization** — Normalize file paths before lookup; try multiple path variants (`./path`, `path`, normalized) to handle inconsistencies.
-- [x] 12. **Case-insensitive parameter name match** — Use `COLLATE NOCASE` for parameter and return name lookups in UPDATE queries.
+- [ ] 9. **Watch mode** — Add `--watch` flag to `generate_all.sh` using `inotifywait` to re-process files on save. Depends on incremental generation (#2).
+- [ ] 10. **Multi-schema support** — Support a schema directory or multiple `.sch` files for type resolution instead of a single file.
+- [ ] 11. **Procedure vs Function distinction** — Track whether a definition is a FUNCTION (has RETURN values) vs a procedure/MAIN/REPORT for better type accuracy.
+- [ ] 12. **Standard format exports** — Generate DOT/Graphviz (call graphs), SARIF (quality issues), or LSIF/SCIP (editor integration) from the existing data.
 
-## Pipeline (generate_all.sh)
+## Completed (Previous Sprint)
 
-- [x] 13. **Remove error suppression** — Replace `2>/dev/null` with logging to temp files; display error details on failure.
-- [x] 14. **Subshell variable loss** — Warn when header extraction produces no output despite files being present; reuse temp files across steps.
-- [x] 15. **RESOLVE_TYPES flag dependency** — Add explicit error message and manual retry command when schema parse succeeds but DB load fails.
-- [x] 16. **Duplicate header extraction** — Reuse headers temp file from Step 1b in Step 3 instead of re-extracting.
-
-## Data Quality
-
-- [x] 17. **Inline RECORD type preservation** — Output `record_types` field in JSON with field-level type mappings for all inline RECORD definitions.
-- [x] 18. **DYNAMIC ARRAY OF RECORD preservation** — Same treatment: field definitions captured and output in `record_types` for DYNAMIC ARRAY OF RECORD and ARRAY[n] OF RECORD.
+- [x] RETURN expression resolution
+- [x] Multi-variable DEFINE handling
+- [x] Multi-line RECORD field tracking
+- [x] First RETURN capture (not last)
+- [x] RETURN without space pattern
+- [x] Function calls in RETURN expressions
+- [x] Comment-safe parameter accumulation
+- [x] Schema-qualified LIKE references
+- [x] Case-insensitive column lookup
+- [x] Schema load failure reporting
+- [x] Path normalization in merge
+- [x] Case-insensitive parameter name match
+- [x] Error suppression removal
+- [x] Subshell variable loss detection
+- [x] RESOLVE_TYPES flag fallback
+- [x] Duplicate header extraction fix
+- [x] Inline RECORD type preservation
+- [x] DYNAMIC ARRAY OF RECORD preservation

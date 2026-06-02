@@ -294,11 +294,33 @@ if [[ "${RESOLVE_TYPES:-0}" == "1" ]]; then
 fi
 
 echo ""
+
+# Step 6: Extract and store code quality metrics
+if [[ $GL4_COUNT -gt 0 && -f "workspace.db" ]]; then
+    log_step "Extracting code quality metrics..."
+    
+    METRICS_LOG=$(mktemp)
+    METRICS_OUT=$(mktemp)
+    if python3 "$SCRIPT_DIR/scripts/extract_and_store_metrics.py" "$TARGET" workspace.db >"$METRICS_OUT" 2>"$METRICS_LOG"; then
+        log_success "Code quality metrics extracted and stored in workspace.db"
+        # Show summary
+        cat "$METRICS_OUT" >&2
+    else
+        log_info "Could not extract metrics (continuing without metrics)"
+        if [[ -s "$METRICS_LOG" ]]; then
+            log_info "Metrics error details:"
+            tail -5 "$METRICS_LOG" | sed 's/^/  /' >&2
+        fi
+    fi
+    rm -f "$METRICS_LOG" "$METRICS_OUT"
+fi
+
+echo ""
 log_success "All generators completed successfully!"
 echo ""
 log_info "Generated files:"
 [[ $GL4_COUNT -gt 0 ]] && log_info "  - workspace.json (function signatures with headers)"
-[[ $GL4_COUNT -gt 0 ]] && log_info "  - workspace.db (SQLite database with signatures and headers)"
+[[ $GL4_COUNT -gt 0 ]] && log_info "  - workspace.db (SQLite database with signatures, headers, and metrics)"
 [[ -n "$SCHEMA_FILE" && -f "$SCHEMA_FILE" ]] && log_info "  - workspace_resolved.json (signatures with resolved types)"
 [[ $M3_COUNT -gt 0 ]] && log_info "  - modules.json (module dependencies)"
 [[ $M3_COUNT -gt 0 ]] && log_info "  - modules.db (SQLite database for fast queries)"
