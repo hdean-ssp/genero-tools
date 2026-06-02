@@ -211,13 +211,12 @@ Command-line tools for common development tasks:
 
 | Operation | Time |
 |-----------|------|
-| Signature extraction | <1ms per file |
-| Incremental re-run (no changes) | <1s total |
-| Module parsing | <1ms per file |
+| Incremental re-run (no changes) | <1s |
+| Incremental re-run (few files changed) | ~2-5s |
+| Full rebuild (3,400 files) | ~10 min |
 | Database exact lookup | <1ms |
 | Database pattern search | <10ms |
 | Type resolution query | <1ms |
-| Metrics extraction | <1ms per function |
 
 ## Pipeline
 
@@ -235,13 +234,23 @@ Command-line tools for common development tasks:
 
 ### Incremental Mode
 
-File content hashes are stored in `.genero-manifest.json`. On subsequent runs, only files whose content has changed are re-processed. This is the default behavior when a manifest exists.
+File content hashes are stored in `.genero-manifest.json`. On subsequent runs:
+- **No changes detected** — exits in under 1 second, skipping all steps
+- **Files changed** — only re-processes changed files through the entire pipeline (signatures, DB update, metrics). Unchanged data stays intact in workspace.db.
+
+This is the default behavior when a manifest and workspace.db already exist.
 
 | Environment Variable | Effect |
 |---------------------|--------|
 | `INCREMENTAL=0` | Disable incremental mode, always do full rebuild |
 | `FORCE_FULL=1` | One-time full rebuild (still updates manifest for next run) |
 | `VERBOSE=1` | Show detailed progress output |
+
+| Scenario | Time (3,400 files) |
+|----------|-------------------|
+| No changes | <1 second |
+| 1-5 files changed | ~2-5 seconds |
+| Full rebuild | ~10 minutes |
 
 ### Generated Files
 
