@@ -34,17 +34,18 @@ class TypeResolver:
         self.tables = {}
         
         # Check if schema tables exist
+        self.schema_loaded = False
         try:
             self.cursor.execute("""
                 SELECT name FROM sqlite_master 
                 WHERE type='table' AND name='schema_tables'
             """)
             if not self.cursor.fetchone():
-                print("Warning: schema_tables not found in database", file=sys.stderr)
-                print("Type resolution will not work without schema", file=sys.stderr)
+                print("Error: schema_tables not found in database - type resolution cannot proceed", file=sys.stderr)
+                print("Ensure parse_schema.py and json_to_sqlite_schema.py ran successfully", file=sys.stderr)
                 return
         except Exception as e:
-            print(f"Warning: Could not check for schema tables: {e}", file=sys.stderr)
+            print(f"Error: Could not check for schema tables: {e}", file=sys.stderr)
             return
         
         # Query all tables and columns
@@ -70,7 +71,10 @@ class TypeResolver:
                         'type': row['column_type']
                     })
         except Exception as e:
-            print(f"Warning: Could not load schema: {e}", file=sys.stderr)
+            print(f"Error: Could not load schema: {e}", file=sys.stderr)
+            return
+        
+        self.schema_loaded = True
     
     def resolve_like_reference(self, like_ref: str) -> Optional[Dict]:
         """
@@ -90,47 +94,55 @@ class TypeResolver:
         }
         """
         # Extract table and column pattern
-        match = re.match(r'LIKE\s+(\w+)\.(\*|\w+)', like_ref.strip(), re.IGNORECASE)
+        # Supports: LIKE table.column, LIKE table.*, LIKE schema:table.column, LIKE schema:table.*
+        match = re.match(r'LIKE\s+(?:(\w+):)?(\w+)\.(\*|\w+)', like_ref.strip(), re.IGNORECASE)
         if not match:
             return {
                 'resolved': False,
                 'error': f'Invalid LIKE pattern: {like_ref}'
             }
         
-        table_name = match.group(1)
-        column_pattern = match.group(2)
+        schema_name = match.group(1)  # May be None
+        table_name = match.group(2)
+        column_pattern = match.group(3)
         
-        # Check if table exists
-        if table_name not in self.tables:
+        # Check if table exists (case-insensitive)
+        table_key = None
+        for t in self.tables:
+            if t.lower() == table_name.lower():
+                table_key = t
+                break
+        
+        if table_key is None:
             return {
                 'table': table_name,
                 'resolved': False,
                 'error': f'Table not found: {table_name}'
             }
         
-        columns = self.tables[table_name]
+        columns = self.tables[table_key]
         
         # Handle LIKE table.*
         if column_pattern == '*':
             return {
-                'table': table_name,
+                'table': table_key,
                 'columns': [col['name'] for col in columns],
                 'types': [col['type'] for col in columns],
                 'resolved': True
             }
         
-        # Handle LIKE table.column
+        # Handle LIKE table.column (case-insensitive)
         for col in columns:
-            if col['name'] == column_pattern:
+            if col['name'].lower() == column_pattern.lower():
                 return {
-                    'table': table_name,
+                    'table': table_key,
                     'columns': [col['name']],
                     'types': [col['type']],
                     'resolved': True
                 }
         
         return {
-            'table': table_name,
+            'table': table_key,
             'column': column_pattern,
             'resolved': False,
             'error': f'Column not found: {table_name}.{column_pattern}'
@@ -254,6 +266,10 @@ def main():
     # Resolve types
     resolver = TypeResolver(db_path)
     try:
+        if not resolver.schema_loaded:
+            print("Error: Schema could not be loaded - type resolution aborted", file=sys.stderr)
+            sys.exit(1)
+        
         workspace = resolver.process_workspace_json(workspace_json_path)
         
         # Write output

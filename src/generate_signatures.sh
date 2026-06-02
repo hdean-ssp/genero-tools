@@ -77,6 +77,7 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         delete param_order
         delete param_types
         delete return_order
+        delete record_fields
         delete function_calls
         call_count = 0
     }
@@ -89,6 +90,7 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
             delete param_order
             delete param_types
             delete return_order
+            delete record_fields
         }
         
         in_function = 1
@@ -104,6 +106,12 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
         full_line = $0
         while (index(full_line, ")") == 0) {
             if ((getline next_line) <= 0) break
+            # Strip comment lines to avoid ) in comments stopping accumulation
+            stripped = next_line
+            gsub(/^[ \t]+/, "", stripped)
+            if (substr(stripped, 1, 1) == "#") continue
+            # Strip inline comments before checking for closing paren
+            sub(/[ \t]*#.*/, "", next_line)
             full_line = full_line " " next_line
         }
 
@@ -146,28 +154,127 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
 
     in_function && /^[ \t]*DEFINE / {
         sub(/^[ \t]*DEFINE[ \t]+/, "")
-        # Extract variable name (first word)
-        match($0, /^[^ \t]+/)
-        var_name = substr($0, RSTART, RLENGTH)
-        # Extract type (everything after first whitespace, trimmed)
-        sub(/^[^ \t]+[ \t]+/, "")
-        var_type = $0
-        gsub(/^[ \t]+|[ \t]+$/, "", var_type)  # Trim whitespace
 
-        # Update parameter type if this is a parameter redefinition
-        if (var_name in param_types) {
-            param_types[var_name] = var_type
+        # Handle multi-line RECORD definitions:
+        # Accumulate lines until END RECORD to get the full type
+        define_line = $0
+        if (match(define_line, /RECORD/) && !match(define_line, /RECORD[ \t]+LIKE/)) {
+            # Multi-line RECORD - accumulate until END RECORD
+            # Track fields inside the record for field-level type resolution
+            while (index(define_line, "END RECORD") == 0) {
+                if ((getline next_line) <= 0) break
+                define_line = define_line "\n" next_line
+            }
         }
-        vars[var_name] = var_type
+
+        # Check for multi-variable DEFINE: DEFINE a, b, c INTEGER
+        # Detect by looking for comma before the type keyword
+        # Pattern: name1, name2, name3 TYPE
+        first_part = define_line
+        # Remove everything after newline for type extraction (use first line only for names)
+        sub(/\n.*/, "", first_part)
+
+        # Check if this is a multi-variable define (has commas before the type)
+        # Strategy: find the last comma, check if what follows looks like a type
+        if (match(first_part, /^[a-zA-Z_][a-zA-Z0-9_]*([ \t]*,[ \t]*[a-zA-Z_][a-zA-Z0-9_]*)+[ \t]+/)) {
+            # Multi-variable DEFINE detected
+            names_part = substr(first_part, RSTART, RLENGTH)
+            var_type = substr(first_part, RSTART + RLENGTH)
+            gsub(/^[ \t]+|[ \t]+$/, "", var_type)
+
+            # Split names on comma
+            n_count = split(names_part, name_arr, /[ \t]*,[ \t]*/)
+            for (ni = 1; ni <= n_count; ni++) {
+                gsub(/^[ \t]+|[ \t]+$/, "", name_arr[ni])
+                if (name_arr[ni] == "") continue
+                if (name_arr[ni] in param_types) {
+                    param_types[name_arr[ni]] = var_type
+                }
+                vars[name_arr[ni]] = var_type
+            }
+        } else {
+            # Single variable DEFINE
+            match(first_part, /^[^ \t]+/)
+            var_name = substr(first_part, RSTART, RLENGTH)
+            # Extract type (everything after first whitespace, trimmed)
+            type_part = substr(first_part, RSTART + RLENGTH)
+            gsub(/^[ \t]+|[ \t]+$/, "", type_part)
+            var_type = type_part
+
+            # For multi-line RECORD, extract field info and store in record_fields
+            if (match(define_line, /RECORD/) && !match(var_type, /^RECORD[ \t]+LIKE/)) {
+                # Parse fields from the RECORD block
+                rec_body = define_line
+                sub(/^[^\n]*\n?/, "", rec_body)  # Remove first line (DEFINE var RECORD)
+                sub(/\n[ \t]*END RECORD.*/, "", rec_body)  # Remove END RECORD line
+
+                # Parse each field line
+                fn_count = split(rec_body, field_lines, /\n/)
+                for (fi = 1; fi <= fn_count; fi++) {
+                    gsub(/^[ \t]+|[ \t]+$/, "", field_lines[fi])
+                    sub(/,[ \t]*$/, "", field_lines[fi])  # Remove trailing comma
+                    if (field_lines[fi] == "") continue
+                    # Extract field name and type
+                    if (match(field_lines[fi], /^[a-zA-Z_][a-zA-Z0-9_]*/)) {
+                        f_name = substr(field_lines[fi], RSTART, RLENGTH)
+                        f_type = substr(field_lines[fi], RSTART + RLENGTH)
+                        gsub(/^[ \t]+|[ \t]+$/, "", f_type)
+                        # Store as var_name.field_name for lookup
+                        record_fields[var_name "." f_name] = f_type
+                    }
+                }
+            }
+
+            # Update parameter type if this is a parameter redefinition
+            if (var_name in param_types) {
+                param_types[var_name] = var_type
+            }
+            vars[var_name] = var_type
+        }
         next
     }
 
-    in_function && /RETURN / {
-        sub(/.*RETURN[ \t]+/, "")
-        sub(/[ \t]*(#|;).*/, "")
-        return_count = split($0, return_arr, /, */)
-        for (i = 1; i <= return_count; i++) {
-            return_order[i] = return_arr[i]
+    in_function && /RETURN[ \t(]/ {
+        line_content = $0
+        sub(/.*RETURN[ \t]*/, "", line_content)
+        sub(/[ \t]*(#|;).*/, "", line_content)
+        gsub(/^[ \t]+|[ \t]+$/, "", line_content)
+
+        # Skip bare RETURN (no value)
+        if (line_content == "" || line_content == ")") {
+            next
+        }
+
+        # Only capture the first RETURN with values (most representative)
+        if (return_count == 0) {
+            return_count = split(line_content, return_arr, /, */)
+            for (i = 1; i <= return_count; i++) {
+                gsub(/^[ \t]+|[ \t]+$/, "", return_arr[i])
+                return_order[i] = return_arr[i]
+            }
+        } else {
+            # If a later RETURN has more values, use it instead
+            tmp_count = split(line_content, tmp_arr, /, */)
+            if (tmp_count > return_count) {
+                return_count = tmp_count
+                for (i = 1; i <= return_count; i++) {
+                    gsub(/^[ \t]+|[ \t]+$/, "", tmp_arr[i])
+                    return_order[i] = tmp_arr[i]
+                }
+            }
+        }
+
+        # Also extract function calls from RETURN expressions (no next - fall through)
+        # Extract function calls: word followed by (
+        ret_scan = line_content
+        while (match(ret_scan, /[a-zA-Z_][a-zA-Z0-9_]*[ \t]*\(/)) {
+            called_func = substr(ret_scan, RSTART, RLENGTH)
+            sub(/[ \t]*\(.*/, "", called_func)
+            if (called_func != current_function) {
+                call_count++
+                function_calls[call_count] = called_func "|" NR
+            }
+            ret_scan = substr(ret_scan, RSTART + RLENGTH)
         }
         next
     }
@@ -235,15 +342,116 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
             params_str = params_str (i > 1 ? ", " : "") name " " (type ? type : "unknown")
         }
 
-        # Build returns array
+        # Build returns array with expression-aware type resolution
         returns_json = ""
         returns_str = ""
         for (i = 1; i <= return_count; i++) {
             var = return_order[i]
-            type = vars[var]
+            type = ""
+
+            # Strategy: resolve the return expression to a type
+            # 1. Direct variable lookup
+            if (var in vars) {
+                type = vars[var]
+            }
+            # 2. Boolean literals
+            else if (toupper(var) == "TRUE" || toupper(var) == "FALSE") {
+                type = "BOOLEAN"
+            }
+            # 3. Numeric literals (integers)
+            else if (match(var, /^-?[0-9]+$/)) {
+                type = "INTEGER"
+            }
+            # 4. Numeric literals (decimals)
+            else if (match(var, /^-?[0-9]+\.[0-9]+$/)) {
+                type = "DECIMAL"
+            }
+            # 5. String literals
+            else if (match(var, /^".*"$/) || match(var, /^\x27.*\x27$/)) {
+                type = "STRING"
+            }
+            # 6. NULL literal
+            else if (toupper(var) == "NULL") {
+                type = "NULL"
+            }
+            # 7. Record field access: l_rec.field - look up in record_fields first, then base var
+            else if (match(var, /^[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*$/)) {
+                if (var in record_fields) {
+                    type = record_fields[var]
+                } else {
+                    # Try base variable lookup
+                    base_var = var
+                    sub(/\..*/, "", base_var)
+                    if (base_var in vars) {
+                        type = vars[base_var] " (field)"
+                    }
+                }
+            }
+            # 8. Array element field access: l_arr[n].field
+            else if (match(var, /^[a-zA-Z_][a-zA-Z0-9_]*\[.*\]\.[a-zA-Z_][a-zA-Z0-9_]*$/)) {
+                base_var = var
+                sub(/\[.*/, "", base_var)
+                if (base_var in vars) {
+                    type = vars[base_var] " (element field)"
+                }
+            }
+            # 9. Array element: l_arr[n]
+            else if (match(var, /^[a-zA-Z_][a-zA-Z0-9_]*\[.*\]$/)) {
+                base_var = var
+                sub(/\[.*/, "", base_var)
+                if (base_var in vars) {
+                    type = vars[base_var] " (element)"
+                }
+            }
+            # 10. Method call: l_data.getLength()
+            else if (match(var, /^[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*\(/)) {
+                base_var = var
+                sub(/\..*/, "", base_var)
+                if (base_var in vars) {
+                    type = "INTEGER"  # Most methods return INTEGER (getLength, etc.)
+                }
+            }
+            # 11. Function call: func_name(args) - check if wrapping a known variable
+            else if (match(var, /^[a-zA-Z_][a-zA-Z0-9_]*\(/)) {
+                # Extract function name and try to infer type from argument
+                func_call_name = var
+                sub(/\(.*/, "", func_call_name)
+                # Common Genero built-ins that return STRING
+                if (toupper(func_call_name) == "UPSHIFT" || toupper(func_call_name) == "DOWNSHIFT" || toupper(func_call_name) == "TRIM" || toupper(func_call_name) == "LPAD" || toupper(func_call_name) == "RPAD" || toupper(func_call_name) == "SFMT" || toupper(func_call_name) == "ASCII") {
+                    type = "STRING"
+                }
+                # Common Genero built-ins that return INTEGER
+                else if (toupper(func_call_name) == "LENGTH" || toupper(func_call_name) == "ORD" || toupper(func_call_name) == "FGL_LASTKEY" || toupper(func_call_name) == "ARR_COUNT" || toupper(func_call_name) == "SCR_LINE" || toupper(func_call_name) == "NUM_ARGS") {
+                    type = "INTEGER"
+                }
+                else {
+                    type = "expression"
+                }
+            }
+            # 12. Expression with operators: (l_count > 0), var CLIPPED, etc.
+            else if (match(var, /^[(\t ]*[a-zA-Z_][a-zA-Z0-9_]*/)) {
+                # Try to extract base variable from expression
+                expr_var = var
+                sub(/^[( \t]*/, "", expr_var)
+                sub(/[) \t].*/, "", expr_var)
+                sub(/\..*/, "", expr_var)  # Strip field access
+                if (expr_var in vars) {
+                    # Check if it looks like a boolean expression
+                    if (match(var, /[><=!]/) || match(var, /AND|OR|NOT/)) {
+                        type = "BOOLEAN"
+                    } else if (match(var, /CLIPPED|USING/)) {
+                        type = vars[expr_var]
+                    } else {
+                        type = vars[expr_var]
+                    }
+                }
+            }
+
+            if (type == "") type = "unknown"
+
             returns_json = returns_json (i > 1 ? ", " : "")
-            returns_json = returns_json sprintf("{\"name\":\"%s\",\"type\":\"%s\"}", var, type ? type : "unknown")
-            returns_str = returns_str (i > 1 ? ", " : "") var " " (type ? type : "unknown")
+            returns_json = returns_json sprintf("{\"name\":\"%s\",\"type\":\"%s\"}", var, type)
+            returns_str = returns_str (i > 1 ? ", " : "") var " " type
         }
 
         # Build calls array
@@ -283,15 +491,30 @@ find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
             function_sig = function_sig ":" returns_str
         }
 
-        # Print structured JSON with calls and variables
-        printf "{\"file\":\"%s\",\"name\":\"%s\",\"line\":{\"start\":%d,\"end\":%d},\"signature\":\"%s\",\"parameters\":[%s],\"returns\":[%s],\"calls\":[%s],\"variables\":[%s]}\n",
-               file, current_function, function_start_line, function_end_line, function_sig, params_json, returns_json, calls_json, variables_json
+        # Build record_types object (field definitions for RECORD variables)
+        record_types_json = ""
+        rf_count = 0
+        for (rf_key in record_fields) {
+            rf_count++
+            record_types_json = record_types_json (rf_count > 1 ? ", " : "")
+            record_types_json = record_types_json sprintf("\"%s\":\"%s\"", rf_key, record_fields[rf_key])
+        }
+
+        # Print structured JSON with calls, variables, and record types
+        if (rf_count > 0) {
+            printf "{\"file\":\"%s\",\"name\":\"%s\",\"line\":{\"start\":%d,\"end\":%d},\"signature\":\"%s\",\"parameters\":[%s],\"returns\":[%s],\"calls\":[%s],\"variables\":[%s],\"record_types\":{%s}}\n",
+                   file, current_function, function_start_line, function_end_line, function_sig, params_json, returns_json, calls_json, variables_json, record_types_json
+        } else {
+            printf "{\"file\":\"%s\",\"name\":\"%s\",\"line\":{\"start\":%d,\"end\":%d},\"signature\":\"%s\",\"parameters\":[%s],\"returns\":[%s],\"calls\":[%s],\"variables\":[%s]}\n",
+                   file, current_function, function_start_line, function_end_line, function_sig, params_json, returns_json, calls_json, variables_json
+        }
 
         in_function = 0
         delete vars
         delete param_order
         delete param_types
         delete return_order
+        delete record_fields
         delete function_calls
         call_count = 0
     }

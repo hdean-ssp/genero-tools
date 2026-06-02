@@ -33,6 +33,17 @@ class ResolvedTypeMerger:
             'errors': []
         }
     
+    @staticmethod
+    def _normalize_path(path: str) -> str:
+        """Normalize a file path for consistent lookup."""
+        import os
+        # Resolve .., remove trailing slashes, normalize separators
+        normalized = os.path.normpath(path)
+        # Ensure relative paths start with ./
+        if not normalized.startswith('./') and not normalized.startswith('/'):
+            normalized = './' + normalized
+        return normalized
+    
     def _ensure_columns(self):
         """Ensure resolved type columns exist in parameters and returns tables."""
         try:
@@ -121,6 +132,9 @@ class ResolvedTypeMerger:
             if not isinstance(functions, list):
                 continue
             
+            # Normalize file path for consistent lookup
+            normalized_path = self._normalize_path(file_path)
+            
             # Process each function
             for func in functions:
                 func_name = func.get('name')
@@ -128,8 +142,23 @@ class ResolvedTypeMerger:
                     continue
                 
                 # Get function ID from database using both function_name and file_path
+                # Try exact match first, then normalized path, then case-insensitive
                 self.cursor.execute('SELECT id FROM functions WHERE name = ? AND file_path = ?', (func_name, file_path))
                 func_row = self.cursor.fetchone()
+                
+                if not func_row and normalized_path != file_path:
+                    self.cursor.execute('SELECT id FROM functions WHERE name = ? AND file_path = ?', (func_name, normalized_path))
+                    func_row = self.cursor.fetchone()
+                
+                if not func_row:
+                    # Try without ./ prefix or with ./ prefix
+                    alt_path = file_path.lstrip('./')
+                    self.cursor.execute('SELECT id FROM functions WHERE name = ? AND file_path = ?', (func_name, alt_path))
+                    func_row = self.cursor.fetchone()
+                    if not func_row:
+                        alt_path = './' + file_path.lstrip('./')
+                        self.cursor.execute('SELECT id FROM functions WHERE name = ? AND file_path = ?', (func_name, alt_path))
+                        func_row = self.cursor.fetchone()
                 
                 if not func_row:
                     continue
@@ -182,7 +211,7 @@ class ResolvedTypeMerger:
                                     table_name = ?,
                                     columns = ?,
                                     types = ?
-                                WHERE function_id = ? AND name = ?
+                                WHERE function_id = ? AND name COLLATE NOCASE = ?
                             ''', (
                                 update_data['actual_type'],
                                 update_data['is_like_reference'],
@@ -251,7 +280,7 @@ class ResolvedTypeMerger:
                                     table_name = ?,
                                     columns = ?,
                                     types = ?
-                                WHERE function_id = ? AND name = ?
+                                WHERE function_id = ? AND name COLLATE NOCASE = ?
                             ''', (
                                 update_data['actual_type'],
                                 update_data['is_like_reference'],

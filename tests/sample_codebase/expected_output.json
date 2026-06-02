@@ -1,8 +1,8 @@
 {
   "_metadata": {
     "version": "1.0.0",
-    "generated": "2026-03-14T14:14:20Z",
-    "files_processed": 8
+    "generated": "2026-06-02T09:06:42Z",
+    "files_processed": 16
   },
   "./no_returns.4gl": [
     {
@@ -24,7 +24,8 @@
           "name": "log_message",
           "line": 7
         }
-      ]
+      ],
+      "variables": []
     },
     {
       "name": "update_database",
@@ -53,7 +54,8 @@
           "name": "write_to_log",
           "line": 17
         }
-      ]
+      ],
+      "variables": []
     },
     {
       "name": "log_error",
@@ -82,7 +84,8 @@
           "name": "send_alert",
           "line": 25
         }
-      ]
+      ],
+      "variables": []
     },
     {
       "name": "initialize_system",
@@ -102,7 +105,8 @@
           "name": "load_configuration",
           "line": 31
         }
-      ]
+      ],
+      "variables": []
     },
     {
       "name": "process_request",
@@ -135,6 +139,259 @@
           "name": "update_database",
           "line": 40
         }
+      ],
+      "variables": []
+    }
+  ],
+  "./test_globals.4gl": [
+    {
+      "name": "test_func",
+      "line": {
+        "start": 16,
+        "end": 19
+      },
+      "signature": "16-19: test_func(param1 INTEGER):param1 INTEGER",
+      "parameters": [
+        {
+          "name": "param1",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "param1",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": []
+    }
+  ],
+  "./customer_db.4gl": [
+    {
+      "name": "customer_insert",
+      "line": {
+        "start": 11,
+        "end": 21
+      },
+      "signature": "11-21: customer_insert(p_rec RECORD)",
+      "parameters": [
+        {
+          "name": "p_rec",
+          "type": "RECORD"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 19
+        },
+        {
+          "name": "db_execute_insert",
+          "line": 20
+        }
+      ],
+      "variables": [],
+      "record_types": {
+        "p_rec.cus_name": "STRING",
+        "p_rec.cus_email": "STRING",
+        "p_rec.cus_phone": "STRING"
+      }
+    },
+    {
+      "name": "customer_update",
+      "line": {
+        "start": 23,
+        "end": 33
+      },
+      "signature": "23-33: customer_update(p_cus_id INTEGER, p_rec RECORD)",
+      "parameters": [
+        {
+          "name": "p_cus_id",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_rec",
+          "type": "RECORD"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 31
+        },
+        {
+          "name": "db_execute_update",
+          "line": 32
+        }
+      ],
+      "variables": [],
+      "record_types": {
+        "p_rec.cus_name": "STRING",
+        "p_rec.cus_email": "STRING",
+        "p_rec.cus_phone": "STRING"
+      }
+    },
+    {
+      "name": "customer_remove",
+      "line": {
+        "start": 35,
+        "end": 40
+      },
+      "signature": "35-40: customer_remove(p_cus_id INTEGER)",
+      "parameters": [
+        {
+          "name": "p_cus_id",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 38
+        },
+        {
+          "name": "db_execute_delete",
+          "line": 39
+        }
+      ],
+      "variables": []
+    },
+    {
+      "name": "customer_exists",
+      "line": {
+        "start": 42,
+        "end": 48
+      },
+      "signature": "42-48: customer_exists(p_cus_id INTEGER):(l_count > 0) BOOLEAN",
+      "parameters": [
+        {
+          "name": "p_cus_id",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "(l_count > 0)",
+          "type": "BOOLEAN"
+        }
+      ],
+      "calls": [
+        {
+          "name": "db_count",
+          "line": 46
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_count",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "customer_load",
+      "line": {
+        "start": 50,
+        "end": 60
+      },
+      "signature": "50-60: customer_load(p_cus_id INTEGER, p_rec RECORD)",
+      "parameters": [
+        {
+          "name": "p_cus_id",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_rec",
+          "type": "RECORD"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 58
+        },
+        {
+          "name": "db_select_by_id",
+          "line": 59
+        }
+      ],
+      "variables": [],
+      "record_types": {
+        "p_rec.cus_name": "STRING",
+        "p_rec.cus_email": "STRING",
+        "p_rec.cus_phone": "STRING"
+      }
+    },
+    {
+      "name": "customer_load_by_name",
+      "line": {
+        "start": 63,
+        "end": 73
+      },
+      "signature": "63-73: customer_load_by_name(p_name STRING, p_results DYNAMIC ARRAY OF RECORD)",
+      "parameters": [
+        {
+          "name": "p_name",
+          "type": "STRING"
+        },
+        {
+          "name": "p_results",
+          "type": "DYNAMIC ARRAY OF RECORD"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 71
+        },
+        {
+          "name": "db_select_by_field",
+          "line": 72
+        }
+      ],
+      "variables": [],
+      "record_types": {
+        "p_results.cus_email": "STRING",
+        "p_results.cus_name": "STRING",
+        "p_results.cus_id": "INTEGER"
+      }
+    },
+    {
+      "name": "customer_count_by_name",
+      "line": {
+        "start": 75,
+        "end": 81
+      },
+      "signature": "75-81: customer_count_by_name(p_name STRING):l_count INTEGER",
+      "parameters": [
+        {
+          "name": "p_name",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "l_count",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [
+        {
+          "name": "db_count_like",
+          "line": 79
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_count",
+          "type": "INTEGER"
+        }
       ]
     }
   ],
@@ -143,9 +400,9 @@
       "name": "process_interval",
       "line": {
         "start": 3,
-        "end": 10
+        "end": 9
       },
-      "signature": "3-10: process_interval(time_span INTERVAL DAY TO HOUR):result INTEGER",
+      "signature": "3-9: process_interval(time_span INTERVAL DAY TO HOUR):result INTEGER",
       "parameters": [
         {
           "name": "time_span",
@@ -161,17 +418,23 @@
       "calls": [
         {
           "name": "log_interval",
-          "line": 8
+          "line": 7
+        }
+      ],
+      "variables": [
+        {
+          "name": "result",
+          "type": "INTEGER"
         }
       ]
     },
     {
       "name": "handle_text_blob",
       "line": {
-        "start": 12,
-        "end": 21
+        "start": 11,
+        "end": 20
       },
-      "signature": "12-21: handle_text_blob(content TEXT):status SMALLINT, row_count INTEGER",
+      "signature": "11-20: handle_text_blob(content TEXT):status SMALLINT, row_count INTEGER",
       "parameters": [
         {
           "name": "content",
@@ -191,17 +454,27 @@
       "calls": [
         {
           "name": "process_blob",
-          "line": 19
+          "line": 18
+        }
+      ],
+      "variables": [
+        {
+          "name": "status",
+          "type": "SMALLINT"
+        },
+        {
+          "name": "row_count",
+          "type": "INTEGER"
         }
       ]
     },
     {
       "name": "calculate_money",
       "line": {
-        "start": 23,
-        "end": 34
+        "start": 22,
+        "end": 33
       },
-      "signature": "23-34: calculate_money(amount1 MONEY(10,2), amount2 MONEY(10,2)):total MONEY(10,2), tax DECIMAL(5,2)",
+      "signature": "22-33: calculate_money(amount1 MONEY(10,2), amount2 MONEY(10,2)):total MONEY(10,2), tax DECIMAL(5,2)",
       "parameters": [
         {
           "name": "amount1",
@@ -225,21 +498,31 @@
       "calls": [
         {
           "name": "validate_amount",
-          "line": 31
+          "line": 30
         },
         {
           "name": "calculate_tax",
-          "line": 32
+          "line": 31
+        }
+      ],
+      "variables": [
+        {
+          "name": "tax",
+          "type": "DECIMAL(5,2)"
+        },
+        {
+          "name": "total",
+          "type": "MONEY(10,2)"
         }
       ]
     },
     {
       "name": "get_serial_value",
       "line": {
-        "start": 36,
-        "end": 44
+        "start": 35,
+        "end": 43
       },
-      "signature": "36-44: get_serial_value():new_id SERIAL, success BOOLEAN",
+      "signature": "35-43: get_serial_value():new_id SERIAL, success BOOLEAN",
       "parameters": [],
       "returns": [
         {
@@ -254,17 +537,27 @@
       "calls": [
         {
           "name": "log_serial",
-          "line": 42
+          "line": 41
+        }
+      ],
+      "variables": [
+        {
+          "name": "new_id",
+          "type": "SERIAL"
+        },
+        {
+          "name": "success",
+          "type": "BOOLEAN"
         }
       ]
     },
     {
       "name": "process_dynamic_array",
       "line": {
-        "start": 46,
-        "end": 57
+        "start": 45,
+        "end": 56
       },
-      "signature": "46-57: process_dynamic_array(data DYNAMIC ARRAY OF RECORD):count INTEGER",
+      "signature": "45-56: process_dynamic_array(data DYNAMIC ARRAY OF RECORD):count INTEGER",
       "parameters": [
         {
           "name": "data",
@@ -280,21 +573,31 @@
       "calls": [
         {
           "name": "validate_array",
-          "line": 54
+          "line": 53
         },
         {
           "name": "process_records",
-          "line": 55
+          "line": 54
         }
-      ]
+      ],
+      "variables": [
+        {
+          "name": "count",
+          "type": "INTEGER"
+        }
+      ],
+      "record_types": {
+        "data.field1": "INTEGER",
+        "data.field2": "STRING"
+      }
     },
     {
       "name": "handle_boolean_logic",
       "line": {
-        "start": 59,
-        "end": 67
+        "start": 58,
+        "end": 66
       },
-      "signature": "59-67: handle_boolean_logic(flag1 BOOLEAN, flag2 BOOLEAN):result BOOLEAN",
+      "signature": "58-66: handle_boolean_logic(flag1 BOOLEAN, flag2 BOOLEAN):result BOOLEAN",
       "parameters": [
         {
           "name": "flag1",
@@ -314,9 +617,217 @@
       "calls": [
         {
           "name": "log_boolean",
-          "line": 65
+          "line": 64
+        }
+      ],
+      "variables": [
+        {
+          "name": "result",
+          "type": "BOOLEAN"
         }
       ]
+    }
+  ],
+  "./multiline_params.4gl": [
+    {
+      "name": "single_line_params",
+      "line": {
+        "start": 3,
+        "end": 7
+      },
+      "signature": "3-7: single_line_params(param1 INTEGER, param2 STRING):param1 INTEGER",
+      "parameters": [
+        {
+          "name": "param1",
+          "type": "INTEGER"
+        },
+        {
+          "name": "param2",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "param1",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": []
+    },
+    {
+      "name": "multiline_two_lines",
+      "line": {
+        "start": 9,
+        "end": 15
+      },
+      "signature": "9-15: multiline_two_lines(param1 INTEGER, param2 STRING, param3 DECIMAL):param1 INTEGER",
+      "parameters": [
+        {
+          "name": "param1",
+          "type": "INTEGER"
+        },
+        {
+          "name": "param2",
+          "type": "STRING"
+        },
+        {
+          "name": "param3",
+          "type": "DECIMAL"
+        }
+      ],
+      "returns": [
+        {
+          "name": "param1",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": []
+    },
+    {
+      "name": "multiline_each_line",
+      "line": {
+        "start": 17,
+        "end": 26
+      },
+      "signature": "17-26: multiline_each_line(alpha INTEGER, beta STRING, gamma DECIMAL):alpha INTEGER",
+      "parameters": [
+        {
+          "name": "alpha",
+          "type": "INTEGER"
+        },
+        {
+          "name": "beta",
+          "type": "STRING"
+        },
+        {
+          "name": "gamma",
+          "type": "DECIMAL"
+        }
+      ],
+      "returns": [
+        {
+          "name": "alpha",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": []
+    },
+    {
+      "name": "multiline_paren_on_same_line",
+      "line": {
+        "start": 28,
+        "end": 34
+      },
+      "signature": "28-34: multiline_paren_on_same_line(x INTEGER, y INTEGER, z INTEGER):x INTEGER",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "INTEGER"
+        },
+        {
+          "name": "y",
+          "type": "INTEGER"
+        },
+        {
+          "name": "z",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "x",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": []
+    },
+    {
+      "name": "no_params_multiline",
+      "line": {
+        "start": 36,
+        "end": 40
+      },
+      "signature": "36-40: no_params_multiline():status INTEGER",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "status",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "status",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "lib4_win_display_list",
+      "line": {
+        "start": 42,
+        "end": 57
+      },
+      "signature": "42-57: lib4_win_display_list(p_arrcnt INTEGER, p_lenf1 INTEGER, p_lenf2 INTEGER, p_lenf3 INTEGER, p_lenf4 INTEGER, p_lenf5 INTEGER, p_retfld INTEGER, p_winsize INTEGER, p_row INTEGER, p_col INTEGER, p_def_list_pos INTEGER):p_arrcnt INTEGER",
+      "parameters": [
+        {
+          "name": "p_arrcnt",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_lenf1",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_lenf2",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_lenf3",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_lenf4",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_lenf5",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_retfld",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_winsize",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_row",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_col",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_def_list_pos",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "p_arrcnt",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": []
     }
   ],
   "./simple_functions.4gl": [
@@ -348,6 +859,12 @@
           "name": "validate_number",
           "line": 52
         }
+      ],
+      "variables": [
+        {
+          "name": "result",
+          "type": "INTEGER"
+        }
       ]
     },
     {
@@ -374,6 +891,12 @@
           "name": "format_string",
           "line": 63
         }
+      ],
+      "variables": [
+        {
+          "name": "name",
+          "type": "STRING"
+        }
       ]
     },
     {
@@ -390,7 +913,8 @@
           "name": "log_message",
           "line": 70
         }
-      ]
+      ],
+      "variables": []
     },
     {
       "name": "display_message",
@@ -411,7 +935,160 @@
           "name": "log_message",
           "line": 77
         }
+      ],
+      "variables": []
+    }
+  ],
+  "./customer_validate.4gl": [
+    {
+      "name": "validate_customer",
+      "line": {
+        "start": 11,
+        "end": 34
+      },
+      "signature": "11-34: validate_customer(p_rec RECORD):FALSE BOOLEAN",
+      "parameters": [
+        {
+          "name": "p_rec",
+          "type": "RECORD"
+        }
+      ],
+      "returns": [
+        {
+          "name": "FALSE",
+          "type": "BOOLEAN"
+        }
+      ],
+      "calls": [
+        {
+          "name": "validate_name",
+          "line": 18
+        },
+        {
+          "name": "log_message",
+          "line": 19
+        },
+        {
+          "name": "validate_email",
+          "line": 23
+        },
+        {
+          "name": "log_message",
+          "line": 24
+        },
+        {
+          "name": "validate_phone",
+          "line": 28
+        },
+        {
+          "name": "log_message",
+          "line": 29
+        }
+      ],
+      "variables": [],
+      "record_types": {
+        "p_rec.cus_name": "STRING",
+        "p_rec.cus_email": "STRING",
+        "p_rec.cus_phone": "STRING"
+      }
+    },
+    {
+      "name": "validate_name",
+      "line": {
+        "start": 36,
+        "end": 48
+      },
+      "signature": "36-48: validate_name(p_name STRING):FALSE BOOLEAN",
+      "parameters": [
+        {
+          "name": "p_name",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "FALSE",
+          "type": "BOOLEAN"
+        }
+      ],
+      "calls": [
+        {
+          "name": "length",
+          "line": 39
+        },
+        {
+          "name": "length",
+          "line": 43
+        }
+      ],
+      "variables": []
+    },
+    {
+      "name": "validate_email",
+      "line": {
+        "start": 51,
+        "end": 69
+      },
+      "signature": "51-69: validate_email(p_email STRING):FALSE BOOLEAN",
+      "parameters": [
+        {
+          "name": "p_email",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "FALSE",
+          "type": "BOOLEAN"
+        }
+      ],
+      "calls": [
+        {
+          "name": "length",
+          "line": 55
+        },
+        {
+          "name": "find_char",
+          "line": 59
+        },
+        {
+          "name": "find_char",
+          "line": 64
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_at_pos",
+          "type": "INTEGER"
+        }
       ]
+    },
+    {
+      "name": "validate_phone",
+      "line": {
+        "start": 71,
+        "end": 81
+      },
+      "signature": "71-81: validate_phone(p_phone STRING):FALSE BOOLEAN",
+      "parameters": [
+        {
+          "name": "p_phone",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "FALSE",
+          "type": "BOOLEAN"
+        }
+      ],
+      "calls": [
+        {
+          "name": "length",
+          "line": 75
+        }
+      ],
+      "variables": []
     }
   ],
   "./whitespace_variations.4gl": [
@@ -442,6 +1119,12 @@
         {
           "name": "validate_params",
           "line": 9
+        }
+      ],
+      "variables": [
+        {
+          "name": "result",
+          "type": "CHAR(5)"
         }
       ]
     },
@@ -477,6 +1160,12 @@
           "name": "log_sum",
           "line": 19
         }
+      ],
+      "variables": [
+        {
+          "name": "sum",
+          "type": "INTEGER"
+        }
       ]
     },
     {
@@ -485,18 +1174,29 @@
         "start": 23,
         "end": 30
       },
-      "signature": "23-30: tabbed_function(value DECIMAL)",
+      "signature": "23-30: tabbed_function(value DECIMAL):output INTEGER",
       "parameters": [
         {
           "name": "value",
           "type": "DECIMAL"
         }
       ],
-      "returns": [],
+      "returns": [
+        {
+          "name": "output",
+          "type": "INTEGER"
+        }
+      ],
       "calls": [
         {
           "name": "process_value",
           "line": 28
+        }
+      ],
+      "variables": [
+        {
+          "name": "output",
+          "type": "INTEGER"
         }
       ]
     },
@@ -531,6 +1231,12 @@
         {
           "name": "adjust_value",
           "line": 39
+        }
+      ],
+      "variables": [
+        {
+          "name": "z",
+          "type": "INTEGER"
         }
       ]
     }
@@ -580,6 +1286,12 @@
           "name": "process_money",
           "line": 13
         }
+      ],
+      "variables": [
+        {
+          "name": "result",
+          "type": "INTEGER"
+        }
       ]
     },
     {
@@ -600,6 +1312,12 @@
         {
           "name": "log_status",
           "line": 20
+        }
+      ],
+      "variables": [
+        {
+          "name": "status",
+          "type": "INTEGER"
         }
       ]
     },
@@ -626,6 +1344,12 @@
         {
           "name": "validate_string",
           "line": 31
+        }
+      ],
+      "variables": [
+        {
+          "name": "result",
+          "type": "STRING"
         }
       ]
     },
@@ -656,6 +1380,12 @@
         {
           "name": "Get_Status",
           "line": 41
+        }
+      ],
+      "variables": [
+        {
+          "name": "Output_Value",
+          "type": "SMALLINT"
         }
       ]
     },
@@ -698,6 +1428,16 @@
         {
           "name": "finalize_context",
           "line": 54
+        }
+      ],
+      "variables": [
+        {
+          "name": "result1",
+          "type": "INTEGER"
+        },
+        {
+          "name": "result2",
+          "type": "STRING"
         }
       ]
     },
@@ -761,6 +1501,12 @@
           "name": "decrement_value",
           "line": 85
         }
+      ],
+      "variables": [
+        {
+          "name": "status",
+          "type": "INTEGER"
+        }
       ]
     },
     {
@@ -803,6 +1549,12 @@
           "name": "process_match",
           "line": 101
         }
+      ],
+      "variables": [
+        {
+          "name": "result",
+          "type": "STRING"
+        }
       ]
     }
   ],
@@ -839,7 +1591,18 @@
           "name": "check_status",
           "line": 23
         }
-      ]
+      ],
+      "variables": [
+        {
+          "name": "success",
+          "type": "SMALLINT"
+        }
+      ],
+      "record_types": {
+        "rec.amount": "DECIMAL",
+        "rec.id": "INTEGER",
+        "rec.name": "STRING"
+      }
     },
     {
       "name": "get_date_range",
@@ -877,6 +1640,16 @@
           "name": "calculate_days",
           "line": 37
         }
+      ],
+      "variables": [
+        {
+          "name": "days_between",
+          "type": "INTEGER"
+        },
+        {
+          "name": "is_valid",
+          "type": "SMALLINT"
+        }
       ]
     },
     {
@@ -902,6 +1675,138 @@
         {
           "name": "preprocess_record",
           "line": 52
+        }
+      ],
+      "variables": [
+        {
+          "name": "output_rec",
+          "type": "RECORD"
+        }
+      ],
+      "record_types": {
+        "input_rec.field1": "STRING",
+        "input_rec.field2": "INTEGER",
+        "output_rec.status": "INTEGER",
+        "output_rec.result": "STRING"
+      }
+    }
+  ],
+  "./report_main.4gl": [
+    {
+      "name": "report_main",
+      "line": {
+        "start": 10,
+        "end": 27
+      },
+      "signature": "10-27: report_main()",
+      "parameters": [],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 13
+        },
+        {
+          "name": "get_user_action",
+          "line": 15
+        },
+        {
+          "name": "report_customer_summary",
+          "line": 19
+        },
+        {
+          "name": "report_customer_detail",
+          "line": 21
+        },
+        {
+          "name": "display_error",
+          "line": 23
+        },
+        {
+          "name": "log_message",
+          "line": 26
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_type",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "report_customer_summary",
+      "line": {
+        "start": 29,
+        "end": 39
+      },
+      "signature": "29-39: report_customer_summary()",
+      "parameters": [],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 32
+        },
+        {
+          "name": "db_count",
+          "line": 35
+        },
+        {
+          "name": "display_info",
+          "line": 37
+        },
+        {
+          "name": "display_separator",
+          "line": 38
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_count",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "report_customer_detail",
+      "line": {
+        "start": 41,
+        "end": 59
+      },
+      "signature": "41-59: report_customer_detail()",
+      "parameters": [],
+      "returns": [],
+      "calls": [
+        {
+          "name": "prompt_user_int",
+          "line": 44
+        },
+        {
+          "name": "display_error",
+          "line": 47
+        },
+        {
+          "name": "customer_exists",
+          "line": 51
+        },
+        {
+          "name": "display_error",
+          "line": 52
+        },
+        {
+          "name": "log_message",
+          "line": 57
+        },
+        {
+          "name": "display_info",
+          "line": 58
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_cus_id",
+          "type": "INTEGER"
         }
       ]
     }
@@ -938,6 +1843,20 @@
         {
           "name": "validate_number",
           "line": 15
+        }
+      ],
+      "variables": [
+        {
+          "name": "count",
+          "type": "INTEGER"
+        },
+        {
+          "name": "total",
+          "type": "DECIMAL"
+        },
+        {
+          "name": "average",
+          "type": "DECIMAL"
         }
       ]
     },
@@ -977,6 +1896,16 @@
           "name": "format_error",
           "line": 31
         }
+      ],
+      "variables": [
+        {
+          "name": "error_msg",
+          "type": "STRING"
+        },
+        {
+          "name": "is_valid",
+          "type": "SMALLINT"
+        }
       ]
     },
     {
@@ -1015,7 +1944,693 @@
           "name": "transform_data",
           "line": 46
         }
+      ],
+      "variables": [
+        {
+          "name": "result_code",
+          "type": "INTEGER"
+        },
+        {
+          "name": "result_message",
+          "type": "STRING"
+        },
+        {
+          "name": "result_data",
+          "type": "STRING"
+        }
       ]
+    }
+  ],
+  "./customer_main.4gl": [
+    {
+      "name": "customer_main",
+      "line": {
+        "start": 11,
+        "end": 33
+      },
+      "signature": "11-33: customer_main()",
+      "parameters": [],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 14
+        },
+        {
+          "name": "init_customer_cache",
+          "line": 15
+        },
+        {
+          "name": "get_user_action",
+          "line": 17
+        },
+        {
+          "name": "customer_add_new",
+          "line": 21
+        },
+        {
+          "name": "customer_edit",
+          "line": 23
+        },
+        {
+          "name": "customer_search_by_name",
+          "line": 25
+        },
+        {
+          "name": "customer_delete",
+          "line": 27
+        },
+        {
+          "name": "display_error",
+          "line": 29
+        },
+        {
+          "name": "log_message",
+          "line": 32
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_action",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "customer_search_by_name",
+      "line": {
+        "start": 36,
+        "end": 65
+      },
+      "signature": "36-65: customer_search_by_name(p_name STRING)",
+      "parameters": [
+        {
+          "name": "p_name",
+          "type": "STRING"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "length",
+          "line": 49
+        },
+        {
+          "name": "display_error",
+          "line": 50
+        },
+        {
+          "name": "log_message",
+          "line": 54
+        },
+        {
+          "name": "customer_count_by_name",
+          "line": 55
+        },
+        {
+          "name": "display_info",
+          "line": 58
+        },
+        {
+          "name": "customer_load_by_name",
+          "line": 63
+        },
+        {
+          "name": "customer_display_list",
+          "line": 64
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_results",
+          "type": "DYNAMIC ARRAY OF RECORD"
+        },
+        {
+          "name": "l_count",
+          "type": "INTEGER"
+        }
+      ],
+      "record_types": {
+        "l_results.con_id": "LIKE contract.con_id",
+        "l_results.cus_id": "INTEGER",
+        "l_results.cus_email": "STRING",
+        "l_results.cus_name": "STRING"
+      }
+    },
+    {
+      "name": "customer_add_new",
+      "line": {
+        "start": 67,
+        "end": 88
+      },
+      "signature": "67-88: customer_add_new()",
+      "parameters": [],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 74
+        },
+        {
+          "name": "validate_customer",
+          "line": 80
+        },
+        {
+          "name": "display_error",
+          "line": 81
+        },
+        {
+          "name": "customer_insert",
+          "line": 85
+        },
+        {
+          "name": "log_message",
+          "line": 86
+        },
+        {
+          "name": "display_info",
+          "line": 87
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_rec",
+          "type": "RECORD"
+        }
+      ],
+      "record_types": {
+        "l_rec.cus_phone": "STRING",
+        "l_rec.cus_name": "STRING",
+        "l_rec.cus_email": "STRING"
+      }
+    },
+    {
+      "name": "customer_delete",
+      "line": {
+        "start": 91,
+        "end": 109
+      },
+      "signature": "91-109: customer_delete()",
+      "parameters": [],
+      "returns": [],
+      "calls": [
+        {
+          "name": "prompt_user_int",
+          "line": 94
+        },
+        {
+          "name": "display_error",
+          "line": 97
+        },
+        {
+          "name": "customer_exists",
+          "line": 101
+        },
+        {
+          "name": "display_error",
+          "line": 102
+        },
+        {
+          "name": "customer_remove",
+          "line": 106
+        },
+        {
+          "name": "invalidate_customer_cache",
+          "line": 107
+        },
+        {
+          "name": "log_message",
+          "line": 108
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_cus_id",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "customer_edit",
+      "line": {
+        "start": 111,
+        "end": 142
+      },
+      "signature": "111-142: customer_edit()",
+      "parameters": [],
+      "returns": [],
+      "calls": [
+        {
+          "name": "prompt_user_int",
+          "line": 119
+        },
+        {
+          "name": "customer_exists",
+          "line": 121
+        },
+        {
+          "name": "display_error",
+          "line": 122
+        },
+        {
+          "name": "customer_load",
+          "line": 126
+        },
+        {
+          "name": "log_message",
+          "line": 129
+        },
+        {
+          "name": "validate_customer",
+          "line": 134
+        },
+        {
+          "name": "display_error",
+          "line": 135
+        },
+        {
+          "name": "customer_update",
+          "line": 139
+        },
+        {
+          "name": "invalidate_customer_cache",
+          "line": 140
+        },
+        {
+          "name": "log_message",
+          "line": 141
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_rec",
+          "type": "RECORD"
+        },
+        {
+          "name": "l_cus_id",
+          "type": "INTEGER"
+        }
+      ],
+      "record_types": {
+        "l_rec.cus_phone": "STRING",
+        "l_rec.cus_name": "STRING",
+        "l_rec.cus_email": "STRING"
+      }
+    },
+    {
+      "name": "record_like_table",
+      "line": {
+        "start": 146,
+        "end": 150
+      },
+      "signature": "146-150: record_like_table():l_cust.cus_id RECORD LIKE customer.* (field)",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_cust.cus_id",
+          "type": "RECORD LIKE customer.* (field)"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_cust",
+          "type": "RECORD LIKE customer.*"
+        }
+      ]
+    },
+    {
+      "name": "record_like_table_param",
+      "line": {
+        "start": 152,
+        "end": 155
+      },
+      "signature": "152-155: record_like_table_param(p_rec RECORD LIKE customer.*):p_rec.cus_id RECORD LIKE customer.* (field)",
+      "parameters": [
+        {
+          "name": "p_rec",
+          "type": "RECORD LIKE customer.*"
+        }
+      ],
+      "returns": [
+        {
+          "name": "p_rec.cus_id",
+          "type": "RECORD LIKE customer.* (field)"
+        }
+      ],
+      "calls": [],
+      "variables": []
+    },
+    {
+      "name": "record_inline_single_field",
+      "line": {
+        "start": 157,
+        "end": 163
+      },
+      "signature": "157-163: record_inline_single_field():l_rec.status INTEGER",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_rec.status",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_rec",
+          "type": "RECORD"
+        }
+      ],
+      "record_types": {
+        "l_rec.status": "INTEGER"
+      }
+    },
+    {
+      "name": "record_with_like_fields",
+      "line": {
+        "start": 165,
+        "end": 173
+      },
+      "signature": "165-173: record_with_like_fields():l_rec.balance DECIMAL(12,2)",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_rec.balance",
+          "type": "DECIMAL(12,2)"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_rec",
+          "type": "RECORD"
+        }
+      ],
+      "record_types": {
+        "l_rec.cus_name": "LIKE customer.cus_name",
+        "l_rec.balance": "DECIMAL(12,2)",
+        "l_rec.cus_id": "LIKE customer.cus_id"
+      }
+    },
+    {
+      "name": "record_array_of_record_like",
+      "line": {
+        "start": 175,
+        "end": 179
+      },
+      "signature": "175-179: record_array_of_record_like():l_arr[1].cus_id DYNAMIC ARRAY OF RECORD LIKE customer.* (element field)",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_arr[1].cus_id",
+          "type": "DYNAMIC ARRAY OF RECORD LIKE customer.* (element field)"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_arr",
+          "type": "DYNAMIC ARRAY OF RECORD LIKE customer.*"
+        }
+      ]
+    },
+    {
+      "name": "record_dynamic_array_of_record_like",
+      "line": {
+        "start": 181,
+        "end": 186
+      },
+      "signature": "181-186: record_dynamic_array_of_record_like():l_arr[1].cus_id DYNAMIC ARRAY OF RECORD LIKE customer.* (element field)",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_arr[1].cus_id",
+          "type": "DYNAMIC ARRAY OF RECORD LIKE customer.* (element field)"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_arr",
+          "type": "DYNAMIC ARRAY OF RECORD LIKE customer.*"
+        }
+      ]
+    },
+    {
+      "name": "record_nested_types",
+      "line": {
+        "start": 188,
+        "end": 204
+      },
+      "signature": "188-204: record_nested_types():l_rec.cus_id INTEGER",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_rec.cus_id",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_rec",
+          "type": "RECORD"
+        }
+      ],
+      "record_types": {
+        "l_rec.cus_created": "DATETIME YEAR TO SECOND",
+        "l_rec.cus_name": "VARCHAR(200)",
+        "l_rec.cus_photo": "BYTE",
+        "l_rec.cus_ref": "CHAR(20)",
+        "l_rec.cus_dob": "DATE",
+        "l_rec.cus_rank": "SMALLINT",
+        "l_rec.cus_active": "BOOLEAN",
+        "l_rec.cus_notes": "TEXT",
+        "l_rec.cus_balance": "MONEY(14,2)",
+        "l_rec.cus_id": "INTEGER",
+        "l_rec.cus_score": "FLOAT"
+      }
+    },
+    {
+      "name": "record_multiple_records",
+      "line": {
+        "start": 206,
+        "end": 220
+      },
+      "signature": "206-220: record_multiple_records():l_header.doc_id INTEGER",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_header.doc_id",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_detail",
+          "type": "RECORD"
+        },
+        {
+          "name": "l_footer",
+          "type": "RECORD LIKE invoice_footer.*"
+        },
+        {
+          "name": "l_header",
+          "type": "RECORD"
+        }
+      ],
+      "record_types": {
+        "l_detail.item_code": "STRING",
+        "l_header.doc_id": "INTEGER",
+        "l_header.doc_date": "DATE",
+        "l_detail.line_no": "INTEGER",
+        "l_detail.qty": "DECIMAL(10,2)"
+      }
+    },
+    {
+      "name": "record_dynamic_array_inline",
+      "line": {
+        "start": 222,
+        "end": 239
+      },
+      "signature": "222-239: record_dynamic_array_inline(p_limit INTEGER):l_data.getLength() INTEGER",
+      "parameters": [
+        {
+          "name": "p_limit",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "l_data.getLength()",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [
+        {
+          "name": "getLength",
+          "line": 238
+        }
+      ],
+      "variables": [
+        {
+          "name": "i",
+          "type": "INTEGER"
+        },
+        {
+          "name": "l_data",
+          "type": "DYNAMIC ARRAY OF RECORD"
+        }
+      ],
+      "record_types": {
+        "l_data.created_at": "DATETIME YEAR TO FRACTION(3)",
+        "l_data.id": "INTEGER",
+        "l_data.description": "VARCHAR(255)",
+        "l_data.code": "CHAR(10)",
+        "l_data.is_active": "BOOLEAN",
+        "l_data.amount": "MONEY(10,2)"
+      }
+    },
+    {
+      "name": "record_static_array_inline",
+      "line": {
+        "start": 241,
+        "end": 249
+      },
+      "signature": "241-249: record_static_array_inline():l_items[1].item_id ARRAY[50] OF RECORD (element field)",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_items[1].item_id",
+          "type": "ARRAY[50] OF RECORD (element field)"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_items",
+          "type": "ARRAY[50] OF RECORD"
+        }
+      ],
+      "record_types": {
+        "l_items.item_price": "DECIMAL(8,2)",
+        "l_items.item_id": "INTEGER",
+        "l_items.item_name": "STRING"
+      }
+    },
+    {
+      "name": "record_mixed_defines",
+      "line": {
+        "start": 251,
+        "end": 266
+      },
+      "signature": "251-266: record_mixed_defines():l_count INTEGER",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_count",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_flag",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "l_name",
+          "type": "STRING"
+        },
+        {
+          "name": "l_count",
+          "type": "INTEGER"
+        },
+        {
+          "name": "l_hist",
+          "type": "DYNAMIC ARRAY OF RECORD"
+        },
+        {
+          "name": "l_rec",
+          "type": "RECORD"
+        }
+      ],
+      "record_types": {
+        "l_hist.action": "CHAR(20)",
+        "l_rec.field1": "STRING",
+        "l_rec.field2": "INTEGER",
+        "l_hist.ts": "DATETIME YEAR TO SECOND"
+      }
+    },
+    {
+      "name": "record_like_partial_fields",
+      "line": {
+        "start": 268,
+        "end": 278
+      },
+      "signature": "268-278: record_like_partial_fields():l_rec.cus_id LIKE customer.cus_id",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "l_rec.cus_id",
+          "type": "LIKE customer.cus_id"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_con_id",
+          "type": "LIKE contract.con_id"
+        },
+        {
+          "name": "l_rec",
+          "type": "RECORD"
+        }
+      ],
+      "record_types": {
+        "l_rec.notes": "STRING",
+        "l_rec.con_id": "LIKE contract.con_id",
+        "l_rec.inv_total": "LIKE invoice.inv_total",
+        "l_rec.cus_id": "LIKE customer.cus_id"
+      }
+    },
+    {
+      "name": "record_param_and_local",
+      "line": {
+        "start": 280,
+        "end": 291
+      },
+      "signature": "280-291: record_param_and_local(p_input RECORD LIKE order_header.*):l_line.line_no SMALLINT",
+      "parameters": [
+        {
+          "name": "p_input",
+          "type": "RECORD LIKE order_header.*"
+        }
+      ],
+      "returns": [
+        {
+          "name": "l_line.line_no",
+          "type": "SMALLINT"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_line",
+          "type": "RECORD"
+        },
+        {
+          "name": "l_summary",
+          "type": "RECORD LIKE order_summary.*"
+        }
+      ],
+      "record_types": {
+        "l_line.quantity": "DECIMAL(10,3)",
+        "l_line.line_no": "SMALLINT",
+        "l_line.product_id": "INTEGER"
+      }
     }
   ],
   "./test_like_types.4gl": [
@@ -1038,7 +2653,13 @@
           "type": "INTEGER"
         }
       ],
-      "calls": []
+      "calls": [],
+      "variables": [
+        {
+          "name": "msg_id",
+          "type": "INTEGER"
+        }
+      ]
     },
     {
       "name": "get_message_id",
@@ -1059,7 +2680,8 @@
           "type": "LIKE abi_message.msg_id"
         }
       ],
-      "calls": []
+      "calls": [],
+      "variables": []
     },
     {
       "name": "process_segment",
@@ -1067,7 +2689,7 @@
         "start": 16,
         "end": 20
       },
-      "signature": "16-20: process_segment(seg LIKE abi_segments.*):seg.seg_id unknown",
+      "signature": "16-20: process_segment(seg LIKE abi_segments.*):seg.seg_id LIKE abi_segments.* (field)",
       "parameters": [
         {
           "name": "seg",
@@ -1077,10 +2699,11 @@
       "returns": [
         {
           "name": "seg.seg_id",
-          "type": "unknown"
+          "type": "LIKE abi_segments.* (field)"
         }
       ],
-      "calls": []
+      "calls": [],
+      "variables": []
     },
     {
       "name": "get_field_name",
@@ -1101,7 +2724,664 @@
           "type": "LIKE abi_fields.field_name"
         }
       ],
-      "calls": []
+      "calls": [],
+      "variables": []
+    }
+  ],
+  "./lib_util.4gl": [
+    {
+      "name": "log_message",
+      "line": {
+        "start": 14,
+        "end": 20
+      },
+      "signature": "14-20: log_message(p_msg STRING)",
+      "parameters": [
+        {
+          "name": "p_msg",
+          "type": "STRING"
+        }
+      ],
+      "returns": [],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_timestamp",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "log_error",
+      "line": {
+        "start": 22,
+        "end": 29
+      },
+      "signature": "22-29: log_error(p_msg STRING)",
+      "parameters": [
+        {
+          "name": "p_msg",
+          "type": "STRING"
+        }
+      ],
+      "returns": [],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_timestamp",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "display_error",
+      "line": {
+        "start": 33,
+        "end": 38
+      },
+      "signature": "33-38: display_error(p_msg STRING)",
+      "parameters": [
+        {
+          "name": "p_msg",
+          "type": "STRING"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_error",
+          "line": 36
+        }
+      ],
+      "variables": []
+    },
+    {
+      "name": "display_info",
+      "line": {
+        "start": 40,
+        "end": 44
+      },
+      "signature": "40-44: display_info(p_msg STRING)",
+      "parameters": [
+        {
+          "name": "p_msg",
+          "type": "STRING"
+        }
+      ],
+      "returns": [],
+      "calls": [],
+      "variables": []
+    },
+    {
+      "name": "prompt_user",
+      "line": {
+        "start": 48,
+        "end": 56
+      },
+      "signature": "48-56: prompt_user(p_prompt STRING):l_input STRING",
+      "parameters": [
+        {
+          "name": "p_prompt",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "l_input",
+          "type": "STRING"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "l_input",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "prompt_user_int",
+      "line": {
+        "start": 58,
+        "end": 66
+      },
+      "signature": "58-66: prompt_user_int(p_prompt STRING):l_value INTEGER",
+      "parameters": [
+        {
+          "name": "p_prompt",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "l_value",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [
+        {
+          "name": "prompt_user",
+          "line": 63
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_input",
+          "type": "STRING"
+        },
+        {
+          "name": "l_value",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "get_user_action",
+      "line": {
+        "start": 68,
+        "end": 73
+      },
+      "signature": "68-73: get_user_action():upshift(l_action) STRING",
+      "parameters": [],
+      "returns": [
+        {
+          "name": "upshift(l_action)",
+          "type": "STRING"
+        }
+      ],
+      "calls": [
+        {
+          "name": "prompt_user",
+          "line": 71
+        },
+        {
+          "name": "upshift",
+          "line": 72
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_action",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "find_char",
+      "line": {
+        "start": 77,
+        "end": 89
+      },
+      "signature": "77-89: find_char(p_str STRING, p_char STRING):i INTEGER",
+      "parameters": [
+        {
+          "name": "p_str",
+          "type": "STRING"
+        },
+        {
+          "name": "p_char",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "i",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "i",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "pad_right",
+      "line": {
+        "start": 91,
+        "end": 100
+      },
+      "signature": "91-100: pad_right(p_str STRING, p_len INTEGER):p_str STRING",
+      "parameters": [
+        {
+          "name": "p_str",
+          "type": "STRING"
+        },
+        {
+          "name": "p_len",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "p_str",
+          "type": "STRING"
+        }
+      ],
+      "calls": [
+        {
+          "name": "length",
+          "line": 95
+        }
+      ],
+      "variables": []
+    },
+    {
+      "name": "repeat_char",
+      "line": {
+        "start": 102,
+        "end": 114
+      },
+      "signature": "102-114: repeat_char(p_char STRING, p_count INTEGER):l_result STRING",
+      "parameters": [
+        {
+          "name": "p_char",
+          "type": "STRING"
+        },
+        {
+          "name": "p_count",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "l_result",
+          "type": "STRING"
+        }
+      ],
+      "calls": [],
+      "variables": [
+        {
+          "name": "i",
+          "type": "INTEGER"
+        },
+        {
+          "name": "l_result",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "format_string",
+      "line": {
+        "start": 116,
+        "end": 120
+      },
+      "signature": "116-120: format_string(p_str STRING):p_str CLIPPED STRING",
+      "parameters": [
+        {
+          "name": "p_str",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "p_str CLIPPED",
+          "type": "STRING"
+        }
+      ],
+      "calls": [],
+      "variables": []
+    },
+    {
+      "name": "init_customer_cache",
+      "line": {
+        "start": 124,
+        "end": 126
+      },
+      "signature": "124-126: init_customer_cache()",
+      "parameters": [],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 125
+        }
+      ],
+      "variables": []
+    },
+    {
+      "name": "invalidate_customer_cache",
+      "line": {
+        "start": 128,
+        "end": 132
+      },
+      "signature": "128-132: invalidate_customer_cache(p_cus_id INTEGER)",
+      "parameters": [
+        {
+          "name": "p_cus_id",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 131
+        }
+      ],
+      "variables": []
+    },
+    {
+      "name": "db_execute_insert",
+      "line": {
+        "start": 136,
+        "end": 145
+      },
+      "signature": "136-145: db_execute_insert(p_table STRING, p_rec RECORD)",
+      "parameters": [
+        {
+          "name": "p_table",
+          "type": "STRING"
+        },
+        {
+          "name": "p_rec",
+          "type": "RECORD"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 144
+        }
+      ],
+      "variables": [],
+      "record_types": {
+        "p_rec.cus_name": "STRING",
+        "p_rec.cus_email": "STRING",
+        "p_rec.cus_phone": "STRING"
+      }
+    },
+    {
+      "name": "db_execute_update",
+      "line": {
+        "start": 147,
+        "end": 157
+      },
+      "signature": "147-157: db_execute_update(p_table STRING, p_id INTEGER, p_rec RECORD)",
+      "parameters": [
+        {
+          "name": "p_table",
+          "type": "STRING"
+        },
+        {
+          "name": "p_id",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_rec",
+          "type": "RECORD"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 156
+        }
+      ],
+      "variables": [],
+      "record_types": {
+        "p_rec.cus_name": "STRING",
+        "p_rec.cus_email": "STRING",
+        "p_rec.cus_phone": "STRING"
+      }
+    },
+    {
+      "name": "db_execute_delete",
+      "line": {
+        "start": 159,
+        "end": 164
+      },
+      "signature": "159-164: db_execute_delete(p_table STRING, p_id INTEGER)",
+      "parameters": [
+        {
+          "name": "p_table",
+          "type": "STRING"
+        },
+        {
+          "name": "p_id",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 163
+        }
+      ],
+      "variables": []
+    },
+    {
+      "name": "db_count",
+      "line": {
+        "start": 166,
+        "end": 173
+      },
+      "signature": "166-173: db_count(p_table STRING, p_field STRING, p_value INTEGER):1 INTEGER",
+      "parameters": [
+        {
+          "name": "p_table",
+          "type": "STRING"
+        },
+        {
+          "name": "p_field",
+          "type": "STRING"
+        },
+        {
+          "name": "p_value",
+          "type": "INTEGER"
+        }
+      ],
+      "returns": [
+        {
+          "name": "1",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": []
+    },
+    {
+      "name": "db_count_like",
+      "line": {
+        "start": 175,
+        "end": 181
+      },
+      "signature": "175-181: db_count_like(p_table STRING, p_field STRING, p_pattern STRING):5 INTEGER",
+      "parameters": [
+        {
+          "name": "p_table",
+          "type": "STRING"
+        },
+        {
+          "name": "p_field",
+          "type": "STRING"
+        },
+        {
+          "name": "p_pattern",
+          "type": "STRING"
+        }
+      ],
+      "returns": [
+        {
+          "name": "5",
+          "type": "INTEGER"
+        }
+      ],
+      "calls": [],
+      "variables": []
+    },
+    {
+      "name": "db_select_by_id",
+      "line": {
+        "start": 183,
+        "end": 193
+      },
+      "signature": "183-193: db_select_by_id(p_table STRING, p_id INTEGER, p_rec RECORD)",
+      "parameters": [
+        {
+          "name": "p_table",
+          "type": "STRING"
+        },
+        {
+          "name": "p_id",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_rec",
+          "type": "RECORD"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 192
+        }
+      ],
+      "variables": [],
+      "record_types": {
+        "p_rec.cus_name": "STRING",
+        "p_rec.cus_email": "STRING",
+        "p_rec.cus_phone": "STRING"
+      }
+    },
+    {
+      "name": "db_select_by_field",
+      "line": {
+        "start": 195,
+        "end": 206
+      },
+      "signature": "195-206: db_select_by_field(p_table STRING, p_field STRING, p_value STRING, p_results DYNAMIC ARRAY OF RECORD)",
+      "parameters": [
+        {
+          "name": "p_table",
+          "type": "STRING"
+        },
+        {
+          "name": "p_field",
+          "type": "STRING"
+        },
+        {
+          "name": "p_value",
+          "type": "STRING"
+        },
+        {
+          "name": "p_results",
+          "type": "DYNAMIC ARRAY OF RECORD"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "log_message",
+          "line": 205
+        }
+      ],
+      "variables": [],
+      "record_types": {
+        "p_results.cus_email": "STRING",
+        "p_results.cus_name": "STRING",
+        "p_results.cus_id": "INTEGER"
+      }
+    }
+  ],
+  "./customer_display.4gl": [
+    {
+      "name": "customer_display_list",
+      "line": {
+        "start": 10,
+        "end": 30
+      },
+      "signature": "10-30: customer_display_list(p_results DYNAMIC ARRAY OF RECORD)",
+      "parameters": [
+        {
+          "name": "p_results",
+          "type": "DYNAMIC ARRAY OF RECORD"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "display_info",
+          "line": 18
+        },
+        {
+          "name": "display_separator",
+          "line": 19
+        },
+        {
+          "name": "customer_display_row",
+          "line": 22
+        },
+        {
+          "name": "display_separator",
+          "line": 29
+        }
+      ],
+      "variables": [
+        {
+          "name": "i",
+          "type": "INTEGER"
+        }
+      ],
+      "record_types": {
+        "p_results.cus_email": "STRING",
+        "p_results.cus_name": "STRING",
+        "p_results.cus_id": "INTEGER"
+      }
+    },
+    {
+      "name": "customer_display_row",
+      "line": {
+        "start": 32,
+        "end": 40
+      },
+      "signature": "32-40: customer_display_row(p_id INTEGER, p_name STRING, p_email STRING)",
+      "parameters": [
+        {
+          "name": "p_id",
+          "type": "INTEGER"
+        },
+        {
+          "name": "p_name",
+          "type": "STRING"
+        },
+        {
+          "name": "p_email",
+          "type": "STRING"
+        }
+      ],
+      "returns": [],
+      "calls": [
+        {
+          "name": "format_display_row",
+          "line": 38
+        }
+      ],
+      "variables": [
+        {
+          "name": "l_formatted",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "display_separator",
+      "line": {
+        "start": 50,
+        "end": 52
+      },
+      "signature": "50-52: display_separator()",
+      "parameters": [],
+      "returns": [],
+      "calls": [],
+      "variables": []
     }
   ]
 }

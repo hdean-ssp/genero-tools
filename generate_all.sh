@@ -108,24 +108,34 @@ if [[ $GL4_COUNT -gt 0 ]]; then
     
     # Create temp file for headers
     HEADERS_TEMP=$(mktemp)
-    trap 'rm -f "$HEADERS_TEMP"' EXIT
+    HEADERS_ERR=$(mktemp)
+    trap 'rm -f "$HEADERS_TEMP" "$HEADERS_ERR"' EXIT
     
     # Process all .4gl files to extract headers
-    # Continue even if some files fail to parse
+    # Continue even if some files fail to parse (individual file errors logged)
     find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
-        python3 "$SCRIPT_DIR/scripts/parse_headers.py" "$file" "$TARGET" >> "$HEADERS_TEMP" 2>/dev/null || true
+        python3 "$SCRIPT_DIR/scripts/parse_headers.py" "$file" "$TARGET" >> "$HEADERS_TEMP" 2>>"$HEADERS_ERR" || true
     done
     
     # Merge headers into workspace.json (only if we have headers)
     if [[ -s "$HEADERS_TEMP" ]]; then
-        if python3 "$SCRIPT_DIR/scripts/merge_headers.py" workspace.json "$HEADERS_TEMP" workspace.json 2>/dev/null; then
+        if python3 "$SCRIPT_DIR/scripts/merge_headers.py" workspace.json "$HEADERS_TEMP" workspace.json 2>>"$HEADERS_ERR"; then
             log_success "File headers extracted and merged"
         else
             log_info "Some headers could not be merged (continuing)"
+            if [[ -s "$HEADERS_ERR" ]]; then
+                log_info "Header error details:"
+                tail -5 "$HEADERS_ERR" | sed 's/^/  /' >&2
+            fi
         fi
     else
         log_info "No headers found to extract (some or all files may not have modification sections)"
+        if [[ -s "$HEADERS_ERR" ]]; then
+            log_info "Header parsing errors:"
+            tail -5 "$HEADERS_ERR" | sed 's/^/  /' >&2
+        fi
     fi
+    rm -f "$HEADERS_ERR"
 fi
 
 echo ""
@@ -168,20 +178,33 @@ if [[ $GL4_COUNT -gt 0 ]]; then
     python3 "$SCRIPT_DIR/scripts/json_to_sqlite.py" signatures workspace.json workspace.db
     log_success "workspace.db created"
     
-    # Add header tables to database (continue even if this fails)
-    HEADERS_TEMP=$(mktemp)
-    trap 'rm -f "$HEADERS_TEMP"' EXIT
-    
-    find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
-        python3 "$SCRIPT_DIR/scripts/parse_headers.py" "$file" "$TARGET" >> "$HEADERS_TEMP" 2>/dev/null || true
-    done
+    # Add header tables to database - reuse headers from Step 1b if available
+    # Re-extract only if HEADERS_TEMP is not available (shouldn't happen in normal flow)
+    if [[ ! -s "${HEADERS_TEMP:-}" ]]; then
+        HEADERS_TEMP=$(mktemp)
+        trap 'rm -f "$HEADERS_TEMP"' EXIT
+        
+        find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
+            python3 "$SCRIPT_DIR/scripts/parse_headers.py" "$file" "$TARGET" >> "$HEADERS_TEMP" 2>/dev/null || true
+        done
+        
+        # Check for subshell variable loss: if temp file is empty after processing files, warn
+        if [[ $GL4_COUNT -gt 0 && ! -s "$HEADERS_TEMP" ]]; then
+            log_info "Warning: Header extraction produced no output for $GL4_COUNT files (possible parse_headers.py issue)"
+        fi
+    fi
     
     if [[ -s "$HEADERS_TEMP" ]]; then
-        if python3 "$SCRIPT_DIR/scripts/json_to_sqlite_headers.py" "$HEADERS_TEMP" workspace.db 2>/dev/null; then
+        HEADER_DB_ERR=$(mktemp)
+        if python3 "$SCRIPT_DIR/scripts/json_to_sqlite_headers.py" "$HEADERS_TEMP" workspace.db 2>"$HEADER_DB_ERR"; then
             log_success "Header metadata added to workspace.db"
         else
             log_info "Some header metadata could not be added (continuing)"
+            if [[ -s "$HEADER_DB_ERR" ]]; then
+                tail -3 "$HEADER_DB_ERR" | sed 's/^/  /' >&2
+            fi
         fi
+        rm -f "$HEADER_DB_ERR"
     else
         log_info "No header metadata to add"
     fi
@@ -222,9 +245,12 @@ if [[ -n "$SCHEMA_FILE" && -f "$SCHEMA_FILE" ]]; then
             export RESOLVE_TYPES=1
             log_info "Type resolution enabled"
         else
-            log_info "Could not load schema into database (type resolution will be skipped)"
+            log_error "Schema parsed successfully but could not be loaded into database"
+            log_info "Type resolution will be skipped - schema DB load failed"
             echo -e "${BLUE}[INFO]${NC} Error details:" >&2
             cat "$LOAD_OUTPUT" | sed 's/^/  /' >&2
+            log_info "Parsed schema JSON is available at: $SCHEMA_JSON"
+            log_info "Try manually: python3 scripts/json_to_sqlite_schema.py $SCHEMA_JSON workspace.db"
         fi
     else
         log_info "Could not parse schema file (type resolution will be skipped)"
@@ -241,18 +267,30 @@ echo ""
 if [[ "${RESOLVE_TYPES:-0}" == "1" ]]; then
     log_step "Generating type-resolved signatures..."
     
-    if python3 "$SCRIPT_DIR/scripts/resolve_types.py" workspace.db workspace.json workspace_resolved.json 2>/dev/null; then
+    RESOLVE_LOG=$(mktemp)
+    if python3 "$SCRIPT_DIR/scripts/resolve_types.py" workspace.db workspace.json workspace_resolved.json 2>"$RESOLVE_LOG"; then
         log_success "Type-resolved signatures generated (workspace_resolved.json)"
         
         # Merge resolved types back into database for fast querying
-        if python3 "$SCRIPT_DIR/scripts/merge_resolved_types.py" workspace_resolved.json workspace.db 2>/dev/null; then
+        MERGE_LOG=$(mktemp)
+        if python3 "$SCRIPT_DIR/scripts/merge_resolved_types.py" workspace_resolved.json workspace.db 2>"$MERGE_LOG"; then
             log_success "Resolved types merged into workspace.db"
         else
             log_info "Could not merge resolved types into database (JSON queries still available)"
+            if [[ -s "$MERGE_LOG" ]]; then
+                log_info "Merge error details:"
+                sed 's/^/  /' "$MERGE_LOG" >&2
+            fi
         fi
+        rm -f "$MERGE_LOG"
     else
         log_info "Could not generate type-resolved signatures (continuing)"
+        if [[ -s "$RESOLVE_LOG" ]]; then
+            log_info "Resolution error details:"
+            sed 's/^/  /' "$RESOLVE_LOG" >&2
+        fi
     fi
+    rm -f "$RESOLVE_LOG"
 fi
 
 echo ""
