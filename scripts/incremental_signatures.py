@@ -123,7 +123,8 @@ def run_signature_extraction(target_dir: str, files_to_process: Set[str], script
         try:
             result = subprocess.run(
                 ["bash", gen_script, full_path],
-                capture_output=True, text=True, timeout=30
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True, timeout=30
             )
             
             if result.returncode == 0 and os.path.exists(WORKSPACE_JSON):
@@ -172,7 +173,8 @@ def run_batch_extraction(target_dir: str, files_to_process: Set[str], project_ro
             # Run the AWK extraction using the existing script for a single file
             result = subprocess.run(
                 ["bash", gen_script, full_path],
-                capture_output=True, text=True, timeout=60,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True, timeout=60,
                 env={**os.environ, "OUTPUT_FILE": temp_output, "VERBOSE": "0"}
             )
         
@@ -267,7 +269,8 @@ def main():
         # Run full signature extraction
         result = subprocess.run(
             ["bash", gen_script, target_dir],
-            capture_output=True, text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True,
             env={**os.environ, "OUTPUT_FILE": output_file, "VERBOSE": os.environ.get("VERBOSE", "0")}
         )
         
@@ -339,7 +342,8 @@ def main():
         try:
             result = subprocess.run(
                 ["bash", gen_script, full_path],
-                capture_output=True, text=True, timeout=30,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True, timeout=30,
                 env={**os.environ, "OUTPUT_FILE": temp_output, "VERBOSE": "0"}
             )
             
