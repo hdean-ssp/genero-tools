@@ -156,35 +156,62 @@ echo ""
 
 # Step 1b: Extract file headers and merge
 if [[ $GL4_COUNT -gt 0 ]]; then
-    log_step "Extracting file headers and code references..."
-    
     # Create temp file for headers
     HEADERS_TEMP=$(mktemp)
     HEADERS_ERR=$(mktemp)
     trap 'rm -f "$HEADERS_TEMP" "$HEADERS_ERR"' EXIT
-    
-    # Process all .4gl files to extract headers
-    # Continue even if some files fail to parse (individual file errors logged)
-    find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
-        python3 "$SCRIPT_DIR/scripts/parse_headers.py" "$file" "$TARGET" >> "$HEADERS_TEMP" 2>>"$HEADERS_ERR" || true
-    done
-    
-    # Merge headers into workspace.json (only if we have headers)
-    if [[ -s "$HEADERS_TEMP" ]]; then
-        if python3 "$SCRIPT_DIR/scripts/merge_headers.py" workspace.json "$HEADERS_TEMP" workspace.json 2>>"$HEADERS_ERR"; then
-            log_success "File headers extracted and merged"
-        else
-            log_info "Some headers could not be merged (continuing)"
-            if [[ -s "$HEADERS_ERR" ]]; then
-                log_info "Header error details:"
-                tail -5 "$HEADERS_ERR" | sed 's/^/  /' >&2
+
+    if [[ $IS_INCREMENTAL -eq 1 && -n "$CHANGES_FILE" && -f "$CHANGES_FILE" ]]; then
+        # Incremental: only extract headers for changed/added files
+        log_step "Extracting file headers (incremental - changed files only)..."
+        CHANGED_4GL=$(python3 -c "
+import json, os, sys
+d = json.load(open('$CHANGES_FILE'))
+files = d.get('changed', []) + d.get('added', [])
+for f in files:
+    full = os.path.join('$TARGET', f)
+    if os.path.exists(full):
+        print(full)
+" 2>/dev/null)
+        
+        if [[ -n "$CHANGED_4GL" ]]; then
+            while IFS= read -r file; do
+                python3 "$SCRIPT_DIR/scripts/parse_headers.py" "$file" "$TARGET" >> "$HEADERS_TEMP" 2>>"$HEADERS_ERR" || true
+            done <<< "$CHANGED_4GL"
+        fi
+        
+        if [[ -s "$HEADERS_TEMP" ]]; then
+            if python3 "$SCRIPT_DIR/scripts/merge_headers.py" workspace.json "$HEADERS_TEMP" workspace.json 2>>"$HEADERS_ERR"; then
+                log_success "File headers extracted and merged (incremental)"
+            else
+                log_info "Some headers could not be merged (continuing)"
             fi
+        else
+            log_success "File headers up to date (no header changes)"
         fi
     else
-        log_info "No headers found to extract (some or all files may not have modification sections)"
-        if [[ -s "$HEADERS_ERR" ]]; then
-            log_info "Header parsing errors:"
-            tail -5 "$HEADERS_ERR" | sed 's/^/  /' >&2
+        # Full: process all .4gl files
+        log_step "Extracting file headers and code references..."
+        find "$TARGET" -name "*.4gl" -type f -print0 | while IFS= read -r -d '' file; do
+            python3 "$SCRIPT_DIR/scripts/parse_headers.py" "$file" "$TARGET" >> "$HEADERS_TEMP" 2>>"$HEADERS_ERR" || true
+        done
+        
+        if [[ -s "$HEADERS_TEMP" ]]; then
+            if python3 "$SCRIPT_DIR/scripts/merge_headers.py" workspace.json "$HEADERS_TEMP" workspace.json 2>>"$HEADERS_ERR"; then
+                log_success "File headers extracted and merged"
+            else
+                log_info "Some headers could not be merged (continuing)"
+                if [[ -s "$HEADERS_ERR" ]]; then
+                    log_info "Header error details:"
+                    tail -5 "$HEADERS_ERR" | sed 's/^/  /' >&2
+                fi
+            fi
+        else
+            log_info "No headers found to extract (some or all files may not have modification sections)"
+            if [[ -s "$HEADERS_ERR" ]]; then
+                log_info "Header parsing errors:"
+                tail -5 "$HEADERS_ERR" | sed 's/^/  /' >&2
+            fi
         fi
     fi
     rm -f "$HEADERS_ERR"
@@ -194,11 +221,27 @@ echo ""
 
 # Step 1c: Generate modular information (GLOBALS and IMPORT statements)
 if [[ $GL4_COUNT -gt 0 ]]; then
-    log_step "Generating modular information from .4gl files..."
-    if bash "$SCRIPT_DIR/src/generate_modulars.sh" "$TARGET" 2>&1 | tee /tmp/gen_mod_output.log; then
-        log_success "Modular information generated (modulars.json)"
+    if [[ $IS_INCREMENTAL -eq 1 && -n "$CHANGES_FILE" && -f "$CHANGES_FILE" ]]; then
+        # Incremental: only re-extract modulars for changed/added files, merge into existing
+        log_step "Generating modular information (incremental - changed files only)..."
+        if python3 "$SCRIPT_DIR/scripts/incremental_modulars.py" "$TARGET" modulars.json "$CHANGES_FILE" 2>&1; then
+            log_success "Modular information updated (modulars.json) [incremental]"
+        else
+            # Fallback to full rebuild
+            log_info "Incremental modular update failed, doing full rebuild..."
+            if bash "$SCRIPT_DIR/src/generate_modulars.sh" "$TARGET" 2>&1 | tee /tmp/gen_mod_output.log; then
+                log_success "Modular information generated (modulars.json)"
+            else
+                log_info "Could not generate modular information (continuing)"
+            fi
+        fi
     else
-        log_info "Could not generate modular information (continuing)"
+        log_step "Generating modular information from .4gl files..."
+        if bash "$SCRIPT_DIR/src/generate_modulars.sh" "$TARGET" 2>&1 | tee /tmp/gen_mod_output.log; then
+            log_success "Modular information generated (modulars.json)"
+        else
+            log_info "Could not generate modular information (continuing)"
+        fi
     fi
 else
     log_info "Skipping modular generation (no .4gl files found)"
@@ -206,12 +249,30 @@ fi
 
 echo ""
 if [[ $M3_COUNT -gt 0 ]]; then
-    log_step "Generating module dependencies from .m3 files..."
-    if bash "$SCRIPT_DIR/src/generate_modules.sh" "$TARGET"; then
-        log_success "Module dependencies generated (modules.json)"
+    if [[ $IS_INCREMENTAL -eq 1 && -f "modules.json" && -f "modules.db" ]]; then
+        # Incremental: skip module regeneration if no .m3 files changed
+        # Check if any .m3 files are newer than modules.json
+        M3_CHANGED=$(find "$TARGET" -name "*.m3" -type f -newer modules.json 2>/dev/null | head -1)
+        if [[ -z "$M3_CHANGED" ]]; then
+            log_step "Generating module dependencies from .m3 files..."
+            log_success "Module dependencies up to date (no .m3 changes) [skipped]"
+        else
+            log_step "Generating module dependencies from .m3 files..."
+            if bash "$SCRIPT_DIR/src/generate_modules.sh" "$TARGET"; then
+                log_success "Module dependencies generated (modules.json)"
+            else
+                log_error "Failed to generate module dependencies"
+                exit 1
+            fi
+        fi
     else
-        log_error "Failed to generate module dependencies"
-        exit 1
+        log_step "Generating module dependencies from .m3 files..."
+        if bash "$SCRIPT_DIR/src/generate_modules.sh" "$TARGET"; then
+            log_success "Module dependencies generated (modules.json)"
+        else
+            log_error "Failed to generate module dependencies"
+            exit 1
+        fi
     fi
 else
     log_info "Skipping module dependency generation (no .m3 files found)"
@@ -288,24 +349,58 @@ fi
 
 # Resolve cross-file call references (only for changed functions in incremental mode)
 if [[ -f "workspace.db" ]]; then
-    log_info "Resolving cross-file call references..."
-    CALLS_OUT=$(mktemp)
-    if python3 "$SCRIPT_DIR/scripts/resolve_calls.py" workspace.db >"$CALLS_OUT" 2>&1; then
-        cat "$CALLS_OUT" >&2
-        log_success "Call references resolved"
+    if [[ $IS_INCREMENTAL -eq 1 && -n "$CHANGES_FILE" && -f "$CHANGES_FILE" ]]; then
+        # Incremental: only re-resolve calls for changed files' functions
+        log_info "Resolving cross-file call references (incremental)..."
+        CALLS_OUT=$(mktemp)
+        if python3 "$SCRIPT_DIR/scripts/resolve_calls.py" workspace.db --changes "$CHANGES_FILE" >"$CALLS_OUT" 2>&1; then
+            cat "$CALLS_OUT" >&2
+            log_success "Call references resolved (incremental)"
+        else
+            # Fallback: full resolution
+            if python3 "$SCRIPT_DIR/scripts/resolve_calls.py" workspace.db >"$CALLS_OUT" 2>&1; then
+                cat "$CALLS_OUT" >&2
+                log_success "Call references resolved"
+            else
+                log_info "Could not resolve call references (continuing)"
+            fi
+        fi
+        rm -f "$CALLS_OUT"
     else
-        log_info "Could not resolve call references (continuing)"
+        log_info "Resolving cross-file call references..."
+        CALLS_OUT=$(mktemp)
+        if python3 "$SCRIPT_DIR/scripts/resolve_calls.py" workspace.db >"$CALLS_OUT" 2>&1; then
+            cat "$CALLS_OUT" >&2
+            log_success "Call references resolved"
+        else
+            log_info "Could not resolve call references (continuing)"
+        fi
+        rm -f "$CALLS_OUT"
     fi
-    rm -f "$CALLS_OUT"
 fi
 
 # Load GLOBALS/IMPORT dependencies into workspace.db
 if [[ -f "workspace.db" && -f "modulars.json" ]]; then
-    log_info "Loading file dependencies (GLOBALS/IMPORT)..."
-    if python3 "$SCRIPT_DIR/scripts/load_modulars.py" load modulars.json workspace.db 2>/dev/null; then
-        log_success "File dependencies loaded into workspace.db"
+    if [[ $IS_INCREMENTAL -eq 1 && -n "$CHANGES_FILE" && -f "$CHANGES_FILE" ]]; then
+        # Incremental: only reload dependencies for changed files
+        log_info "Loading file dependencies (incremental)..."
+        if python3 "$SCRIPT_DIR/scripts/load_modulars.py" load-incremental modulars.json workspace.db "$CHANGES_FILE" 2>/dev/null; then
+            log_success "File dependencies updated (incremental)"
+        else
+            # Fallback to full reload
+            if python3 "$SCRIPT_DIR/scripts/load_modulars.py" load modulars.json workspace.db 2>/dev/null; then
+                log_success "File dependencies loaded into workspace.db"
+            else
+                log_info "Could not load file dependencies (continuing)"
+            fi
+        fi
     else
-        log_info "Could not load file dependencies (continuing)"
+        log_info "Loading file dependencies (GLOBALS/IMPORT)..."
+        if python3 "$SCRIPT_DIR/scripts/load_modulars.py" load modulars.json workspace.db 2>/dev/null; then
+            log_success "File dependencies loaded into workspace.db"
+        else
+            log_info "Could not load file dependencies (continuing)"
+        fi
     fi
 fi
 
@@ -313,42 +408,66 @@ echo ""
 
 # Step 4: Parse and load schema if available
 if [[ -n "$SCHEMA_FILE" && -f "$SCHEMA_FILE" ]]; then
-    log_step "Parsing schema file and loading into database..."
-    
-    # Create temp files for schema JSON and output
-    SCHEMA_JSON=$(mktemp)
-    PARSE_OUTPUT=$(mktemp)
-    trap 'rm -f "$SCHEMA_JSON" "$PARSE_OUTPUT"' EXIT
-    
-    # Parse schema file (capture both stdout and stderr)
-    if python3 "$SCRIPT_DIR/scripts/parse_schema.py" "$SCHEMA_FILE" "$SCHEMA_JSON" >"$PARSE_OUTPUT" 2>&1; then
-        # Show the output (which includes success messages)
-        cat "$PARSE_OUTPUT" >&2
-        log_success "Schema parsed: $SCHEMA_FILE"
-        
-        # Load schema into workspace.db
-        LOAD_OUTPUT=$(mktemp)
-        trap 'rm -f "$LOAD_OUTPUT"' EXIT
-        
-        if python3 "$SCRIPT_DIR/scripts/json_to_sqlite_schema.py" "$SCHEMA_JSON" workspace.db >"$LOAD_OUTPUT" 2>&1; then
-            cat "$LOAD_OUTPUT" >&2
-            log_success "Schema loaded into workspace.db"
-            
-            # Enable type resolution for subsequent steps
-            export RESOLVE_TYPES=1
-            log_info "Type resolution enabled"
-        else
-            log_error "Schema parsed successfully but could not be loaded into database"
-            log_info "Type resolution will be skipped - schema DB load failed"
-            echo -e "${BLUE}[INFO]${NC} Error details:" >&2
-            cat "$LOAD_OUTPUT" | sed 's/^/  /' >&2
-            log_info "Parsed schema JSON is available at: $SCHEMA_JSON"
-            log_info "Try manually: python3 scripts/json_to_sqlite_schema.py $SCHEMA_JSON workspace.db"
+    # Incremental: skip schema parsing if .sch file hasn't changed since last parse
+    SCHEMA_SKIP=0
+    if [[ $IS_INCREMENTAL -eq 1 && -f "workspace.db" ]]; then
+        # Check if schema file is newer than workspace.db's schema tables
+        SCHEMA_MTIME=$(stat -c %Y "$SCHEMA_FILE" 2>/dev/null || stat -f %m "$SCHEMA_FILE" 2>/dev/null)
+        SCHEMA_MARKER=".genero-schema-mtime"
+        if [[ -f "$SCHEMA_MARKER" ]]; then
+            PREV_MTIME=$(cat "$SCHEMA_MARKER" 2>/dev/null)
+            if [[ "$SCHEMA_MTIME" == "$PREV_MTIME" ]]; then
+                SCHEMA_SKIP=1
+            fi
         fi
+    fi
+
+    if [[ $SCHEMA_SKIP -eq 1 ]]; then
+        log_step "Parsing schema file and loading into database..."
+        log_success "Schema unchanged - using cached data [skipped]"
+        export RESOLVE_TYPES=1
     else
-        log_info "Could not parse schema file (type resolution will be skipped)"
-        echo -e "${BLUE}[INFO]${NC} Error details:" >&2
-        cat "$PARSE_OUTPUT" | sed 's/^/  /' >&2
+        log_step "Parsing schema file and loading into database..."
+        
+        # Create temp files for schema JSON and output
+        SCHEMA_JSON=$(mktemp)
+        PARSE_OUTPUT=$(mktemp)
+        trap 'rm -f "$SCHEMA_JSON" "$PARSE_OUTPUT"' EXIT
+        
+        # Parse schema file (capture both stdout and stderr)
+        if python3 "$SCRIPT_DIR/scripts/parse_schema.py" "$SCHEMA_FILE" "$SCHEMA_JSON" >"$PARSE_OUTPUT" 2>&1; then
+            # Show the output (which includes success messages)
+            cat "$PARSE_OUTPUT" >&2
+            log_success "Schema parsed: $SCHEMA_FILE"
+            
+            # Load schema into workspace.db
+            LOAD_OUTPUT=$(mktemp)
+            trap 'rm -f "$LOAD_OUTPUT"' EXIT
+            
+            if python3 "$SCRIPT_DIR/scripts/json_to_sqlite_schema.py" "$SCHEMA_JSON" workspace.db >"$LOAD_OUTPUT" 2>&1; then
+                cat "$LOAD_OUTPUT" >&2
+                log_success "Schema loaded into workspace.db"
+                
+                # Save schema mtime for future incremental runs
+                SCHEMA_MTIME=$(stat -c %Y "$SCHEMA_FILE" 2>/dev/null || stat -f %m "$SCHEMA_FILE" 2>/dev/null)
+                echo "$SCHEMA_MTIME" > ".genero-schema-mtime"
+                
+                # Enable type resolution for subsequent steps
+                export RESOLVE_TYPES=1
+                log_info "Type resolution enabled"
+            else
+                log_error "Schema parsed successfully but could not be loaded into database"
+                log_info "Type resolution will be skipped - schema DB load failed"
+                echo -e "${BLUE}[INFO]${NC} Error details:" >&2
+                cat "$LOAD_OUTPUT" | sed 's/^/  /' >&2
+                log_info "Parsed schema JSON is available at: $SCHEMA_JSON"
+                log_info "Try manually: python3 scripts/json_to_sqlite_schema.py $SCHEMA_JSON workspace.db"
+            fi
+        else
+            log_info "Could not parse schema file (type resolution will be skipped)"
+            echo -e "${BLUE}[INFO]${NC} Error details:" >&2
+            cat "$PARSE_OUTPUT" | sed 's/^/  /' >&2
+        fi
     fi
 else
     log_info "No schema file available (type resolution will be skipped)"
@@ -358,32 +477,67 @@ echo ""
 
 # Step 5: Generate resolved types if schema was loaded
 if [[ "${RESOLVE_TYPES:-0}" == "1" ]]; then
-    log_step "Generating type-resolved signatures..."
-    
-    RESOLVE_LOG=$(mktemp)
-    if python3 "$SCRIPT_DIR/scripts/resolve_types.py" workspace.db workspace.json workspace_resolved.json 2>"$RESOLVE_LOG"; then
-        log_success "Type-resolved signatures generated (workspace_resolved.json)"
+    if [[ $IS_INCREMENTAL -eq 1 && -n "$CHANGES_FILE" && -f "$CHANGES_FILE" && -f "workspace_resolved.json" ]]; then
+        # Incremental: only re-resolve types for changed files
+        log_step "Generating type-resolved signatures (incremental)..."
         
-        # Merge resolved types back into database for fast querying
-        MERGE_LOG=$(mktemp)
-        if python3 "$SCRIPT_DIR/scripts/merge_resolved_types.py" workspace_resolved.json workspace.db 2>"$MERGE_LOG"; then
-            log_success "Resolved types merged into workspace.db"
+        RESOLVE_LOG=$(mktemp)
+        if python3 "$SCRIPT_DIR/scripts/resolve_types.py" workspace.db workspace.json workspace_resolved.json --changes "$CHANGES_FILE" 2>"$RESOLVE_LOG"; then
+            log_success "Type-resolved signatures updated (incremental)"
+            
+            # Merge resolved types back into database for changed files only
+            MERGE_LOG=$(mktemp)
+            if python3 "$SCRIPT_DIR/scripts/merge_resolved_types.py" workspace_resolved.json workspace.db 2>"$MERGE_LOG"; then
+                log_success "Resolved types merged into workspace.db"
+            else
+                log_info "Could not merge resolved types into database (JSON queries still available)"
+            fi
+            rm -f "$MERGE_LOG"
         else
-            log_info "Could not merge resolved types into database (JSON queries still available)"
-            if [[ -s "$MERGE_LOG" ]]; then
-                log_info "Merge error details:"
-                sed 's/^/  /' "$MERGE_LOG" >&2
+            # Fallback to full resolution
+            log_info "Incremental type resolution failed, doing full resolution..."
+            if python3 "$SCRIPT_DIR/scripts/resolve_types.py" workspace.db workspace.json workspace_resolved.json 2>"$RESOLVE_LOG"; then
+                log_success "Type-resolved signatures generated (workspace_resolved.json)"
+                MERGE_LOG=$(mktemp)
+                if python3 "$SCRIPT_DIR/scripts/merge_resolved_types.py" workspace_resolved.json workspace.db 2>"$MERGE_LOG"; then
+                    log_success "Resolved types merged into workspace.db"
+                else
+                    log_info "Could not merge resolved types into database (JSON queries still available)"
+                fi
+                rm -f "$MERGE_LOG"
+            else
+                log_info "Could not generate type-resolved signatures (continuing)"
             fi
         fi
-        rm -f "$MERGE_LOG"
+        rm -f "$RESOLVE_LOG"
     else
-        log_info "Could not generate type-resolved signatures (continuing)"
-        if [[ -s "$RESOLVE_LOG" ]]; then
-            log_info "Resolution error details:"
-            sed 's/^/  /' "$RESOLVE_LOG" >&2
+        log_step "Generating type-resolved signatures..."
+        
+        RESOLVE_LOG=$(mktemp)
+        if python3 "$SCRIPT_DIR/scripts/resolve_types.py" workspace.db workspace.json workspace_resolved.json 2>"$RESOLVE_LOG"; then
+            log_success "Type-resolved signatures generated (workspace_resolved.json)"
+            
+            # Merge resolved types back into database for fast querying
+            MERGE_LOG=$(mktemp)
+            if python3 "$SCRIPT_DIR/scripts/merge_resolved_types.py" workspace_resolved.json workspace.db 2>"$MERGE_LOG"; then
+                log_success "Resolved types merged into workspace.db"
+            else
+                log_info "Could not merge resolved types into database (JSON queries still available)"
+                if [[ -s "$MERGE_LOG" ]]; then
+                    log_info "Merge error details:"
+                    sed 's/^/  /' "$MERGE_LOG" >&2
+                fi
+            fi
+            rm -f "$MERGE_LOG"
+        else
+            log_info "Could not generate type-resolved signatures (continuing)"
+            if [[ -s "$RESOLVE_LOG" ]]; then
+                log_info "Resolution error details:"
+                sed 's/^/  /' "$RESOLVE_LOG" >&2
+            fi
         fi
+        rm -f "$RESOLVE_LOG"
     fi
-    rm -f "$RESOLVE_LOG"
 fi
 
 echo ""

@@ -116,19 +116,107 @@ def resolve_calls(db_path: str, verbose: bool = False):
     }
 
 
+def resolve_calls_incremental(db_path: str, changes_file: str, verbose: bool = False):
+    """Resolve calls only for functions in changed files.
+    
+    Strategy:
+    1. Clear resolved_function_id for calls FROM changed files (their calls may have changed)
+    2. Clear resolved_function_id for calls TO functions in changed files (targets may have moved)
+    3. Re-resolve only those affected calls
+    """
+    import json
+    
+    with open(changes_file, 'r') as f:
+        changes = json.load(f)
+    
+    changed = set(changes.get('changed', []))
+    added = set(changes.get('added', []))
+    removed = set(changes.get('removed', []))
+    
+    affected_files = changed | added
+    if not affected_files and not removed:
+        return {'total_calls': 0, 'resolved': 0, 'ambiguous': 0, 'not_found': 0}
+    
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # Add resolved_function_id column if not exists
+    cursor.execute("PRAGMA table_info(calls)")
+    columns = {row['name'] for row in cursor.fetchall()}
+    
+    if 'resolved_function_id' not in columns:
+        cursor.execute("ALTER TABLE calls ADD COLUMN resolved_function_id INTEGER")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_calls_resolved ON calls(resolved_function_id)")
+        conn.commit()
+    
+    # Normalize paths for matching
+    def normalize(p):
+        import os
+        p = os.path.normpath(p)
+        if not p.startswith('./') and not p.startswith('/'):
+            p = './' + p
+        return p
+    
+    affected_normalized = {normalize(f) for f in affected_files}
+    
+    # Find function IDs in affected files
+    placeholders = ','.join('?' * len(affected_normalized))
+    cursor.execute(
+        f"SELECT id, file_path FROM functions WHERE file_path IN ({placeholders})",
+        list(affected_normalized)
+    )
+    affected_func_ids = [row['id'] for row in cursor.fetchall()]
+    
+    if not affected_func_ids:
+        conn.close()
+        return {'total_calls': 0, 'resolved': 0, 'ambiguous': 0, 'not_found': 0}
+    
+    # Clear resolution for calls FROM affected functions
+    id_placeholders = ','.join('?' * len(affected_func_ids))
+    cursor.execute(
+        f"UPDATE calls SET resolved_function_id = NULL WHERE function_id IN ({id_placeholders})",
+        affected_func_ids
+    )
+    
+    # Also clear resolution for calls TO functions that were in affected files
+    # (their function IDs may have changed during the DB update)
+    cursor.execute(
+        f"UPDATE calls SET resolved_function_id = NULL WHERE resolved_function_id IN ({id_placeholders})",
+        affected_func_ids
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    # Now run normal resolution which only resolves NULL entries
+    return resolve_calls(db_path, verbose)
+
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage: resolve_calls.py <workspace_db>", file=sys.stderr)
+        print("Usage: resolve_calls.py <workspace_db> [--changes <changes_file>]", file=sys.stderr)
         sys.exit(1)
     
     db_path = sys.argv[1]
     verbose = os.environ.get('VERBOSE', '0') == '1'
+    changes_file = None
+    
+    # Parse --changes argument
+    if '--changes' in sys.argv:
+        idx = sys.argv.index('--changes')
+        if idx + 1 < len(sys.argv):
+            changes_file = sys.argv[idx + 1]
     
     if not Path(db_path).exists():
         print(f"Error: Database not found: {db_path}", file=sys.stderr)
         sys.exit(1)
     
-    stats = resolve_calls(db_path, verbose)
+    if changes_file:
+        # Incremental: only re-resolve calls for changed files
+        stats = resolve_calls_incremental(db_path, changes_file, verbose)
+    else:
+        stats = resolve_calls(db_path, verbose)
     
     print(f"[OK] Call resolution complete")
     print(f"[OK] Total calls: {stats['total_calls']}")

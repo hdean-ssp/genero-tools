@@ -247,12 +247,24 @@ class TypeResolver:
 def main():
     """Main entry point."""
     if len(sys.argv) < 3:
-        print("Usage: resolve_types.py <db_path> <workspace_json_path> [output_path]")
+        print("Usage: resolve_types.py <db_path> <workspace_json_path> [output_path] [--changes <changes_file>]")
         sys.exit(1)
     
     db_path = sys.argv[1]
     workspace_json_path = sys.argv[2]
-    output_path = sys.argv[3] if len(sys.argv) > 3 else workspace_json_path
+    
+    # Parse remaining args (output_path and --changes)
+    output_path = workspace_json_path
+    changes_file = None
+    
+    i = 3
+    while i < len(sys.argv):
+        if sys.argv[i] == '--changes' and i + 1 < len(sys.argv):
+            changes_file = sys.argv[i + 1]
+            i += 2
+        else:
+            output_path = sys.argv[i]
+            i += 1
     
     # Validate inputs
     if not Path(db_path).exists():
@@ -263,6 +275,22 @@ def main():
         print(f"Error: workspace.json not found: {workspace_json_path}", file=sys.stderr)
         sys.exit(1)
     
+    # Determine which files to resolve
+    changed_files = None
+    if changes_file and Path(changes_file).exists():
+        import os
+        with open(changes_file, 'r') as f:
+            changes = json.load(f)
+        changed = set(changes.get('changed', []))
+        added = set(changes.get('added', []))
+        # Normalize paths
+        changed_files = set()
+        for p in changed | added:
+            p = os.path.normpath(p)
+            if not p.startswith('./') and not p.startswith('/'):
+                p = './' + p
+            changed_files.add(p)
+    
     # Resolve types
     resolver = TypeResolver(db_path)
     try:
@@ -270,7 +298,67 @@ def main():
             print("Error: Schema could not be loaded - type resolution aborted", file=sys.stderr)
             sys.exit(1)
         
-        workspace = resolver.process_workspace_json(workspace_json_path)
+        # If incremental, load existing resolved file and only update changed entries
+        if changed_files and Path(output_path).exists():
+            # Load existing resolved output
+            with open(output_path, 'r') as f:
+                workspace = json.load(f)
+            
+            # Also load the source workspace.json for the changed files' data
+            with open(workspace_json_path, 'r') as f:
+                source = json.load(f)
+            
+            # Update only changed files in the resolved output
+            for file_path in list(source.keys()):
+                if file_path == '_metadata':
+                    workspace['_metadata'] = source['_metadata']
+                    continue
+                
+                # Check if this file is in changed set
+                if file_path not in changed_files:
+                    continue
+                
+                functions = source[file_path]
+                if not isinstance(functions, list):
+                    workspace[file_path] = functions
+                    continue
+                
+                # Resolve types for this file's functions
+                for func in functions:
+                    if 'parameters' in func:
+                        for param in func['parameters']:
+                            if 'type' in param:
+                                resolution = resolver.resolve_parameter_type(param['type'])
+                                param.update(resolution)
+                    
+                    if 'returns' in func and isinstance(func['returns'], list):
+                        for ret in func['returns']:
+                            if 'type' in ret:
+                                resolution = resolver.resolve_return_type(ret['type'])
+                                ret.update(resolution)
+                    
+                    if 'return_type' in func:
+                        resolution = resolver.resolve_return_type(func['return_type'])
+                        func['return_type_resolved'] = resolution
+                
+                workspace[file_path] = functions
+            
+            # Remove deleted files
+            removed = set(changes.get('removed', []))
+            import os
+            removed_normalized = set()
+            for p in removed:
+                p = os.path.normpath(p)
+                if not p.startswith('./') and not p.startswith('/'):
+                    p = './' + p
+                removed_normalized.add(p)
+            
+            for key in list(workspace.keys()):
+                if key in removed_normalized:
+                    del workspace[key]
+        else:
+            # Full resolution
+            workspace = resolver.process_workspace_json(workspace_json_path)
         
         # Write output
         with open(output_path, 'w') as f:
@@ -306,7 +394,8 @@ def main():
                                 f"return {ret.get('name')} in {func.get('name')} ({file_path}): {ret.get('error', 'unknown')}"
                             )
         
-        print(f"Type resolution complete. Output: {output_path}")
+        mode = "incremental" if changed_files else "full"
+        print(f"Type resolution complete ({mode}). Output: {output_path}")
         print(f"  LIKE references resolved: {resolved_count}")
         print(f"  LIKE references unresolved: {unresolved_count}")
         

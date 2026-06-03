@@ -6,6 +6,7 @@ modulars.json
 codebase_index.json
 *.db
 .genero-manifest.json
+.genero-schema-mtime
 
 # Production database schema (sensitive)
 castle.sch

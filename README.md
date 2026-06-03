@@ -239,7 +239,7 @@ Command-line tools for common development tasks:
 
 File content hashes are stored in `.genero-manifest.json`. On subsequent runs:
 - **No changes detected** — exits in under 1 second, skipping all steps
-- **Files changed** — only re-processes changed files through the entire pipeline (signatures, DB update, metrics). Unchanged data stays intact in workspace.db.
+- **Files changed** — only re-processes changed files through the entire pipeline (signatures, headers, modulars, DB update, call resolution, type resolution, metrics). Unchanged data stays intact in workspace.db.
 
 This is the default behavior when a manifest and workspace.db already exist.
 
