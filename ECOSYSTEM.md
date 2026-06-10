@@ -1,56 +1,56 @@
 # Ecosystem: How genero-tools Connects
 
 ```
-                        ┌──────────────────────────────────┐
-                        │   electRa/Castle Codebase        │
-                        │       ~/work/genero              │
-                        │  3.5M+ LOC · 3,400 .4gl files    │
-                        └───────────────┬──────────────────┘
-                                        │ scanned by
-                                        ▼
-┌─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐
-│                                                                           │
-│  ┌════════════════════════════════════════════════════════════════════┐   │
-│  ║  genero-tools                                                     ║   │
-│  ║  ★ THIS REPO ★                                                    ║   │
-│  ║                                                                    ║   │
-│  ║  • Function signatures, parameters, return types                   ║   │
-│  ║  • Call graph analysis (cross-file resolution)                     ║   │
-│  ║  • Schema impact analysis (table → function mapping)               ║   │
-│  ║  • Code quality metrics (complexity, LOC, dead code)               ║   │
-│  ║  • Type resolution (LIKE references → actual types)                ║   │
-│  ║  • Module dependencies (.m3 makefiles)                             ║   │
-│  ║                                                                    ║   │
-│  ║  Produces: workspace.db · modules.db · workspace.json              ║   │
-│  ║  Interface: query.sh <command> [args]                              ║   │
-│  ╚════════════════════════════════════════════════════════════════════╝   │
-│                                                                           │
-└─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
+                        ┌─────────────────────────────────────┐
+                        │   electRa/Castle Codebase           │
+                        │       ~/work/genero                 │
+                        │  3.5M+ LOC · 3,400 .4gl files       │
+                        └─────────────────┬───────────────────┘
+                                          │ scanned by
+                                          ▼
+┌─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐
+│                                                                               │
+│  ┌════════════════════════════════════════════════════════════════════════┐   │
+│  ║  genero-tools                                                         ║   │
+│  ║  ★ THIS REPO ★                                                        ║   │
+│  ║                                                                        ║   │
+│  ║  • Function signatures, parameters, return types                       ║   │
+│  ║  • Call graph analysis (cross-file resolution)                         ║   │
+│  ║  • Schema impact analysis (table → function mapping)                   ║   │
+│  ║  • Code quality metrics (complexity, LOC, dead code)                   ║   │
+│  ║  • Type resolution (LIKE references → actual types)                    ║   │
+│  ║  • Module dependencies (.m3 makefiles)                                 ║   │
+│  ║                                                                        ║   │
+│  ║  Produces: workspace.db · modules.db · workspace.json                  ║   │
+│  ║  Interface: query.sh <command> [args]                                  ║   │
+│  ╚════════════════════════════════════════════════════════════════════════╝   │
+│                                                                               │
+└─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
           │                         │                         │
           │ queried via             │ databases               │ analysis used
           │ $GENERO_TOOLS_PATH      │ consumed by             │ to build
           ▼                         ▼                         ▼
-┌───────────────────┐   ┌───────────────────────┐   ┌────────────────────────┐
-│    genero-vim     │   │    electra-vault      │   │ electra-documentation  │
-│                   │   │                       │   │                        │
-│  • Go to def      │   │  • ~25,800 fn pages   │   │  • Agent used query.sh │
-│  • Find refs      │   │  • ~905 schema pages  │   │    to understand the   │
-│  • Autocomplete   │   │  • ~810 module pages  │   │    codebase and write  │
-│  • Hover sigs     │   │  • Cross-linked vault │   │    system documentation│
-│  • Telescope      │   │                       │   │                        │
-└───────────────────┘   └───────────┬───────────┘   └────────────────────────┘
-                                    │
-                                    │ also consumes
-                                    ▼
-                        ┌───────────────────────────┐
-                        │ agent-knowledge-repository│
-                        │ (AKR)                     │
-                        │                           │
-                        │ • codebase-intelligence   │
-                        │   steering file teaches   │
-                        │   agents to combine       │
-                        │   akr-fetch + query.sh    │
-                        └───────────────────────────┘
+┌───────────────────────┐   ┌───────────────────────┐   ┌───────────────────────┐
+│    genero-vim         │   │    electra-vault      │   │ electra-documentation │
+│                       │   │                       │   │                       │
+│  • Go to def          │   │  • ~25,800 fn pages   │   │  • Agent used         │
+│  • Find refs          │   │  • ~905 schema pages  │   │    query.sh to        │
+│  • Autocomplete       │   │  • ~810 module pages  │   │    understand the     │
+│  • Hover sigs         │   │  • Cross-linked vault │   │    codebase and write │
+│  • Telescope          │   │                       │   │    system docs        │
+└───────────────────────┘   └───────────┬───────────┘   └───────────────────────┘
+                                        │
+                                        │ also consumes
+                                        ▼
+                            ┌───────────────────────────┐
+                            │ agent-knowledge-repository │
+                            │ (AKR)                      │
+                            │                            │
+                            │ • codebase-intelligence    │
+                            │   steering file teaches    │
+                            │   agents to combine        │
+                            │   akr-fetch + query.sh     │
+                            └────────────────────────────┘
 ```
 
 ## Role in the Ecosystem
